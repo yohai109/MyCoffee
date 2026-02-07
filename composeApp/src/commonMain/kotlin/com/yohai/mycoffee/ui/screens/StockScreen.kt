@@ -141,6 +141,13 @@ fun AddStockDialog(
     var roaster by remember { mutableStateOf("") }
     var sizeText by remember { mutableStateOf("") }
     var roastDateText by remember { mutableStateOf("") }
+    
+    val roastDate = try {
+        if (roastDateText.isBlank()) null else LocalDate.parse(roastDateText)
+    } catch (e: Exception) {
+        null
+    }
+    val isDateError = roastDateText.isNotBlank() && roastDate == null
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -179,6 +186,10 @@ fun AddStockDialog(
                     value = roastDateText,
                     onValueChange = { roastDateText = it },
                     label = { Text("Roast Date (YYYY-MM-DD)") },
+                    isError = isDateError,
+                    supportingText = if (isDateError) {
+                        { Text("Invalid date format. Use YYYY-MM-DD") }
+                    } else null,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -191,17 +202,10 @@ fun AddStockDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     val size = sizeText.toDoubleOrNull() ?: 0.0
-                    val roastDate = try {
-                        LocalDate.parse(roastDateText)
-                    } catch (e: Exception) {
-                        null
-                    }
                     val isValid = name.isNotBlank() && roaster.isNotBlank() && size > 0 && roastDate != null
                     TextButton(
                         onClick = {
-                            roastDate?.let { date ->
-                                onConfirm(name, roaster, size, date)
-                            }
+                            onConfirm(name, roaster, size, roastDate!!)
                         },
                         enabled = isValid
                     ) {
