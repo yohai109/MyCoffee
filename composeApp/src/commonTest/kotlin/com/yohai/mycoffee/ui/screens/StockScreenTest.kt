@@ -3,12 +3,19 @@ package com.yohai.mycoffee.ui.screens
 import androidx.compose.ui.test.*
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
+import com.yohai.mycoffee.database.initTestDatabase
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class StockScreenTest {
+
+    @BeforeTest
+    fun setup() {
+        initTestDatabase()
+    }
 
     @OptIn(ExperimentalTestApi::class)
     @Test
