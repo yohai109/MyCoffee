@@ -50,6 +50,10 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+            implementation(libs.compose.ui.test)
+            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+            implementation(libs.compose.ui.test.junit4)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
