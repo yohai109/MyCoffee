@@ -177,7 +177,7 @@ class StockScreenTest {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _ -> }
+                onConfirm = { _, _, _, _ -> }
             )
         }
 
@@ -186,6 +186,7 @@ class StockScreenTest {
         onNodeWithText("Coffee Name").assertIsDisplayed()
         onNodeWithText("Roaster").assertIsDisplayed()
         onNodeWithText("Size (grams)").assertIsDisplayed()
+        onNodeWithText("Roast Date (YYYY-MM-DD)").assertIsDisplayed()
         onNodeWithText("Add").assertIsDisplayed()
         onNodeWithText("Cancel").assertIsDisplayed()
     }

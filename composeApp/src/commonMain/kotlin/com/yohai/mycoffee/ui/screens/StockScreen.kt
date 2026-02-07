@@ -45,6 +45,7 @@ import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
@@ -109,7 +110,7 @@ fun StockScreen() {
         if (showAddDialog) {
             AddStockDialog(
                 onDismiss = { showAddDialog = false },
-                onConfirm = { name, roaster, size ->
+                onConfirm = { name, roaster, size, roastDate ->
                     scope.launch {
                         database.coffeeDao().insertStock(
                             CoffeeStock(
@@ -117,7 +118,7 @@ fun StockScreen() {
                                 roaster = roaster,
                                 state = CoffeeState.NEW,
                                 size = size,
-                                roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                                roastDate = roastDate,
                                 openDate = null,
                                 finishDate = null,
                             )
@@ -134,11 +135,12 @@ fun StockScreen() {
 @Composable
 fun AddStockDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String, roaster: String, size: Double) -> Unit
+    onConfirm: (name: String, roaster: String, size: Double, roastDate: LocalDate) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var roaster by remember { mutableStateOf("") }
     var sizeText by remember { mutableStateOf("") }
+    var roastDateText by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -172,6 +174,13 @@ fun AddStockDialog(
                     label = { Text("Size (grams)") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = roastDateText,
+                    onValueChange = { roastDateText = it },
+                    label = { Text("Roast Date (YYYY-MM-DD)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -182,10 +191,17 @@ fun AddStockDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     val size = sizeText.toDoubleOrNull() ?: 0.0
-                    val isValid = name.isNotBlank() && roaster.isNotBlank() && size > 0
+                    val roastDate = try {
+                        LocalDate.parse(roastDateText)
+                    } catch (e: Exception) {
+                        null
+                    }
+                    val isValid = name.isNotBlank() && roaster.isNotBlank() && size > 0 && roastDate != null
                     TextButton(
                         onClick = {
-                            onConfirm(name, roaster, size)
+                            roastDate?.let { date ->
+                                onConfirm(name, roaster, size, date)
+                            }
                         },
                         enabled = isValid
                     ) {
