@@ -22,7 +22,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -47,13 +46,9 @@ import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
-import kotlinx.datetime.plus
-import kotlinx.datetime.minus
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -263,7 +258,14 @@ fun DatePickerModal(
                 ) {
                     Text("Year:", style = MaterialTheme.typography.bodyLarge)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = { selectedYear-- }) {
+                        TextButton(onClick = { 
+                            selectedYear--
+                            // Validate day is still valid for the new year (leap year handling)
+                            val maxDays = getMaxDaysInMonth(selectedYear, selectedMonth)
+                            if (selectedDay > maxDays) {
+                                selectedDay = maxDays
+                            }
+                        }) {
                             Text("-")
                         }
                         Text(
@@ -271,7 +273,14 @@ fun DatePickerModal(
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
-                        TextButton(onClick = { selectedYear++ }) {
+                        TextButton(onClick = { 
+                            selectedYear++
+                            // Validate day is still valid for the new year (leap year handling)
+                            val maxDays = getMaxDaysInMonth(selectedYear, selectedMonth)
+                            if (selectedDay > maxDays) {
+                                selectedDay = maxDays
+                            }
+                        }) {
                             Text("+")
                         }
                     }
@@ -288,7 +297,14 @@ fun DatePickerModal(
                     Text("Month:", style = MaterialTheme.typography.bodyLarge)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TextButton(onClick = { 
-                            if (selectedMonth > 1) selectedMonth--
+                            if (selectedMonth > 1) {
+                                selectedMonth--
+                                // Validate day is still valid for the new month
+                                val maxDays = getMaxDaysInMonth(selectedYear, selectedMonth)
+                                if (selectedDay > maxDays) {
+                                    selectedDay = maxDays
+                                }
+                            }
                         }) {
                             Text("-")
                         }
@@ -298,7 +314,14 @@ fun DatePickerModal(
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                         TextButton(onClick = { 
-                            if (selectedMonth < 12) selectedMonth++
+                            if (selectedMonth < 12) {
+                                selectedMonth++
+                                // Validate day is still valid for the new month
+                                val maxDays = getMaxDaysInMonth(selectedYear, selectedMonth)
+                                if (selectedDay > maxDays) {
+                                    selectedDay = maxDays
+                                }
+                            }
                         }) {
                             Text("+")
                         }
