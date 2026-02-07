@@ -28,6 +28,9 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        androidUnitTest.dependencies {
+            implementation(libs.androidx.test.core)
+        }
     }
 }
 
