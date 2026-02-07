@@ -1,15 +1,8 @@
 package com.yohai.mycoffee.database
 
-import androidx.room.Room
 import androidx.room.RoomDatabase
 
-class TestDatabaseFactory : DatabaseFactory {
-    override fun createBuilder(): RoomDatabase.Builder<CoffeeDatabase> {
-        return Room.databaseBuilder<CoffeeDatabase>(
-            name = ":memory:"
-        )
-    }
-}
+expect class TestDatabaseFactory() : DatabaseFactory
 
 fun initTestDatabase() {
     initDatabase(TestDatabaseFactory())
