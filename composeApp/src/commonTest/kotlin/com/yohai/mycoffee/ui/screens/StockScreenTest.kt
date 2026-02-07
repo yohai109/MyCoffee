@@ -92,4 +92,101 @@ class StockScreenTest {
         onNodeWithText("State: FINISHED").assertIsDisplayed()
         onNodeWithText("Size: 1000.0g").assertIsDisplayed()
     }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemShowsOpenButtonForNewState() = runComposeUiTest {
+        // Given
+        val testStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.NEW,
+            size = 250.0,
+            roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            openDate = null,
+            finishDate = null,
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithText("Open").assertIsDisplayed()
+        onNodeWithText("Finish").assertDoesNotExist()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemShowsFinishButtonForOpenState() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val testStock = CoffeeStock(
+            id = 2,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.OPEN,
+            size = 250.0,
+            roastDate = today,
+            openDate = today,
+            finishDate = null,
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithText("Finish").assertIsDisplayed()
+        onNodeWithText("Open").assertDoesNotExist()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemHidesButtonsForFinishedState() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val testStock = CoffeeStock(
+            id = 3,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.FINISHED,
+            size = 250.0,
+            roastDate = today,
+            openDate = today,
+            finishDate = today,
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithText("Open").assertDoesNotExist()
+        onNodeWithText("Finish").assertDoesNotExist()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun addStockDialogDisplaysCorrectly() = runComposeUiTest {
+        // When
+        setContent {
+            AddStockDialog(
+                onDismiss = {},
+                onConfirm = { _, _, _ -> }
+            )
+        }
+
+        // Then
+        onNodeWithText("Add New Stock").assertIsDisplayed()
+        onNodeWithText("Coffee Name").assertIsDisplayed()
+        onNodeWithText("Roaster").assertIsDisplayed()
+        onNodeWithText("Size (grams)").assertIsDisplayed()
+        onNodeWithText("Add").assertIsDisplayed()
+        onNodeWithText("Cancel").assertIsDisplayed()
+    }
 }
