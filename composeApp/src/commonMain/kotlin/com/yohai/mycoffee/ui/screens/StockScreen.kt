@@ -122,8 +122,10 @@ fun StatisticsBanner(stockList: List<CoffeeStock>) {
                 style = MaterialTheme.typography.titleMedium
             )
             if (averageOpenTime != null) {
+                val roundedDays = averageOpenTime.roundToInt()
+                val daysText = if (roundedDays == 1) "day" else "days"
                 Text(
-                    text = "Average open time: ${averageOpenTime.roundToInt()} days",
+                    text = "Average open time: $roundedDays $daysText",
                     style = MaterialTheme.typography.bodyMedium
                 )
             } else {

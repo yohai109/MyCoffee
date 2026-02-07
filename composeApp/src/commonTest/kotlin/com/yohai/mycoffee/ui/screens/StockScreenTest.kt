@@ -229,4 +229,34 @@ class StockScreenTest {
         onNodeWithText("Statistics").assertIsDisplayed()
         onNodeWithText("Average open time: 10 days").assertIsDisplayed()
     }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun statisticsBanner_withOneDayAverage_displaysSingularDay() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val oneDayAgo = today.minus(1, DateTimeUnit.DAY)
+        
+        val stockList = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Test Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.FINISHED,
+                size = 250.0,
+                roastDate = oneDayAgo,
+                openDate = oneDayAgo,
+                finishDate = today,
+            )
+        )
+
+        // When
+        setContent {
+            StatisticsBanner(stockList)
+        }
+
+        // Then
+        onNodeWithText("Statistics").assertIsDisplayed()
+        onNodeWithText("Average open time: 1 day").assertIsDisplayed()
+    }
 }
