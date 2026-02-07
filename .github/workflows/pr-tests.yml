@@ -35,4 +35,4 @@ jobs:
       with:
         name: test-results
         path: '**/build/test-results/test/*.xml'
-        retention-days: 30
+        retention-days: 14
