@@ -25,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.yohai.mycoffee.ui.screens.BrewScreen
 import com.yohai.mycoffee.ui.screens.SettingsScreen
 import com.yohai.mycoffee.ui.screens.StockScreen
+import com.yohai.mycoffee.ui.theme.MyCoffeeTheme
 
 sealed class Screen(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     data object Stock : Screen("stock", "Stock", Icons.AutoMirrored.Filled.List)
@@ -35,7 +36,7 @@ sealed class Screen(val route: String, val label: String, val icon: androidx.com
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
-    MaterialTheme {
+    MyCoffeeTheme {
         val navController = rememberNavController()
         val items = listOf(
             Screen.Stock,
