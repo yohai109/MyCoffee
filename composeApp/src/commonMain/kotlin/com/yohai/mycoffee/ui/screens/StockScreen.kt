@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,6 +68,9 @@ fun StockScreen() {
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                item {
+                    StatisticsBanner(stockList)
+                }
                 items(stockList) { stock ->
                     StockItem(stock)
                 }
@@ -85,6 +89,51 @@ suspend fun insertDummyStock(database: CoffeeDatabase) {
         openDate = null,
         finishDate = null,
     ))
+}
+
+fun calculateAverageOpenTime(stockList: List<CoffeeStock>): Double? {
+    val finishedBags = stockList.filter { stock ->
+        stock.openDate != null && stock.finishDate != null
+    }
+    
+    if (finishedBags.isEmpty()) {
+        return null
+    }
+    
+    val totalDays = finishedBags.sumOf { stock ->
+        val openDate = stock.openDate!!
+        val finishDate = stock.finishDate!!
+        (finishDate.toEpochDays() - openDate.toEpochDays()).toDouble()
+    }
+    
+    return totalDays / finishedBags.size
+}
+
+@Composable
+fun StatisticsBanner(stockList: List<CoffeeStock>) {
+    val averageOpenTime = calculateAverageOpenTime(stockList)
+    
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Statistics",
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (averageOpenTime != null) {
+                Text(
+                    text = "Average open time: ${averageOpenTime.roundToInt()} days",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                Text(
+                    text = "Average open time: No finished bags yet",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    }
 }
 
 
