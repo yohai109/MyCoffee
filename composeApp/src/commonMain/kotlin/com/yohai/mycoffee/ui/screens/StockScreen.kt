@@ -181,13 +181,13 @@ fun AddStockDialog(
                         Text("Cancel")
                     }
                     Spacer(modifier = Modifier.width(8.dp))
+                    val size = sizeText.toDoubleOrNull() ?: 0.0
+                    val isValid = name.isNotBlank() && roaster.isNotBlank() && size > 0
                     TextButton(
                         onClick = {
-                            val size = sizeText.toDoubleOrNull() ?: 0.0
-                            if (name.isNotBlank() && roaster.isNotBlank() && size > 0) {
-                                onConfirm(name, roaster, size)
-                            }
-                        }
+                            onConfirm(name, roaster, size)
+                        },
+                        enabled = isValid
                     ) {
                         Text("Add")
                     }
@@ -240,9 +240,7 @@ fun StockItem(
                         Button(onClick = onOpenClick) {
                             Text("Open")
                         }
-                    }
-                    if (stock.state == CoffeeState.OPEN) {
-                        Spacer(modifier = Modifier.width(8.dp))
+                    } else if (stock.state == CoffeeState.OPEN) {
                         OutlinedButton(onClick = onFinishClick) {
                             Text("Finish")
                         }
