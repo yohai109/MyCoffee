@@ -5,7 +5,9 @@ import androidx.room.RoomDatabase
 
 class TestDatabaseFactory : DatabaseFactory {
     override fun createBuilder(): RoomDatabase.Builder<CoffeeDatabase> {
-        return Room.inMemoryDatabaseBuilder<CoffeeDatabase>()
+        return Room.databaseBuilder<CoffeeDatabase>(
+            name = ":memory:"
+        )
     }
 }
 
