@@ -5,25 +5,25 @@ import kotlin.test.assertNotNull
 
 /**
  * Android-specific UI tests
- * These tests verify Android-specific functionality and integration
+ * These are basic smoke tests to ensure Android-specific code compiles and integrates correctly
  */
 class AndroidAppTest {
 
     @Test
-    fun testAndroidPlatformInitialization() {
-        // Verify that the platform can be initialized
-        // This is a basic test to ensure Android-specific code compiles
-        assertNotNull("Android")
+    fun testAndroidPlatformString() {
+        // Basic smoke test to ensure Android test infrastructure works
+        val platform = "Android"
+        assertNotNull(platform)
     }
 
     @Test
-    fun testAndroidMainActivityExists() {
-        // Verify MainActivity class exists
+    fun testAndroidMainActivityClassExists() {
+        // Verify MainActivity class exists in the Android-specific source
         val mainActivityClass = try {
             Class.forName("com.yohai.mycoffee.MainActivity")
         } catch (e: ClassNotFoundException) {
             null
         }
-        assertNotNull(mainActivityClass, "MainActivity should exist")
+        assertNotNull(mainActivityClass, "MainActivity should exist in Android source")
     }
 }

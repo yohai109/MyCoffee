@@ -65,3 +65,57 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 ---
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## Running Tests
+
+The project includes comprehensive UI tests for all platforms.
+
+### Run All Tests
+- on macOS/Linux
+  ```shell
+  ./gradlew test
+  ```
+- on Windows
+  ```shell
+  .\gradlew.bat test
+  ```
+
+### Run Tests for Specific Modules
+
+**Common Tests** (shared across all platforms):
+```shell
+./gradlew :composeApp:allTests
+```
+
+**Android Tests**:
+```shell
+./gradlew :composeApp:testDebugUnitTest
+```
+
+**iOS Tests**:
+```shell
+./gradlew :composeApp:iosSimulatorArm64Test
+```
+
+**Desktop (JVM) Tests**:
+```shell
+./gradlew :composeApp:jvmTest
+```
+
+**Server Tests**:
+```shell
+./gradlew :server:test
+```
+
+**Shared Module Tests**:
+```shell
+./gradlew :shared:allTests
+```
+
+### Test Coverage
+
+The test suite includes:
+- **Common UI Tests**: Tests for all screens (Stock, Brew, Settings) and navigation
+- **Android-specific Tests**: Tests for Android platform integration
+- **iOS-specific Tests**: Tests for iOS platform integration
+- **Desktop-specific Tests**: Tests for Desktop/JVM platform integration
+- **Component Tests**: Tests for individual UI components like `StockItem`

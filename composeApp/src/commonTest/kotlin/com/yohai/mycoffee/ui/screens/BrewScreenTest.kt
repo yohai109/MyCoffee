@@ -19,7 +19,7 @@ class BrewScreenTest {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun brewScreenIsScrollable() = runComposeUiTest {
+    fun brewScreenRendersSuccessfully() = runComposeUiTest {
         // When
         setContent {
             BrewScreen()
