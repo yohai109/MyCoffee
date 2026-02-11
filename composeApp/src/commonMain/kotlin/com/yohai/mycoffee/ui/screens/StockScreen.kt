@@ -57,6 +57,16 @@ fun StockScreen() {
     val scope = rememberCoroutineScope()
     val stockList: List<CoffeeStock> by database.coffeeDao().getAllStock().collectAsState(initial = emptyList())
     var showAddDialog by remember { mutableStateOf(false) }
+    
+    val sortedStockList = remember(stockList) {
+        stockList.sortedBy { 
+            when (it.state) {
+                CoffeeState.OPEN -> 0
+                CoffeeState.NEW -> 1
+                CoffeeState.FINISHED -> 2
+            }
+        }
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -83,7 +93,7 @@ fun StockScreen() {
                 item {
                     StatisticsBanner(stockList)
                 }
-                items(stockList) { stock ->
+                items(sortedStockList) { stock ->
                     StockItem(
                         stock = stock,
                         onOpenClick = {
