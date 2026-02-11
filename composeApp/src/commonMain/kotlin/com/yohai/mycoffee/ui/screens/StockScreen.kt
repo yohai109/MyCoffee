@@ -83,7 +83,13 @@ fun StockScreen() {
                 item {
                     StatisticsBanner(stockList)
                 }
-                items(stockList) { stock ->
+                items(stockList.sortedBy { 
+                    when (it.state) {
+                        CoffeeState.OPEN -> 0
+                        CoffeeState.NEW -> 1
+                        CoffeeState.FINISHED -> 2
+                    }
+                }) { stock ->
                     StockItem(
                         stock = stock,
                         onOpenClick = {

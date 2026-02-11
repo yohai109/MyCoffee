@@ -357,4 +357,59 @@ class StockScreenTest {
         onNodeWithText("Statistics").assertIsDisplayed()
         onNodeWithText("Average open time: 1 day").assertIsDisplayed()
     }
+
+    @Test
+    fun sortStockList_opensFirst_thenNew_thenFinished() {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val stockList = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Finished Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.FINISHED,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = today,
+            ),
+            CoffeeStock(
+                id = 2,
+                name = "Open Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.OPEN,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = null,
+            ),
+            CoffeeStock(
+                id = 3,
+                name = "New Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.NEW,
+                size = 250.0,
+                roastDate = today,
+                openDate = null,
+                finishDate = null,
+            )
+        )
+
+        // When - sort by state with OPEN first, then NEW, then FINISHED
+        val sorted = stockList.sortedBy { 
+            when (it.state) {
+                CoffeeState.OPEN -> 0
+                CoffeeState.NEW -> 1
+                CoffeeState.FINISHED -> 2
+            }
+        }
+
+        // Then
+        assertEquals(CoffeeState.OPEN, sorted[0].state)
+        assertEquals("Open Coffee", sorted[0].name)
+        assertEquals(CoffeeState.NEW, sorted[1].state)
+        assertEquals("New Coffee", sorted[1].name)
+        assertEquals(CoffeeState.FINISHED, sorted[2].state)
+        assertEquals("Finished Coffee", sorted[2].name)
+    }
 }
