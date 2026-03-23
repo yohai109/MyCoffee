@@ -192,8 +192,28 @@ class StockScreenTest {
         onNodeWithText("Coffee Name").assertIsDisplayed()
         onNodeWithText("Roaster").assertIsDisplayed()
         onNodeWithText("Size (grams)").assertIsDisplayed()
-        onNodeWithText("Roast Date (YYYY-MM-DD)").assertIsDisplayed()
+        onNodeWithText("Roast Date").assertIsDisplayed()
         onNodeWithText("Add").assertIsDisplayed()
+        onNodeWithText("Cancel").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun datePickerModalDisplaysCorrectly() = runComposeUiTest {
+        // When
+        setContent {
+            DatePickerModal(
+                onDateSelected = { },
+                onDismiss = { }
+            )
+        }
+
+        // Then
+        onNodeWithText("Select Date").assertIsDisplayed()
+        onNodeWithText("Year:").assertIsDisplayed()
+        onNodeWithText("Month:").assertIsDisplayed()
+        onNodeWithText("Day:").assertIsDisplayed()
+        onNodeWithText("OK").assertIsDisplayed()
         onNodeWithText("Cancel").assertIsDisplayed()
     }
 

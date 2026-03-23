@@ -1,5 +1,6 @@
 package com.yohai.mycoffee.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -154,14 +155,8 @@ fun AddStockDialog(
     var name by remember { mutableStateOf("") }
     var roaster by remember { mutableStateOf("") }
     var sizeText by remember { mutableStateOf("") }
-    var roastDateText by remember { mutableStateOf("") }
-    
-    val roastDate = try {
-        if (roastDateText.isBlank()) null else LocalDate.parse(roastDateText)
-    } catch (e: Exception) {
-        null
-    }
-    val isDateError = roastDateText.isNotBlank() && roastDate == null
+    var roastDate by remember { mutableStateOf<LocalDate?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -197,14 +192,14 @@ fun AddStockDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = roastDateText,
-                    onValueChange = { roastDateText = it },
-                    label = { Text("Roast Date (YYYY-MM-DD)") },
-                    isError = isDateError,
-                    supportingText = if (isDateError) {
-                        { Text("Invalid date format. Use YYYY-MM-DD") }
-                    } else null,
-                    modifier = Modifier.fillMaxWidth()
+                    value = roastDate?.toString() ?: "",
+                    onValueChange = { },
+                    label = { Text("Roast Date") },
+                    readOnly = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true },
+                    placeholder = { Text("Select date") }
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
@@ -229,6 +224,188 @@ fun AddStockDialog(
             }
         }
     }
+
+    if (showDatePicker) {
+        DatePickerModal(
+            onDateSelected = { selectedDate ->
+                roastDate = selectedDate
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerModal(
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    var selectedYear by remember { mutableStateOf(today.year) }
+    var selectedMonth by remember { mutableStateOf(today.monthNumber) }
+    var selectedDay by remember { mutableStateOf(today.dayOfMonth) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text(
+                    text = "Select Date",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                // Year selection
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Year:", style = MaterialTheme.typography.bodyLarge)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(onClick = { 
+                            selectedYear--
+                            // Validate day is still valid for the new year (leap year handling)
+                            val maxDays = getMaxDaysInMonth(selectedYear, selectedMonth)
+                            if (selectedDay > maxDays) {
+                                selectedDay = maxDays
+                            }
+                        }) {
+                            Text("-")
+                        }
+                        Text(
+                            text = selectedYear.toString(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        TextButton(onClick = { 
+                            selectedYear++
+                            // Validate day is still valid for the new year (leap year handling)
+                            val maxDays = getMaxDaysInMonth(selectedYear, selectedMonth)
+                            if (selectedDay > maxDays) {
+                                selectedDay = maxDays
+                            }
+                        }) {
+                            Text("+")
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Month selection
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Month:", style = MaterialTheme.typography.bodyLarge)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(onClick = { 
+                            if (selectedMonth > 1) {
+                                selectedMonth--
+                                // Validate day is still valid for the new month
+                                val maxDays = getMaxDaysInMonth(selectedYear, selectedMonth)
+                                if (selectedDay > maxDays) {
+                                    selectedDay = maxDays
+                                }
+                            }
+                        }) {
+                            Text("-")
+                        }
+                        Text(
+                            text = selectedMonth.toString().padStart(2, '0'),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        TextButton(onClick = { 
+                            if (selectedMonth < 12) {
+                                selectedMonth++
+                                // Validate day is still valid for the new month
+                                val maxDays = getMaxDaysInMonth(selectedYear, selectedMonth)
+                                if (selectedDay > maxDays) {
+                                    selectedDay = maxDays
+                                }
+                            }
+                        }) {
+                            Text("+")
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Day selection
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Day:", style = MaterialTheme.typography.bodyLarge)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(onClick = { 
+                            if (selectedDay > 1) selectedDay--
+                        }) {
+                            Text("-")
+                        }
+                        Text(
+                            text = selectedDay.toString().padStart(2, '0'),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        TextButton(onClick = { 
+                            val maxDays = getMaxDaysInMonth(selectedYear, selectedMonth)
+                            if (selectedDay < maxDays) selectedDay++
+                        }) {
+                            Text("+")
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = {
+                            try {
+                                val date = LocalDate(selectedYear, selectedMonth, selectedDay)
+                                onDateSelected(date)
+                            } catch (e: Exception) {
+                                // Invalid date, do nothing
+                            }
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun getMaxDaysInMonth(year: Int, month: Int): Int {
+    return when (month) {
+        1, 3, 5, 7, 8, 10, 12 -> 31
+        4, 6, 9, 11 -> 30
+        2 -> if (isLeapYear(year)) 29 else 28
+        else -> 31
+    }
+}
+
+fun isLeapYear(year: Int): Boolean {
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
 }
 
 suspend fun insertDummyStock(database: CoffeeDatabase) {
