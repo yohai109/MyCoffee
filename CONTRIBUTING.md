@@ -10,8 +10,10 @@ Thank you for your interest in contributing to MyCoffee! We welcome contribution
    git clone https://github.com/YOUR_USERNAME/MyCoffee.git
    cd MyCoffee
    ```
-3. **Create a new branch** for your feature or bugfix:
+3. **Create a new branch** from master for your feature or bugfix:
    ```bash
+   git checkout master
+   git pull origin master
    git checkout -b feature/your-feature-name
    ```
 
@@ -93,10 +95,10 @@ Fixes #123
 
 ### Pull Request Process
 
-1. **Update your branch** with the latest changes from main:
+1. **Update your branch** with the latest changes from master:
    ```bash
    git fetch origin
-   git rebase origin/main
+   git merge origin/master
    ```
 
 2. **Ensure all tests pass** and the code builds successfully
@@ -114,7 +116,13 @@ Fixes #123
 
 5. **Address review feedback** if requested
 
-6. Once approved, your PR will be merged!
+6. **Merge your PR** - use "Merge pull request" button on GitHub or:
+   ```bash
+   git checkout master
+   git pull origin master
+   ```
+
+**IMPORTANT:** Never commit directly to the `master` branch. Always use feature branches and submit PRs.
 
 ## Reporting Bugs
 
