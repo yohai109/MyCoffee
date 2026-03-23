@@ -22,9 +22,8 @@ This skill guides you through writing tests for the MyCoffee project.
 
 ### Setup
 ```kotlin
-import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
-import org.junit.Rule
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.runComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 ```

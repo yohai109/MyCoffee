@@ -41,7 +41,7 @@ Open `/iosApp` directory in Xcode and run from there.
 ```bash
 ./gradlew :composeApp:testDebugUnitTest --tests "com.yohai.mycoffee.ui.screens.StockScreenTest"
 ./gradlew :server:test --tests "com.yohai.mycoffee.ApplicationTest"
-./gradlew :shared:testDebugUnitTest --tests "com.yohai.mycoffee.SharedCommonTest"
+./gradlew :shared:allTests --tests "com.yohai.mycoffee.SharedCommonTest"
 ```
 
 ### Run Specific Module Tests

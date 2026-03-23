@@ -45,23 +45,29 @@ fun NewScreen() {
 Update `composeApp/src/commonMain/kotlin/com/yohai/mycoffee/App.kt`:
 
 ```kotlin
-sealed class Screen(val route: String) {
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add  // or another real icon
+import androidx.compose.ui.graphics.vector.ImageVector
+
+sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     // ... existing screens
-    object NewScreen : Screen("new_screen")
+    data object New : Screen("new", "New", Icons.Default.Add)
 }
 
+// Add to items list:
+val items = listOf(
+    Screen.Stock,
+    Screen.Brew,
+    Screen.Settings,
+    Screen.New,  // Add new screen
+)
+
 // In NavHost:
-composable(Screen.NewScreen.route) {
+composable(Screen.New.route) {
     NewScreen()
 }
 
-// In NavigationBar:
-NavigationBarItem(
-    icon = { Icon(Icons.Default.New, contentDescription = "New") },
-    label = { Text("New") },
-    selected = currentRoute == Screen.NewScreen.route,
-    onClick = { navController.navigate(Screen.NewScreen.route) }
-)
+// NavigationBar stays the same - it iterates over items
 ```
 
 ### 3. Add Navigation Import

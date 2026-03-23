@@ -68,13 +68,14 @@ Open `/iosApp` directory in Xcode and run from there.
 | Enums | PascalCase (members UPPER_SNAKE) | `CoffeeState.NEW` |
 | Functions | camelCase | `getDatabase()`, `calculateAverage()` |
 | Composables | PascalCase | `StockScreen()`, `StatisticsBanner()` |
-| Constants | PascalCase | `SERVER_PORT`, `LightColorScheme` |
+| Constants (`const val`) | UPPER_SNAKE_CASE | `SERVER_PORT` |
+| Top-level vals (non-const) | PascalCase | `LightColorScheme` |
 | Private vals/vars | camelCase | `darkTheme`, `stockList` |
 | Colors | PascalCase | `CoffeeBrown`, `DarkRoast` |
 
 ### Import Organization
 
-Organize imports with blank lines between groups:
+Organize imports in logical groups (no blank lines between groups):
 
 1. AndroidX/Compose imports (`androidx.compose.*`)
 2. Material icons (`androidx.compose.material.icons.*`)
@@ -209,9 +210,9 @@ fun testRoot() = testApplication {
 ## Architecture Notes
 
 - **No ViewModels**: Screens manage state directly with `remember { mutableStateOf() }`
-- **Database via expect/actual**: `getDatabase()` is defined with expect/actual pattern
+- **Database initialization**: `getDatabase()` is a common function backed by an injected `DatabaseFactory` via `initDatabase(...)` (see `shared/.../DatabaseProvider.kt`)
 - **Platform-specific code**: Use `iosMain`, `jvmMain`, `androidMain` directories
-- **Navigation**: Uses `NavigationBar` with `NavHost` and sealed class `Screen` for routes
+- **Navigation**: Uses `NavigationBar` with `NavHost` and sealed class `Screen` with `data object` entries
 
 ## Key Dependencies
 
