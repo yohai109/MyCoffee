@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,6 +58,7 @@ fun StockScreen() {
     val scope = rememberCoroutineScope()
     val stockList: List<CoffeeStock> by database.coffeeDao().getAllStock().collectAsState(initial = emptyList())
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingStock by remember { mutableStateOf<CoffeeStock?>(null) }
     
     val sortedStockList = remember(stockList) {
         stockList.sortedBy { 
@@ -115,6 +117,9 @@ fun StockScreen() {
                                     )
                                 )
                             }
+                        },
+                        onEditClick = {
+                            editingStock = stock
                         }
                     )
                 }
@@ -142,6 +147,26 @@ fun StockScreen() {
                 }
             )
         }
+
+        editingStock?.let { stock ->
+            AddStockDialog(
+                initialStock = stock,
+                onDismiss = { editingStock = null },
+                onConfirm = { name, roaster, size, roastDate ->
+                    scope.launch {
+                        database.coffeeDao().updateStock(
+                            stock.copy(
+                                name = name,
+                                roaster = roaster,
+                                size = size,
+                                roastDate = roastDate,
+                            )
+                        )
+                        editingStock = null
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -149,12 +174,14 @@ fun StockScreen() {
 @Composable
 fun AddStockDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String, roaster: String, size: Double, roastDate: LocalDate) -> Unit
+    onConfirm: (name: String, roaster: String, size: Double, roastDate: LocalDate) -> Unit,
+    initialStock: CoffeeStock? = null
 ) {
-    var name by remember { mutableStateOf("") }
-    var roaster by remember { mutableStateOf("") }
-    var sizeText by remember { mutableStateOf("") }
-    var roastDateText by remember { mutableStateOf("") }
+    val isEditing = initialStock != null
+    var name by remember { mutableStateOf(initialStock?.name ?: "") }
+    var roaster by remember { mutableStateOf(initialStock?.roaster ?: "") }
+    var sizeText by remember { mutableStateOf(initialStock?.size?.toString() ?: "") }
+    var roastDateText by remember { mutableStateOf(initialStock?.roastDate?.toString() ?: "") }
     
     val roastDate = try {
         if (roastDateText.isBlank()) null else LocalDate.parse(roastDateText)
@@ -171,7 +198,7 @@ fun AddStockDialog(
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
-                    text = "Add New Stock",
+                    text = if (isEditing) "Edit Stock" else "Add New Stock",
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -223,7 +250,7 @@ fun AddStockDialog(
                         },
                         enabled = isValid
                     ) {
-                        Text("Add")
+                        Text(if (isEditing) "Save" else "Add")
                     }
                 }
             }
@@ -295,13 +322,25 @@ fun StatisticsBanner(stockList: List<CoffeeStock>) {
 fun StockItem(
     stock: CoffeeStock,
     onOpenClick: () -> Unit = {},
-    onFinishClick: () -> Unit = {}
+    onFinishClick: () -> Unit = {},
+    onEditClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = stock.name, style = MaterialTheme.typography.titleLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = stock.name, style = MaterialTheme.typography.titleLarge)
+                if (stock.state != CoffeeState.FINISHED) {
+                    TextButton(onClick = onEditClick) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.width(20.dp))
+                    }
+                }
+            }
             Text(text = "Roaster: ${stock.roaster}", style = MaterialTheme.typography.bodyMedium)
             Row(
                 modifier = Modifier.fillMaxWidth(),
