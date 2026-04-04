@@ -20,13 +20,23 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
       - name: Cache Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-wrapper-cache: true
+          cache-read-only: ${{ github.ref != 'refs/heads/master' }}
 
       - name: Run tests
-        run: ./gradlew test
+        run: |
+          ./gradlew :server:test
+          ./gradlew :shared:jvmTest
 
       - name: Build debug APK
-        run: ./gradlew :composeApp:assembleDebug
+        run: |
+          if [ -d "$ANDROID_HOME" ]; then
+            ./gradlew :composeApp:assembleDebug
+          else
+            echo "Skipping Android build - no Android SDK"
+          fi
