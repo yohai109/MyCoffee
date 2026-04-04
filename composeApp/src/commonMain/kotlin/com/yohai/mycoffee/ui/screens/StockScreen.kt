@@ -17,11 +17,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -59,9 +62,10 @@ fun StockScreen() {
     val stockList: List<CoffeeStock> by database.coffeeDao().getAllStock().collectAsState(initial = emptyList())
     var showAddDialog by remember { mutableStateOf(false) }
     var editingStock by remember { mutableStateOf<CoffeeStock?>(null) }
+    var finishedBagsExpanded by remember { mutableStateOf(false) }
     
-    val sortedStockList = remember(stockList) {
-        stockList.sortedBy { 
+    val activeStockList = remember(stockList) {
+        stockList.filter { it.state != CoffeeState.FINISHED }.sortedBy { 
             when (it.state) {
                 CoffeeState.OPEN -> 0
                 CoffeeState.NEW -> 1
@@ -69,7 +73,11 @@ fun StockScreen() {
             }
         }
     }
-
+    
+    val finishedStockList = remember(stockList) {
+        stockList.filter { it.state == CoffeeState.FINISHED }
+    }
+    
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
@@ -95,7 +103,7 @@ fun StockScreen() {
                 item {
                     StatisticsBanner(stockList)
                 }
-                items(sortedStockList) { stock ->
+                items(activeStockList) { stock ->
                     StockItem(
                         stock = stock,
                         onOpenClick = {
@@ -122,6 +130,27 @@ fun StockScreen() {
                             editingStock = stock
                         }
                     )
+                }
+                
+                if (finishedStockList.isNotEmpty()) {
+                    item {
+                        FinishedBagsHeader(
+                            count = finishedStockList.size,
+                            expanded = finishedBagsExpanded,
+                            onToggle = { finishedBagsExpanded = !finishedBagsExpanded }
+                        )
+                    }
+                    
+                    if (finishedBagsExpanded) {
+                        items(finishedStockList) { stock ->
+                            StockItem(
+                                stock = stock,
+                                onOpenClick = {},
+                                onFinishClick = {},
+                                onEditClick = {}
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -313,6 +342,38 @@ fun StatisticsBanner(stockList: List<CoffeeStock>) {
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FinishedBagsHeader(
+    count: Int,
+    expanded: Boolean,
+    onToggle: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        onClick = onToggle
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Finished Bags ($count)",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Icon(
+                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = if (expanded) "Collapse" else "Expand"
+            )
         }
     }
 }
