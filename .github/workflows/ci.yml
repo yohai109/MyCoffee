@@ -32,7 +32,7 @@ jobs:
         run: |
           ./gradlew :server:test
           ./gradlew :shared:jvmTest
-          ./gradlew test
+          ./gradlew :composeApp:jvmTest
 
       - name: Build debug APK
         run: |
