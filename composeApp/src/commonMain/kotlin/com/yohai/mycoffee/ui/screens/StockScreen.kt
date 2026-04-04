@@ -279,7 +279,7 @@ fun AddStockDialog(
                         },
                         enabled = isValid
                     ) {
-                        Text("Add")
+                        Text(if (isEditing) "Save" else "Add")
                     }
                 }
             }
