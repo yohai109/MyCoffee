@@ -412,4 +412,123 @@ class StockScreenTest {
         assertEquals(CoffeeState.FINISHED, sorted[2].state)
         assertEquals("Finished Coffee", sorted[2].name)
     }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun finishedBagsHeader_displaysCorrectCount() = runComposeUiTest {
+        // When
+        setContent {
+            FinishedBagsHeader(
+                count = 5,
+                expanded = false,
+                onToggle = {}
+            )
+        }
+
+        // Then
+        onNodeWithText("Finished Bags (5)").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun finishedBagsHeader_expandIconToggles() = runComposeUiTest {
+        // When - expanded state
+        setContent {
+            FinishedBagsHeader(
+                count = 3,
+                expanded = true,
+                onToggle = {}
+            )
+        }
+
+        // Then - should show expand less icon
+        onNodeWithContentDescription("Collapse").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun finishedBagsHeader_collapseIconToggles() = runComposeUiTest {
+        // When - collapsed state
+        setContent {
+            FinishedBagsHeader(
+                count = 3,
+                expanded = false,
+                onToggle = {}
+            )
+        }
+
+        // Then - should show expand more icon
+        onNodeWithContentDescription("Expand").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun finishedBagsHeader_callsOnToggle() = runComposeUiTest {
+        // Given
+        var toggleCalled = false
+
+        // When
+        setContent {
+            FinishedBagsHeader(
+                count = 1,
+                expanded = false,
+                onToggle = { toggleCalled = true }
+            )
+        }
+
+        // Click the header
+        onNodeWithText("Finished Bags (1)").performClick()
+
+        // Then
+        assert(toggleCalled)
+    }
+
+    @Test
+    fun separateActiveAndFinishedStock_activeBagsOnlyContainsNonFinished() {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val stockList = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Finished Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.FINISHED,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = today,
+            ),
+            CoffeeStock(
+                id = 2,
+                name = "Open Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.OPEN,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = null,
+            ),
+            CoffeeStock(
+                id = 3,
+                name = "New Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.NEW,
+                size = 250.0,
+                roastDate = today,
+                openDate = null,
+                finishDate = null,
+            )
+        )
+
+        // When - separate into active and finished
+        val activeStock = stockList.filter { it.state != CoffeeState.FINISHED }
+        val finishedStock = stockList.filter { it.state == CoffeeState.FINISHED }
+
+        // Then
+        assertEquals(2, activeStock.size)
+        assertEquals(1, finishedStock.size)
+        assertEquals("Open Coffee", activeStock[0].name)
+        assertEquals("New Coffee", activeStock[1].name)
+        assertEquals("Finished Coffee", finishedStock[0].name)
+    }
 }
