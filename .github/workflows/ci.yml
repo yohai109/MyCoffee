@@ -41,3 +41,10 @@ jobs:
           else
             echo "Skipping Android build - no Android SDK"
           fi
+      - name: Upload Test Report
+        if: always() # Ensures reports upload even if tests fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: '**/build/reports/tests/test/'
+
