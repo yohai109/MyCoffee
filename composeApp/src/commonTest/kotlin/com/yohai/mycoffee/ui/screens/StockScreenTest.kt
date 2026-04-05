@@ -14,7 +14,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class StockScreenTest {
+class StockScreenTest : com.yohai.mycoffee.BaseTest() {
 
     @OptIn(ExperimentalTestApi::class)
     @Test

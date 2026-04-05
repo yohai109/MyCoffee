@@ -3,7 +3,7 @@ package com.yohai.mycoffee.ui.screens
 import androidx.compose.ui.test.*
 import kotlin.test.Test
 
-class BrewScreenTest {
+class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
