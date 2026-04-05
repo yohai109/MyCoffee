@@ -81,21 +81,6 @@ interface CoffeeDao {
     suspend fun deleteStock(stock: CoffeeStock)
 }
 
-@Dao
-interface CoffeeDao {
-    @Query("SELECT * FROM CoffeeStock")
-    fun getAllStock(): Flow<List<CoffeeStock>>
-
-    @Insert
-    suspend fun insertStock(stock: CoffeeStock)
-
-    @Update
-    suspend fun updateStock(stock: CoffeeStock)
-
-    @Delete
-    suspend fun deleteStock(stock: CoffeeStock)
-}
-
 @Database(entities = [CoffeeStock::class, BrewRecord::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
