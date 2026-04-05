@@ -30,9 +30,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ./gradlew :server:test
-          ./gradlew :shared:jvmTest
-          ./gradlew :composeApp:jvmTest
+          ./gradlew :server:test :shared:jvmTest :composeApp:jvmTest
 
       - name: Build debug APK
         run: |
@@ -50,7 +48,7 @@ jobs:
             **/build/reports/tests/*/
 
       - name: Publish test results
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v3
         if: always()
         with:
           name: Unit Tests
