@@ -197,6 +197,194 @@ class StockScreenTest {
         onNodeWithText("Cancel").assertIsDisplayed()
     }
 
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun addStockDialogWithInitialStock_prefillsFields() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val initialStock = CoffeeStock(
+            id = 1,
+            name = "Ethiopian Yirgacheffe",
+            roaster = "Blue Bottle",
+            state = CoffeeState.NEW,
+            size = 250.0,
+            roastDate = today,
+            openDate = null,
+            finishDate = null,
+        )
+
+        // When
+        setContent {
+            AddStockDialog(
+                onDismiss = {},
+                onConfirm = { _, _, _, _ -> },
+                initialStock = initialStock
+            )
+        }
+
+        // Then
+        onNodeWithText("Edit Stock").assertIsDisplayed()
+        onNodeWithText("Save").assertIsDisplayed()
+        onNodeWithText("Add New Stock").assertDoesNotExist()
+        onNodeWithText("Add").assertDoesNotExist()
+        onNodeWithText("Ethiopian Yirgacheffe").assertIsDisplayed()
+        onNodeWithText("Blue Bottle").assertIsDisplayed()
+        onNodeWithText("250.0").assertIsDisplayed()
+        onNodeWithText(today.toString()).assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun addStockDialogWithInitialStock_callsOnConfirmWithPreFilledValues() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val initialStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.NEW,
+            size = 100.0,
+            roastDate = today,
+            openDate = null,
+            finishDate = null,
+        )
+        var confirmCalled = false
+        var confirmedName = ""
+        var confirmedRoaster = ""
+        var confirmedSize = 0.0
+        var confirmedRoastDate: LocalDate? = null
+
+        // When
+        setContent {
+            AddStockDialog(
+                onDismiss = {},
+                onConfirm = { name, roaster, size, roastDate ->
+                    confirmCalled = true
+                    confirmedName = name
+                    confirmedRoaster = roaster
+                    confirmedSize = size
+                    confirmedRoastDate = roastDate
+                },
+                initialStock = initialStock
+            )
+        }
+
+        // Click Save without modifying any fields
+        onNodeWithText("Save").performClick()
+
+        // Then
+        assert(confirmCalled)
+        assertEquals("Test Coffee", confirmedName)
+        assertEquals("Test Roaster", confirmedRoaster)
+        assertEquals(100.0, confirmedSize)
+        assertEquals(today, confirmedRoastDate)
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemShowsEditButtonForNewState() = runComposeUiTest {
+        // Given
+        val testStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.NEW,
+            size = 250.0,
+            roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            openDate = null,
+            finishDate = null,
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithContentDescription("Edit").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemShowsEditButtonForOpenState() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val testStock = CoffeeStock(
+            id = 2,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.OPEN,
+            size = 250.0,
+            roastDate = today,
+            openDate = today,
+            finishDate = null,
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithContentDescription("Edit").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemHidesEditButtonForFinishedState() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val testStock = CoffeeStock(
+            id = 3,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.FINISHED,
+            size = 250.0,
+            roastDate = today,
+            openDate = today,
+            finishDate = today,
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithContentDescription("Edit").assertDoesNotExist()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemEditButtonCallsOnEditClick() = runComposeUiTest {
+        // Given
+        val testStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.NEW,
+            size = 250.0,
+            roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            openDate = null,
+            finishDate = null,
+        )
+        var editClicked = false
+
+        // When
+        setContent {
+            StockItem(
+                stock = testStock,
+                onEditClick = { editClicked = true }
+            )
+        }
+
+        // Click the edit button
+        onNodeWithContentDescription("Edit").performClick()
+
+        // Then
+        assert(editClicked)
+    }
+
     @Test
     fun calculateAverageOpenTime_withNoFinishedBags_returnsNull() {
         // Given
@@ -411,5 +599,124 @@ class StockScreenTest {
         assertEquals("New Coffee", sorted[1].name)
         assertEquals(CoffeeState.FINISHED, sorted[2].state)
         assertEquals("Finished Coffee", sorted[2].name)
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun finishedBagsHeader_displaysCorrectCount() = runComposeUiTest {
+        // When
+        setContent {
+            FinishedBagsHeader(
+                count = 5,
+                expanded = false,
+                onToggle = {}
+            )
+        }
+
+        // Then
+        onNodeWithText("Finished Bags (5)").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun finishedBagsHeader_expandIconToggles() = runComposeUiTest {
+        // When - expanded state
+        setContent {
+            FinishedBagsHeader(
+                count = 3,
+                expanded = true,
+                onToggle = {}
+            )
+        }
+
+        // Then - should show expand less icon
+        onNodeWithContentDescription("Collapse").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun finishedBagsHeader_collapseIconToggles() = runComposeUiTest {
+        // When - collapsed state
+        setContent {
+            FinishedBagsHeader(
+                count = 3,
+                expanded = false,
+                onToggle = {}
+            )
+        }
+
+        // Then - should show expand more icon
+        onNodeWithContentDescription("Expand").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun finishedBagsHeader_callsOnToggle() = runComposeUiTest {
+        // Given
+        var toggleCalled = false
+
+        // When
+        setContent {
+            FinishedBagsHeader(
+                count = 1,
+                expanded = false,
+                onToggle = { toggleCalled = true }
+            )
+        }
+
+        // Click the header
+        onNodeWithText("Finished Bags (1)").performClick()
+
+        // Then
+        assert(toggleCalled)
+    }
+
+    @Test
+    fun separateActiveAndFinishedStock_activeBagsOnlyContainsNonFinished() {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val stockList = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Finished Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.FINISHED,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = today,
+            ),
+            CoffeeStock(
+                id = 2,
+                name = "Open Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.OPEN,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = null,
+            ),
+            CoffeeStock(
+                id = 3,
+                name = "New Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.NEW,
+                size = 250.0,
+                roastDate = today,
+                openDate = null,
+                finishDate = null,
+            )
+        )
+
+        // When - separate into active and finished
+        val activeStock = stockList.filter { it.state != CoffeeState.FINISHED }
+        val finishedStock = stockList.filter { it.state == CoffeeState.FINISHED }
+
+        // Then
+        assertEquals(2, activeStock.size)
+        assertEquals(1, finishedStock.size)
+        assertEquals("Open Coffee", activeStock[0].name)
+        assertEquals("New Coffee", activeStock[1].name)
+        assertEquals("Finished Coffee", finishedStock[0].name)
     }
 }

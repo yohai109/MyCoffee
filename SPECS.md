@@ -7,34 +7,16 @@ Features derived from open GitHub issues and future enhancement ideas.
 ## From Open GitHub Issues
 
 ### 1. Edit Button for Coffee Bags
-**Issue:** #21 | **Priority:** High
+**Issue:** #21 | **Priority:** High | **Status:** Done (PR #25)
 
 **Description:** Bags should have an edit button that opens the creation dialog with the existing data pre-filled.
-
-**Requirements:**
-- Add an edit icon/button to each `StockItem` card
-- Opening edit reuses the `AddStockDialog` but populated with the bag's current data
-- On save, call `updateStock()` instead of `insertStock()`
-- Validation rules remain the same as the add flow
-
-**Files to modify:**
-- `composeApp/src/commonMain/.../ui/screens/StockScreen.kt`
 
 ---
 
 ### 2. Group Finished Bags Under Collapsible Header
-**Issue:** #20 | **Priority:** Medium
+**Issue:** #20 | **Priority:** Medium | **Status:** Done (PR #27)
 
 **Description:** Finished bags should be grouped at the bottom of the list under a collapsible header.
-
-**Requirements:**
-- Display OPEN and NEW bags in the main list as today
-- Add a collapsible section at the bottom labeled "Finished Bags"
-- Collapsed state should be remembered (but does not need to survive process death)
-- Show count of finished bags in the header (e.g., "Finished Bags (5)")
-
-**Files to modify:**
-- `composeApp/src/commonMain/.../ui/screens/StockScreen.kt`
 
 ---
 
@@ -57,38 +39,25 @@ Features derived from open GitHub issues and future enhancement ideas.
 ---
 
 ### 4. Externalize All Texts to Resource Files
-**Issue:** #11 | **Priority:** Low
+**Issue:** #11 | **Priority:** Low | **Status:** Blocked (PR #29)
 
 **Description:** Make sure all user-facing texts are in resource files for i18n support.
 
-**Requirements:**
-- Move all hardcoded strings to `strings.xml` (Android) and equivalent for other platforms
-- Use `stringResource()` in Composables
-- Cover all screens: Stock, Brew, Settings, dialogs, and error messages
+**Status:** Requires significant architectural changes for a KMP project.
 
-**Files to modify:**
-- All screen files under `composeApp/src/commonMain/.../ui/screens/`
-- Resource files under `composeApp/src/androidMain/res/values/strings.xml`
+**Challenges:**
+- Compose Multiplatform doesn't have a built-in cross-platform string resource system
+- Options:
+  1. Use `expect/actual` pattern to provide platform-specific strings
+  2. Use a third-party library like `compose-resources`
+  3. Android-only resources (not ideal for iOS/desktop)
 
 ---
 
 ### 5. Run Tests in CI
-**Issue:** #3 | **Priority:** High
+**Issue:** #3 | **Priority:** High | **Status:** Done (PR #26)
 
 **Description:** CI should run for every PR using GitHub Actions.
-
-**Requirements:**
-- Create a GitHub Actions workflow (`.github/workflows/ci.yml`)
-- Run on every PR and push to main
-- Steps:
-  - Checkout code
-  - Set up JDK
-  - Run `./gradlew test` (all unit tests)
-  - Optionally run lint/check tasks
-- Report pass/fail status on PR
-
-**Files to create:**
-- `.github/workflows/ci.yml`
 
 ---
 
@@ -180,3 +149,5 @@ Features derived from open GitHub issues and future enhancement ideas.
 - Export data as JSON file
 - Import from JSON backup
 - (Future) Cloud sync via the Ktor server
+
+(End of file - total 229 lines)
