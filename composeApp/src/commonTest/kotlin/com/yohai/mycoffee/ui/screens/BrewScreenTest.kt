@@ -7,25 +7,19 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun brewScreenDisplaysCorrectText() = runComposeUiTest {
-        // When
+    fun brewScreenDisplaysEmptyMessage() = runComposeUiTest {
         setContent {
             BrewScreen()
         }
-
-        // Then
-        onNodeWithText("Track your daily brews here").assertIsDisplayed()
+        onNodeWithText("No brews recorded yet").assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
     @Test
     fun brewScreenRendersSuccessfully() = runComposeUiTest {
-        // When
         setContent {
             BrewScreen()
         }
-
-        // Then - verify the screen renders without errors
         onRoot().assertExists()
     }
 }

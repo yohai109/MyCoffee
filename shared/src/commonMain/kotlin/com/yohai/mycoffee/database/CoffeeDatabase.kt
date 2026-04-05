@@ -31,6 +31,40 @@ enum class CoffeeState {
     NEW, OPEN, FINISHED
 }
 
+enum class BrewMethod {
+    POUR_OVER, ESPRESSO, FRENCH_PRESS, AEROPRESS, MOKA_POT, COLD_BREW, DRIP, OTHER
+}
+
+@Entity
+data class BrewRecord(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val coffeeStockId: Long,
+    val date: LocalDate,
+    val method: BrewMethod,
+    val dose: Double,
+    val brewTime: Int, // in seconds
+    val yield: Double?, // in grams
+    val notes: String?
+)
+
+@Dao
+interface BrewDao {
+    @Query("SELECT * FROM BrewRecord ORDER BY date DESC")
+    fun getAllBrews(): Flow<List<BrewRecord>>
+
+    @Query("SELECT * FROM BrewRecord WHERE coffeeStockId = :coffeeStockId ORDER BY date DESC")
+    fun getBrewsForCoffee(coffeeStockId: Long): Flow<List<BrewRecord>>
+
+    @Insert
+    suspend fun insertBrew(brew: BrewRecord)
+
+    @Update
+    suspend fun updateBrew(brew: BrewRecord)
+
+    @Delete
+    suspend fun deleteBrew(brew: BrewRecord)
+}
+
 @Dao
 interface CoffeeDao {
     @Query("SELECT * FROM CoffeeStock")
@@ -46,10 +80,11 @@ interface CoffeeDao {
     suspend fun deleteStock(stock: CoffeeStock)
 }
 
-@Database(entities = [CoffeeStock::class], version = 1)
+@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 1)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
+    abstract fun brewDao(): BrewDao
 }
 
 class Converters {
@@ -61,6 +96,16 @@ class Converters {
     @TypeConverter
     fun dateToTimestamp(date: LocalDate?): String? {
         return date?.toString()
+    }
+
+    @TypeConverter
+    fun fromBrewMethod(value: BrewMethod?): String? {
+        return value?.name
+    }
+
+    @TypeConverter
+    fun toBrewMethod(value: String?): BrewMethod? {
+        return value?.let { BrewMethod.valueOf(it) }
     }
 }
 
