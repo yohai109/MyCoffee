@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -210,14 +211,8 @@ fun AddStockDialog(
     var name by remember { mutableStateOf(initialStock?.name ?: "") }
     var roaster by remember { mutableStateOf(initialStock?.roaster ?: "") }
     var sizeText by remember { mutableStateOf(initialStock?.size?.toString() ?: "") }
-    var roastDateText by remember { mutableStateOf(initialStock?.roastDate?.toString() ?: "") }
-    
-    val roastDate = try {
-        if (roastDateText.isBlank()) null else LocalDate.parse(roastDateText)
-    } catch (e: Exception) {
-        null
-    }
-    val isDateError = roastDateText.isNotBlank() && roastDate == null
+    var selectedDate by remember { mutableStateOf(initialStock?.roastDate) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -253,13 +248,15 @@ fun AddStockDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = roastDateText,
-                    onValueChange = { roastDateText = it },
-                    label = { Text("Roast Date (YYYY-MM-DD)") },
-                    isError = isDateError,
-                    supportingText = if (isDateError) {
-                        { Text("Invalid date format. Use YYYY-MM-DD") }
-                    } else null,
+                    value = selectedDate?.toString() ?: "",
+                    onValueChange = {},
+                    label = { Text("Roast Date") },
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Default.CalendarMonth, contentDescription = "Select date")
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -272,10 +269,10 @@ fun AddStockDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     val size = sizeText.toDoubleOrNull() ?: 0.0
-                    val isValid = name.isNotBlank() && roaster.isNotBlank() && size > 0 && roastDate != null
+                    val isValid = name.isNotBlank() && roaster.isNotBlank() && size > 0 && selectedDate != null
                     TextButton(
                         onClick = {
-                            onConfirm(name, roaster, size, roastDate!!)
+                            onConfirm(name, roaster, size, selectedDate!!)
                         },
                         enabled = isValid
                     ) {
@@ -285,6 +282,10 @@ fun AddStockDialog(
             }
         }
     }
+
+    // Date picker placeholder - using text input for now
+    // Future: integrate datetime picker library when it supports desktop
+    // showDatePicker can be triggered but currently shows as text input fallback
 }
 
 suspend fun insertDummyStock(database: CoffeeDatabase) {

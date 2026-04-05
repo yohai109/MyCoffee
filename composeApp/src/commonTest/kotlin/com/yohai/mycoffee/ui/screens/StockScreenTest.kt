@@ -192,7 +192,7 @@ class StockScreenTest {
         onNodeWithText("Coffee Name").assertIsDisplayed()
         onNodeWithText("Roaster").assertIsDisplayed()
         onNodeWithText("Size (grams)").assertIsDisplayed()
-        onNodeWithText("Roast Date (YYYY-MM-DD)").assertIsDisplayed()
+        onNodeWithText("Roast Date").assertIsDisplayed()
         onNodeWithText("Add").assertIsDisplayed()
         onNodeWithText("Cancel").assertIsDisplayed()
     }

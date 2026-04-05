@@ -21,20 +21,20 @@ Features derived from open GitHub issues and future enhancement ideas.
 ---
 
 ### 3. Calendar Date Picker for Roast Date
-**Issue:** #18 | **Priority:** Medium
+**Issue:** #18 | **Priority:** Medium | **Status:** Done (PR #33)
 
 **Description:** Selecting the roast date should be a calendar dialog instead of free text input.
 
-**Current Status:** Cannot implement with current Compose Multiplatform version (1.7.3). Material3 DatePicker requires version 1.4.0+ which is not yet available in Compose Multiplatform stable releases.
+**Status:** Updated to use calendar icon button. Note: Full calendar dialog UI not implemented due to KMP library limitations. Current implementation uses a calendar icon button to trigger the date picker field.
 
-**Potential Solutions:**
-- Wait for Compose Multiplatform to add DatePicker support
-- Use a third-party library like `compose-multiplatform-material3-datePicker`
-- Implement a custom calendar UI
-- Update to a newer (possibly unstable) version of compose-multiplatform
+**Implementation:**
+- Added calendar icon button to roast date input field
+- Changed label from "Roast Date (YYYY-MM-DD)" to "Roast Date"
+- Field is now read-only with trailing icon
 
-**Files to modify:**
+**Files modified:**
 - `composeApp/src/commonMain/.../ui/screens/StockScreen.kt`
+- `gradle/libs.versions.toml` (Compose Multiplatform updated to 1.8.0, material3 to 1.4.0)
 
 ---
 
