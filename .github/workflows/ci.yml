@@ -47,13 +47,13 @@ jobs:
         with:
           name: test-reports
           path: |
-            **/build/reports/tests/test/
+            **/build/reports/tests/*/
 
       - name: Publish test results
         uses: dorny/test-reporter@v1
         if: always()
         with:
           name: Unit Tests
-          path: '**/build/test-results/test/*.xml'
+          path: '**/build/test-results/*/*.xml'
           reporter: java-junit
           
