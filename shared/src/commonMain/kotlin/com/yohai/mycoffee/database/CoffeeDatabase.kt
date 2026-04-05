@@ -24,7 +24,8 @@ data class CoffeeStock(
     val openDate: LocalDate?,
     val finishDate: LocalDate?,
     val state: CoffeeState,
-    val size: Double
+    val size: Double,
+    val rating: Int? = null
 )
 
 enum class CoffeeState {
@@ -32,21 +33,38 @@ enum class CoffeeState {
 }
 
 enum class BrewMethod {
-    POUR_OVER, ESPRESSO, FRENCH_PRESS, AEROPRESS, DRIP, MOKA, COLD_BREW, OTHER
+    POUR_OVER, ESPRESSO, FRENCH_PRESS, AEROPRESS, MOKA_POT, COLD_BREW, DRIP, OTHER
 }
 
 @Entity
 data class BrewRecord(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val coffeeStockId: Long,
-    val coffeeName: String,
     val date: LocalDate,
     val method: BrewMethod,
     val dose: Double,
-    val yield: Double,
-    val brewTime: Int,
-    val notes: String
+    val brewTime: Int, // in seconds
+    val yield: Double?, // in grams
+    val notes: String?
 )
+
+@Dao
+interface BrewDao {
+    @Query("SELECT * FROM BrewRecord ORDER BY date DESC")
+    fun getAllBrews(): Flow<List<BrewRecord>>
+
+    @Query("SELECT * FROM BrewRecord WHERE coffeeStockId = :coffeeStockId ORDER BY date DESC")
+    fun getBrewsForCoffee(coffeeStockId: Long): Flow<List<BrewRecord>>
+
+    @Insert
+    suspend fun insertBrew(brew: BrewRecord)
+
+    @Update
+    suspend fun updateBrew(brew: BrewRecord)
+
+    @Delete
+    suspend fun deleteBrew(brew: BrewRecord)
+}
 
 @Dao
 interface CoffeeDao {
@@ -63,25 +81,7 @@ interface CoffeeDao {
     suspend fun deleteStock(stock: CoffeeStock)
 }
 
-@Dao
-interface BrewDao {
-    @Query("SELECT * FROM BrewRecord ORDER BY date DESC")
-    fun getAllBrews(): Flow<List<BrewRecord>>
-
-    @Query("SELECT * FROM BrewRecord WHERE coffeeStockId = :coffeeStockId ORDER BY date DESC")
-    fun getBrewsByCoffeeId(coffeeStockId: Long): Flow<List<BrewRecord>>
-
-    @Insert
-    suspend fun insertBrew(brew: BrewRecord)
-
-    @Update
-    suspend fun updateBrew(brew: BrewRecord)
-
-    @Delete
-    suspend fun deleteBrew(brew: BrewRecord)
-}
-
-@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 1)
+@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
@@ -100,13 +100,13 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromBrewMethod(value: BrewMethod): String {
-        return value.name
+    fun fromBrewMethod(value: BrewMethod?): String? {
+        return value?.name
     }
 
     @TypeConverter
-    fun toBrewMethod(value: String): BrewMethod {
-        return BrewMethod.valueOf(value)
+    fun toBrewMethod(value: String?): BrewMethod? {
+        return value?.let { BrewMethod.valueOf(it) }
     }
 }
 

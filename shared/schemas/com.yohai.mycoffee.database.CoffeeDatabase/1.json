@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "fb16e3e53db6eac00e76d2dde7352847",
+    "identityHash": "a2cafd8aba84ecc05f1fdbca6cb9ee49",
     "entities": [
       {
         "tableName": "CoffeeStock",
@@ -61,11 +61,69 @@
             "id"
           ]
         }
+      },
+      {
+        "tableName": "BrewRecord",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `coffeeStockId` INTEGER NOT NULL, `date` TEXT NOT NULL, `method` TEXT NOT NULL, `dose` REAL NOT NULL, `brewTime` INTEGER NOT NULL, `yield` REAL, `notes` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "coffeeStockId",
+            "columnName": "coffeeStockId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "method",
+            "columnName": "method",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dose",
+            "columnName": "dose",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brewTime",
+            "columnName": "brewTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "yield",
+            "columnName": "yield",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fb16e3e53db6eac00e76d2dde7352847')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a2cafd8aba84ecc05f1fdbca6cb9ee49')"
     ]
   }
 }
