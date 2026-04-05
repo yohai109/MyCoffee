@@ -6,7 +6,7 @@ number,title,filename,priority,status,branch name,pr number
 5,Run Tests in CI,ci-tests.md,high,completed,,26
 6,Brew Tracking Screen,brew-tracking.md,medium,in review,brew-tracking,37
 7,Settings Screen,settings-screen.md,low,pending,,
-8,Coffee Bag Rating System,coffee-rating.md,low,in_progress,,
+8,Coffee Bag Rating System,coffee-rating.md,low,in review,coffee-rating,
 9,Coffee Origin & Tasting Notes,origin-tasting-notes.md,low,pending,,
 10,Low Stock Alerts,low-stock-alerts.md,low,pending,,
 11,Brew Analytics Dashboard,brew-analytics.md,low,pending,,

@@ -24,7 +24,8 @@ data class CoffeeStock(
     val openDate: LocalDate?,
     val finishDate: LocalDate?,
     val state: CoffeeState,
-    val size: Double
+    val size: Double,
+    val rating: Int? = null
 )
 
 enum class CoffeeState {
@@ -81,7 +82,7 @@ interface BrewDao {
     suspend fun deleteBrew(brew: BrewRecord)
 }
 
-@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 1)
+@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
