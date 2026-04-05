@@ -216,9 +216,13 @@ fun testRoot() = testApplication {
 
 ## Key Dependencies
 
-- Kotlin 2.1.10
-- Compose Multiplatform 1.7.3
-- Room 2.7.0
-- Ktor 3.0.3
-- kotlinx-datetime 0.6.1
+- Kotlin 2.3.20
+- Compose Multiplatform 1.10.3
+- Material3 1.9.0
+- Navigation Compose 2.9.2
+- Room 2.8.4
+- KSP 2.3.6
+- Ktor 3.4.2
+- Logback 1.5.32
+- kotlinx-datetime 0.7.1
 - Android SDK 36 (compile), minSdk 28

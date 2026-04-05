@@ -30,9 +30,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ./gradlew :server:test
-          ./gradlew :shared:jvmTest
-          ./gradlew :composeApp:jvmTest
+          ./gradlew :server:test :shared:jvmTest :composeApp:jvmTest
 
       - name: Build debug APK
         run: |
@@ -41,3 +39,19 @@ jobs:
           else
             echo "Skipping Android build - no Android SDK"
           fi
+      - name: Upload Test Report
+        if: always() # Ensures reports upload even if tests fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/*/
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v3
+        if: always()
+        with:
+          name: Unit Tests
+          path: '**/build/test-results/*/*.xml'
+          reporter: java-junit
+          
