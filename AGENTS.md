@@ -226,3 +226,11 @@ fun testRoot() = testApplication {
 - Logback 1.5.32
 - kotlinx-datetime 0.7.1
 - Android SDK 36 (compile), minSdk 28
+
+## Git Protection
+
+A pre-commit hook prevents direct commits to `master` or `main` branches. If a commit is attempted on these branches, it will be rejected with an error message.
+
+When the user asks to commit:
+1. Check the current branch with `git symbolic-ref --short HEAD`
+2. If on `master` or `main`, ask the user what to do instead of committing
