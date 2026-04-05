@@ -4,7 +4,7 @@ number,title,filename,priority,status,branch name,pr number
 3,Calendar Date Picker for Roast Date,calendar-date-picker.md,medium,completed,,28
 4,Externalize All Texts to Resource Files,externalize-strings.md,low,blocked,,29
 5,Run Tests in CI,ci-tests.md,high,completed,,26
-6,Brew Tracking Screen,brew-tracking.md,medium,in review,brew-tracking,
+6,Brew Tracking Screen,brew-tracking.md,medium,in review,brew-tracking,37
 7,Settings Screen,settings-screen.md,low,pending,,
 8,Coffee Bag Rating System,coffee-rating.md,low,pending,,
 9,Coffee Origin & Tasting Notes,origin-tasting-notes.md,low,pending,,
