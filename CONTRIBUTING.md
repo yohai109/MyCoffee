@@ -21,7 +21,7 @@ Thank you for your interest in contributing to MyCoffee! We welcome contribution
 
 ### Prerequisites
 
-- JDK 11 or higher
+- JDK 17 or higher
 - Android Studio (for Android development)
 - Xcode (for iOS development, macOS only)
 - Kotlin Multiplatform plugin

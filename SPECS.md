@@ -21,7 +21,7 @@ Features derived from open GitHub issues and future enhancement ideas.
 ---
 
 ### 3. Calendar Date Picker for Roast Date
-**Issue:** #18 | **Priority:** Medium | **Status:** Done (PR #33)
+**Issue:** #18 | **Priority:** Medium | **Status:** Done (PR #28)
 
 **Description:** Selecting the roast date should be a calendar dialog instead of free text input.
 
