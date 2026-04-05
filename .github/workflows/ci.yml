@@ -33,6 +33,7 @@ jobs:
           ./gradlew :server:test
           ./gradlew :shared:jvmTest
           ./gradlew :composeApp:jvmTest
+          ./gradlew test
 
       - name: Build debug APK
         run: |
@@ -48,6 +49,4 @@ jobs:
           name: test-reports
           path: |
             **/build/reports/tests/test/
-            **/build/test-results/
-            **/build-results/
           
