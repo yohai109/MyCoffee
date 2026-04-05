@@ -1,5 +1,6 @@
 package com.yohai.mycoffee.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,11 +17,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -32,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -49,8 +54,11 @@ import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.math.roundToInt
 
@@ -210,14 +218,36 @@ fun AddStockDialog(
     var name by remember { mutableStateOf(initialStock?.name ?: "") }
     var roaster by remember { mutableStateOf(initialStock?.roaster ?: "") }
     var sizeText by remember { mutableStateOf(initialStock?.size?.toString() ?: "") }
-    var roastDateText by remember { mutableStateOf(initialStock?.roastDate?.toString() ?: "") }
-    
-    val roastDate = try {
-        if (roastDateText.isBlank()) null else LocalDate.parse(roastDateText)
-    } catch (e: Exception) {
-        null
+    var selectedDate by remember { mutableStateOf(initialStock?.roastDate) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate?.atStartOfDayIn(TimeZone.UTC)?.toEpochMilliseconds()
+                ?: Clock.System.now().toEpochMilliseconds()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        selectedDate = Instant.fromEpochMilliseconds(millis)
+                            .toLocalDateTime(TimeZone.UTC).date
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
     }
-    val isDateError = roastDateText.isNotBlank() && roastDate == null
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -252,16 +282,23 @@ fun AddStockDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = roastDateText,
-                    onValueChange = { roastDateText = it },
-                    label = { Text("Roast Date (YYYY-MM-DD)") },
-                    isError = isDateError,
-                    supportingText = if (isDateError) {
-                        { Text("Invalid date format. Use YYYY-MM-DD") }
-                    } else null,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = selectedDate?.toString() ?: "",
+                        onValueChange = {},
+                        label = { Text("Roast Date") },
+                        readOnly = true,
+                        trailingIcon = {
+                            Icon(Icons.Default.CalendarMonth, contentDescription = "Select date")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { showDatePicker = true }
+                    )
+                }
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -272,10 +309,10 @@ fun AddStockDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     val size = sizeText.toDoubleOrNull() ?: 0.0
-                    val isValid = name.isNotBlank() && roaster.isNotBlank() && size > 0 && roastDate != null
+                    val isValid = name.isNotBlank() && roaster.isNotBlank() && size > 0 && selectedDate != null
                     TextButton(
                         onClick = {
-                            onConfirm(name, roaster, size, roastDate!!)
+                            onConfirm(name, roaster, size, selectedDate!!)
                         },
                         enabled = isValid
                     ) {
@@ -285,6 +322,7 @@ fun AddStockDialog(
             }
         }
     }
+
 }
 
 suspend fun insertDummyStock(database: CoffeeDatabase) {
