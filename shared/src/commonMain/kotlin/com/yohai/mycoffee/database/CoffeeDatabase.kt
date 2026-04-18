@@ -24,7 +24,8 @@ data class CoffeeStock(
     val openDate: LocalDate?,
     val finishDate: LocalDate?,
     val state: CoffeeState,
-    val size: Double
+    val size: Double,
+    val remainingWeight: Double? = null
 )
 
 enum class CoffeeState {
