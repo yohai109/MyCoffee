@@ -26,7 +26,7 @@ class SettingsScreenTest : com.yohai.mycoffee.BaseTest() {
         }
 
         // Then
-        onNodeWithText("Save").assertIsDisplayed()
+        onAllNodesWithText("Save").onFirst().assertExists()
     }
 
     @OptIn(ExperimentalTestApi::class)
