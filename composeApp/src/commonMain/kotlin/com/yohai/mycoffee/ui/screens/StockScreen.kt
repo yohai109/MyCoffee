@@ -51,6 +51,7 @@ import androidx.compose.ui.window.Dialog
 import com.yohai.mycoffee.database.CoffeeDatabase
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
+import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -356,9 +357,9 @@ fun calculateAverageOpenTime(stockList: List<CoffeeStock>): Double? {
 }
 
 @Composable
-fun StatisticsBanner(stockList: List<CoffeeStock>) {
+fun StatisticsBanner(stockList: List<CoffeeStock>, brewCount: Int = 0, avgDose: Int = 0) {
     val averageOpenTime = calculateAverageOpenTime(stockList)
-    
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
     ) {
@@ -377,6 +378,13 @@ fun StatisticsBanner(stockList: List<CoffeeStock>) {
             } else {
                 Text(
                     text = "Average open time: No finished bags yet",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            if (brewCount > 0) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Total brews: $brewCount (avg ${avgDose}g)",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -416,6 +424,13 @@ fun FinishedBagsHeader(
     }
 }
 
+
+fun calculateBrewStats(brewList: List<BrewRecord>): Pair<Int, Int>? {
+    if (brewList.isEmpty()) return null
+    val totalBrews = brewList.size
+    val avgDose = brewList.map { it.dose }.average().roundToInt()
+    return Pair(totalBrews, avgDose)
+}
 
 @Composable
 fun StockItem(
