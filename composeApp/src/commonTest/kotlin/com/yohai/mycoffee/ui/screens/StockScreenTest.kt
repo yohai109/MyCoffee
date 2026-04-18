@@ -42,7 +42,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         onNodeWithText("Ethiopian Yirgacheffe").assertIsDisplayed()
         onNodeWithText("Roaster: Blue Bottle").assertIsDisplayed()
         onNodeWithText("State: NEW").assertIsDisplayed()
-        onNodeWithText("Size: 250.0g").assertIsDisplayed()
+        onNodeWithText("250g").assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
