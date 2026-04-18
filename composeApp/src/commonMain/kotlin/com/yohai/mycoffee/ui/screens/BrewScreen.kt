@@ -148,6 +148,14 @@ fun BrewScreen() {
                                 notes = notes
                             )
                         )
+                        val stock = coffeeStock.find { it.id == coffeeStockId }
+                        stock?.let {
+                            val currentRemaining = it.remainingWeight ?: it.size
+                            val newRemaining = (currentRemaining - dose).coerceAtLeast(0.0)
+                            database.coffeeDao().updateStock(
+                                it.copy(remainingWeight = newRemaining)
+                            )
+                        }
                         showAddDialog = false
                     }
                 }
@@ -174,6 +182,14 @@ fun BrewScreen() {
                                 notes = notes
                             )
                         )
+                        val stock = coffeeStock.find { it.id == coffeeStockId }
+                        stock?.let {
+                            val currentRemaining = it.remainingWeight ?: it.size
+                            val newRemaining = (currentRemaining - dose).coerceAtLeast(0.0)
+                            database.coffeeDao().updateStock(
+                                it.copy(remainingWeight = newRemaining)
+                            )
+                        }
                         editingBrew = null
                     }
                 }
