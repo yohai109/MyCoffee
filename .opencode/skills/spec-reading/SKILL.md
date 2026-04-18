@@ -42,13 +42,14 @@ When working on a task, follow this workflow exactly:
 2. Change labels to mark as in progress: `gh issue update <number> --remove-label "pending" --add-label "in_progress"`
 3. Read the issue to fully understand the requirements
 4. Switch to master branch
-5. Create a new branch for the task (use issue number in branch name)
-6. Implement the requirements
-7. Write tests that verify everything working as expected
-8. Change labels to mark as in review: `gh issue update <number> --remove-label "in_progress" --add-label "in_review"`
-9. Commit the changes, referencing the issue number
-10. Create a PR for this branch
-11. Update issue labels to mark as merged/completed after PR is merged
+5. update master to match remote
+6. Create a new branch for the task (use issue number in branch name)
+7. Implement the requirements
+8. Write tests that verify everything working as expected
+9. Change labels to mark as in review: `gh issue update <number> --remove-label "in_progress" --add-label "in_review"`
+10. Commit the changes, referencing the issue number
+11. Create a PR for this branch
+12. Update issue labels to mark as merged/completed after PR is merged
 
 # Guidelines
 
@@ -56,3 +57,4 @@ When working on a task, follow this workflow exactly:
 - Each PR should be small yet complete - for example if adding infrastructure, also add a basic usage to verify it works
 - Do not forget tests
 - Reference the issue number in commit messages (e.g., "Closes #123")
+- pr should be linked to the issue so merging the pr will close the issue

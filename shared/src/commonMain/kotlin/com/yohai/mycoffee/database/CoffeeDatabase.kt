@@ -15,6 +15,10 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
+enum class ProcessMethod {
+    WASHED, NATURAL, HONEY, WET_HONEY, ANAEROBIC, OTHER
+}
+
 @Entity
 data class CoffeeStock(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -24,8 +28,12 @@ data class CoffeeStock(
     val openDate: LocalDate?,
     val finishDate: LocalDate?,
     val state: CoffeeState,
-    val size: Double,
-    val rating: Int? = null
+val size: Double,
+    val remainingWeight: Double? = null,
+    val rating: Int? = null,
+    val origin: String? = null,
+    val process: ProcessMethod? = null,
+    val tastingNotes: String? = null
 )
 
 enum class CoffeeState {
@@ -81,7 +89,7 @@ interface CoffeeDao {
     suspend fun deleteStock(stock: CoffeeStock)
 }
 
-@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 2)
+@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 3)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
@@ -108,6 +116,16 @@ class Converters {
     fun toBrewMethod(value: String?): BrewMethod? {
         return value?.let { BrewMethod.valueOf(it) }
     }
+
+    @TypeConverter
+    fun fromProcessMethod(value: String?): ProcessMethod? {
+        return value?.let { ProcessMethod.valueOf(it) }
+    }
+
+    @TypeConverter
+    fun toProcessMethod(value: ProcessMethod?): String? {
+        return value?.name
+    }
 }
 
 fun getRoomDatabase(
@@ -116,21 +134,4 @@ fun getRoomDatabase(
     return builder
         .setDriver(BundledSQLiteDriver())
         .build()
-}
-
-suspend fun CoffeeDatabase.exportToJson(): String {
-    var allStock: List<CoffeeStock> = emptyList()
-    var allBrews: List<BrewRecord> = emptyList()
-
-    coffeeDao().getAllStock().collect { allStock = it }
-    brewDao().getAllBrews().collect { allBrews = it }
-
-    val stockJson = allStock.joinToString(",") { s ->
-        """{"id":${s.id},"name":"${s.name.replace("\"","\\\"")}","roaster":"${s.roaster.replace("\"","\\\"")}","roastDate":"${s.roastDate}","openDate":"${s.openDate}","finishDate":"${s.finishDate}","state":"${s.state}","size":${s.size},"rating":${s.rating}}"""
-    }
-    val brewJson = allBrews.joinToString(",") { b ->
-        """{"id":${b.id},"coffeeStockId":${b.coffeeStockId},"date":"${b.date}","method":"${b.method}","dose":${b.dose},"brewTime":${b.brewTime},"yield":${b.yield},"notes":"${(b.notes ?: "").replace("\"","\\\"")}"""
-    }
-
-    return """{"coffeeStock":[$stockJson],"brewRecords":[$brewJson]}"""
 }

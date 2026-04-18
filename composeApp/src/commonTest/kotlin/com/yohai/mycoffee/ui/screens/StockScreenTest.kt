@@ -3,6 +3,7 @@ package com.yohai.mycoffee.ui.screens
 import androidx.compose.ui.test.*
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
+import com.yohai.mycoffee.database.ProcessMethod
 import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -29,6 +30,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
             openDate = null,
             finishDate = null,
+            remainingWeight = 250.0,
         )
 
         // When
@@ -40,7 +42,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         onNodeWithText("Ethiopian Yirgacheffe").assertIsDisplayed()
         onNodeWithText("Roaster: Blue Bottle").assertIsDisplayed()
         onNodeWithText("State: NEW").assertIsDisplayed()
-        onNodeWithText("Size: 250.0g").assertIsDisplayed()
+        onNodeWithText("250g").assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
@@ -57,6 +59,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             roastDate = today,
             openDate = today,
             finishDate = null,
+            remainingWeight = 500.0,
         )
 
         // When
@@ -68,7 +71,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         onNodeWithText("Colombian Supremo").assertIsDisplayed()
         onNodeWithText("Roaster: Local Roasters").assertIsDisplayed()
         onNodeWithText("State: OPEN").assertIsDisplayed()
-        onNodeWithText("Size: 500.0g").assertIsDisplayed()
+        onNodeWithText("500g").assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
@@ -96,7 +99,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         onNodeWithText("Kenyan AA").assertIsDisplayed()
         onNodeWithText("Roaster: Coffee Masters").assertIsDisplayed()
         onNodeWithText("State: FINISHED").assertIsDisplayed()
-        onNodeWithText("Size: 1000.0g").assertIsDisplayed()
+        onNodeWithText("1000g").assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
@@ -183,7 +186,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _, _ -> }
+                onConfirm = { _, _, _, _, _, _, _ -> }
             )
         }
 
@@ -217,7 +220,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _, _ -> },
+                onConfirm = { _, _, _, _, _, _, _ -> },
                 initialStock = initialStock
             )
         }
@@ -258,7 +261,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { name, roaster, size, roastDate ->
+                onConfirm = { name, roaster, size, roastDate, origin, process, notes ->
                     confirmCalled = true
                     confirmedName = name
                     confirmedRoaster = roaster
