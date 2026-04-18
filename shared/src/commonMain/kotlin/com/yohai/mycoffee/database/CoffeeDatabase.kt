@@ -117,3 +117,26 @@ fun getRoomDatabase(
         .setDriver(BundledSQLiteDriver())
         .build()
 }
+
+suspend fun CoffeeDatabase.exportToJson(): String {
+    var allStock: List<CoffeeStock> = emptyList()
+    var allBrews: List<BrewRecord> = emptyList()
+
+    coffeeDao().getAllStock().collect { allStock = it }
+    brewDao().getAllBrews().collect { allBrews = it }
+
+    val stockJson = allStock.joinToString(",") { s ->
+        """{"id":${s.id},"name":"${s.name.replace("\"","\\\"")}","roaster":"${s.roaster.replace("\"","\\\"")}","roastDate":"${s.roastDate}","openDate":"${s.openDate}","finishDate":"${s.finishDate}","state":"${s.state}","size":${s.size},"rating":${s.rating}}"""
+    }
+    val brewJson = allBrews.joinToString(",") { b ->
+        """{"id":${b.id},"coffeeStockId":${b.coffeeStockId},"date":"${b.date}","method":"${b.method}","dose":${b.dose},"brewTime":${b.brewTime},"yield":${b.yield},"notes":"${(b.notes ?: "").replace("\"","\\\"")}"}"""
+    }
+
+return """{"coffeeStock":[$stockJson],"brewRecords":[$brewJson]}"""
+}
+    val brewJson = allBrews.joinToString(",") { b ->
+        """{"id":${b.id},"coffeeStockId":${b.coffeeStockId},"date":"${b.date}","method":"${b.method}","dose":${b.dose},"brewTime":${b.brewTime},"yield":${b.yield},"notes":"${(b.notes ?: "").replace("\"","\\\"")}"}"""
+    }
+
+    return """{"coffeeStock":[$stockJson],"brewRecords":[$brewJson]}"""
+}
