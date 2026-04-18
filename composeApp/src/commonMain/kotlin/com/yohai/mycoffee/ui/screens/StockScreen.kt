@@ -56,6 +56,7 @@ import androidx.compose.ui.window.Dialog
 import com.yohai.mycoffee.database.CoffeeDatabase
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
+import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.ProcessMethod
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
@@ -484,10 +485,10 @@ fun StarRating(rating: Int?) {
 }
 
 @Composable
-fun StatisticsBanner(stockList: List<CoffeeStock>) {
+fun StatisticsBanner(stockList: List<CoffeeStock>, brewCount: Int = 0, avgDose: Int = 0) {
     val averageOpenTime = calculateAverageOpenTime(stockList)
     val averageRating = calculateAverageRating(stockList)
-    
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
     ) {
@@ -558,6 +559,13 @@ fun FinishedBagsHeader(
     }
 }
 
+
+fun calculateBrewStats(brewList: List<BrewRecord>): Pair<Int, Int>? {
+    if (brewList.isEmpty()) return null
+    val totalBrews = brewList.size
+    val avgDose = brewList.map { it.dose }.average().roundToInt()
+    return Pair(totalBrews, avgDose)
+}
 
 @Composable
 fun StockItem(

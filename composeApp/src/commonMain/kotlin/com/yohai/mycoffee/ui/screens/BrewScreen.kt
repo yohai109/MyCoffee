@@ -64,6 +64,28 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
+import kotlin.math.roundToInt
+
+@Composable
+fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
+    if (brewList.isEmpty()) return
+
+    val totalBrews = brewList.size
+    val avgDose = brewList.map { it.dose }.average().roundToInt()
+    val methodCounts = brewList.groupBy { it.method }.mapValues { it.value.size }
+    val topMethod = methodCounts.maxByOrNull { it.value }?.key
+
+    Card(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Brew Analytics", style = MaterialTheme.typography.titleMedium)
+            Text("Total brews: $totalBrews", style = MaterialTheme.typography.bodyMedium)
+            Text("Average dose: ${avgDose}g", style = MaterialTheme.typography.bodyMedium)
+            topMethod?.let {
+                Text("Favorite method: ${it.name.replace("_", " ")}", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
