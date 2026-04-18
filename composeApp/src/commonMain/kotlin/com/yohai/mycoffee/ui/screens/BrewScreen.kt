@@ -63,6 +63,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlin.math.roundToInt
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
 
 @Composable
 fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
@@ -81,11 +83,8 @@ fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
             topMethod?.let {
                 Text("Favorite method: ${it.name.replace("_", " ")}", style = MaterialTheme.typography.bodyMedium)
             }
-        }
-    }
 }
-import kotlinx.datetime.toLocalDateTime
-import kotlinx.datetime.todayIn
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
