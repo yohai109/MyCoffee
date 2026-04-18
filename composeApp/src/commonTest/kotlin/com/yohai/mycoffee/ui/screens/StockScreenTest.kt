@@ -59,6 +59,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             roastDate = today,
             openDate = today,
             finishDate = null,
+            remainingWeight = 500.0,
         )
 
         // When
@@ -70,7 +71,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         onNodeWithText("Colombian Supremo").assertIsDisplayed()
         onNodeWithText("Roaster: Local Roasters").assertIsDisplayed()
         onNodeWithText("State: OPEN").assertIsDisplayed()
-        onNodeWithText("Size: 500.0g").assertIsDisplayed()
+        onNodeWithText("500g").assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
@@ -98,7 +99,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         onNodeWithText("Kenyan AA").assertIsDisplayed()
         onNodeWithText("Roaster: Coffee Masters").assertIsDisplayed()
         onNodeWithText("State: FINISHED").assertIsDisplayed()
-        onNodeWithText("Size: 1000.0g").assertIsDisplayed()
+        onNodeWithText("1000g").assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
