@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -20,43 +21,22 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.yohai.mycoffee.database.BrewMethod
-import com.yohai.mycoffee.database.Settings
-import com.yohai.mycoffee.database.getDatabase
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen() {
-    val database = remember { getDatabase() }
-    val scope = rememberCoroutineScope()
-    val settings: Settings? by database.settingsDao().getSettings().collectAsState(initial = null)
-
     var useGrams by remember { mutableStateOf(true) }
     var defaultBagSize by remember { mutableStateOf("340") }
     var useDarkTheme by remember { mutableStateOf<Boolean?>(null) }
     var selectedBrewMethod by remember { mutableStateOf<BrewMethod?>(null) }
-
-    var initialized by remember { mutableStateOf(false) }
-
-    settings?.let { s ->
-        if (!initialized) {
-            useGrams = s.useGrams
-            defaultBagSize = s.defaultBagSize.toString()
-            useDarkTheme = s.darkTheme
-            selectedBrewMethod = s.defaultBrewMethod
-            initialized = true
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -153,21 +133,7 @@ fun SettingsScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                androidx.compose.material3.Button(
-                    onClick = {
-                        scope.launch {
-                            val bagSize = defaultBagSize.toDoubleOrNull() ?: 340.0
-                            val newSettings = Settings(
-                                id = 1,
-                                defaultBrewMethod = selectedBrewMethod,
-                                defaultBagSize = bagSize,
-                                useGrams = useGrams,
-                                darkTheme = useDarkTheme
-                            )
-                            database.settingsDao().insertSettings(newSettings)
-                        }
-                    }
-                ) {
+                Button(onClick = { /* TODO: Save settings */ }) {
                     Text("Save")
                 }
             }
