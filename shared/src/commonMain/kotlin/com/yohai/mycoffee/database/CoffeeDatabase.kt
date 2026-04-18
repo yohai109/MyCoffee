@@ -15,6 +15,10 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
+enum class ProcessMethod {
+    WASHED, NATURAL, HONEY, WET_HONEY, ANAEROBIC, OTHER
+}
+
 @Entity
 data class CoffeeStock(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -25,7 +29,10 @@ data class CoffeeStock(
     val finishDate: LocalDate?,
     val state: CoffeeState,
     val size: Double,
-    val rating: Int? = null
+    val rating: Int? = null,
+    val origin: String? = null,
+    val process: ProcessMethod? = null,
+    val tastingNotes: String? = null
 )
 
 enum class CoffeeState {
@@ -46,15 +53,6 @@ data class BrewRecord(
     val brewTime: Int, // in seconds
     val yield: Double?, // in grams
     val notes: String?
-)
-
-@Entity
-data class Settings(
-    @PrimaryKey val id: Int = 1,
-    val defaultBrewMethod: BrewMethod? = null,
-    val defaultBagSize: Double = 340.0,
-    val useGrams: Boolean = true,
-    val darkTheme: Boolean? = null
 )
 
 @Dao
@@ -90,24 +88,11 @@ interface CoffeeDao {
     suspend fun deleteStock(stock: CoffeeStock)
 }
 
-@Dao
-interface SettingsDao {
-    @Query("SELECT * FROM Settings WHERE id = 1")
-    fun getSettings(): Flow<Settings?>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSettings(settings: Settings)
-
-    @Update
-    suspend fun updateSettings(settings: Settings)
-}
-
-@Database(entities = [CoffeeStock::class, BrewRecord::class, Settings::class], version = 3)
+@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 3)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
     abstract fun brewDao(): BrewDao
-    abstract fun settingsDao(): SettingsDao
 }
 
 class Converters {
@@ -129,6 +114,16 @@ class Converters {
     @TypeConverter
     fun toBrewMethod(value: String?): BrewMethod? {
         return value?.let { BrewMethod.valueOf(it) }
+    }
+
+    @TypeConverter
+    fun fromProcessMethod(value: String?): ProcessMethod? {
+        return value?.let { ProcessMethod.valueOf(it) }
+    }
+
+    @TypeConverter
+    fun toProcessMethod(value: ProcessMethod?): String? {
+        return value?.name
     }
 }
 
