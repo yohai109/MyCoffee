@@ -15,6 +15,10 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
+enum class ProcessMethod {
+    WASHED, NATURAL, HONEY, WET_HONEY, ANAEROBIC, OTHER
+}
+
 @Entity
 data class CoffeeStock(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -25,7 +29,10 @@ data class CoffeeStock(
     val finishDate: LocalDate?,
     val state: CoffeeState,
     val size: Double,
-    val rating: Int? = null
+    val rating: Int? = null,
+    val origin: String? = null,
+    val process: ProcessMethod? = null,
+    val tastingNotes: String? = null
 )
 
 enum class CoffeeState {
@@ -81,7 +88,7 @@ interface CoffeeDao {
     suspend fun deleteStock(stock: CoffeeStock)
 }
 
-@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 2)
+@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 3)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
@@ -107,6 +114,16 @@ class Converters {
     @TypeConverter
     fun toBrewMethod(value: String?): BrewMethod? {
         return value?.let { BrewMethod.valueOf(it) }
+    }
+
+    @TypeConverter
+    fun fromProcessMethod(value: String?): ProcessMethod? {
+        return value?.let { ProcessMethod.valueOf(it) }
+    }
+
+    @TypeConverter
+    fun toProcessMethod(value: ProcessMethod?): String? {
+        return value?.name
     }
 }
 

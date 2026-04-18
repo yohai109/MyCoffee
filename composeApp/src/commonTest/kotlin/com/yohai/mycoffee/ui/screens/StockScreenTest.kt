@@ -183,7 +183,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _, _ -> }
+                onConfirm = { _, _, _, _, _, _, _ -> }
             )
         }
 
@@ -217,7 +217,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _, _ -> },
+                onConfirm = { _, _, _, _, _, _, _ -> },
                 initialStock = initialStock
             )
         }
@@ -258,7 +258,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { name, roaster, size, roastDate ->
+                onConfirm = { name, roaster, size, roastDate, origin, process, notes ->
                     confirmCalled = true
                     confirmedName = name
                     confirmedRoaster = roaster
