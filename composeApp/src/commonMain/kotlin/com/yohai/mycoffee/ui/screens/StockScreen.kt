@@ -22,10 +22,14 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -52,6 +56,7 @@ import androidx.compose.ui.window.Dialog
 import com.yohai.mycoffee.database.CoffeeDatabase
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
+import com.yohai.mycoffee.database.ProcessMethod
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -71,6 +76,7 @@ fun StockScreen() {
     val stockList: List<CoffeeStock> by database.coffeeDao().getAllStock().collectAsState(initial = emptyList())
     var showAddDialog by remember { mutableStateOf(false) }
     var editingStock by remember { mutableStateOf<CoffeeStock?>(null) }
+    var finishingStock by remember { mutableStateOf<CoffeeStock?>(null) }
     var finishedBagsExpanded by remember { mutableStateOf(false) }
     
     val activeStockList = remember(stockList) {
@@ -84,7 +90,7 @@ fun StockScreen() {
     }
     
     val finishedStockList = remember(stockList) {
-        stockList.filter { it.state == CoffeeState.FINISHED }
+        stockList.filter { it.state == CoffeeState.FINISHED }.sortedByDescending { it.rating ?: 0 }
     }
     
     Scaffold(
@@ -120,11 +126,14 @@ fun StockScreen() {
                                 database.coffeeDao().updateStock(
                                     stock.copy(
                                         state = CoffeeState.OPEN,
-                                        openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
                                         remainingWeight = stock.size
                                     )
                                 )
                             }
+                        },
+onFinishClick = {
+                            finishingStock = stock
                         },
                         onEditClick = {
                             editingStock = stock
@@ -158,7 +167,7 @@ fun StockScreen() {
         if (showAddDialog) {
             AddStockDialog(
                 onDismiss = { showAddDialog = false },
-                onConfirm = { name, roaster, size, roastDate ->
+                onConfirm = { name, roaster, size, roastDate, origin, process, notes ->
                     scope.launch {
                         database.coffeeDao().insertStock(
                             CoffeeStock(
@@ -169,6 +178,9 @@ fun StockScreen() {
                                 roastDate = roastDate,
                                 openDate = null,
                                 finishDate = null,
+                                origin = origin,
+                                process = process,
+                                tastingNotes = notes,
                             )
                         )
                         showAddDialog = false
@@ -181,7 +193,7 @@ fun StockScreen() {
             AddStockDialog(
                 initialStock = stock,
                 onDismiss = { editingStock = null },
-                onConfirm = { name, roaster, size, roastDate ->
+                onConfirm = { name, roaster, size, roastDate, origin, process, notes ->
                     scope.launch {
                         database.coffeeDao().updateStock(
                             stock.copy(
@@ -189,9 +201,31 @@ fun StockScreen() {
                                 roaster = roaster,
                                 size = size,
                                 roastDate = roastDate,
+                                origin = origin,
+                                process = process,
+                                tastingNotes = notes,
                             )
                         )
                         editingStock = null
+                    }
+                }
+            )
+        }
+
+        finishingStock?.let { stock ->
+            FinishStockDialog(
+                stock = stock,
+                onDismiss = { finishingStock = null },
+                onConfirm = { rating ->
+                    scope.launch {
+                        database.coffeeDao().updateStock(
+                            stock.copy(
+                                state = CoffeeState.FINISHED,
+                                finishDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                                rating = rating
+                            )
+                        )
+                        finishingStock = null
                     }
                 }
             )
@@ -203,7 +237,7 @@ fun StockScreen() {
 @Composable
 fun AddStockDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String, roaster: String, size: Double, roastDate: LocalDate) -> Unit,
+    onConfirm: (name: String, roaster: String, size: Double, roastDate: LocalDate, origin: String?, process: ProcessMethod?, tastingNotes: String?) -> Unit,
     initialStock: CoffeeStock? = null
 ) {
     val isEditing = initialStock != null
@@ -212,6 +246,9 @@ fun AddStockDialog(
     var sizeText by remember { mutableStateOf(initialStock?.size?.toString() ?: "") }
     var selectedDate by remember { mutableStateOf(initialStock?.roastDate) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var origin by remember { mutableStateOf(initialStock?.origin ?: "") }
+    var process by remember { mutableStateOf(initialStock?.process) }
+    var tastingNotes by remember { mutableStateOf(initialStock?.tastingNotes ?: "") }
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
@@ -291,6 +328,53 @@ fun AddStockDialog(
                             .clickable { showDatePicker = true }
                     )
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = origin,
+                    onValueChange = { origin = it },
+                    label = { Text("Origin") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                var processExpanded by remember { mutableStateOf(false) }
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = process?.name?.replace("_", " ") ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Process") },
+                        trailingIcon = {
+                            Icon(
+                                if (processExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = "Select process",
+                                modifier = Modifier.clickable { processExpanded = !processExpanded }
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    DropdownMenu(
+                        expanded = processExpanded,
+                        onDismissRequest = { processExpanded = false }
+                    ) {
+                        ProcessMethod.entries.forEach { method ->
+                            DropdownMenuItem(
+                                text = { Text(method.name.replace("_", " ")) },
+                                onClick = {
+                                    process = method
+                                    processExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = tastingNotes,
+                    onValueChange = { tastingNotes = it },
+                    label = { Text("Tasting Notes") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -304,7 +388,12 @@ fun AddStockDialog(
                     val isValid = name.isNotBlank() && roaster.isNotBlank() && size > 0 && selectedDate != null
                     TextButton(
                         onClick = {
-                            onConfirm(name, roaster, size, selectedDate!!)
+                            onConfirm(
+                                name, roaster, size, selectedDate!!,
+                                origin.ifBlank { null },
+                                process,
+                                tastingNotes.ifBlank { null }
+                            )
                         },
                         enabled = isValid
                     ) {
@@ -347,9 +436,57 @@ fun calculateAverageOpenTime(stockList: List<CoffeeStock>): Double? {
     return totalDays / finishedBags.size
 }
 
+fun calculateAverageRating(stockList: List<CoffeeStock>): Double? {
+    val ratedBags = stockList.filter { it.state == CoffeeState.FINISHED && it.rating != null }
+    
+    if (ratedBags.isEmpty()) {
+        return null
+    }
+    
+    return ratedBags.sumOf { it.rating!! }.toDouble() / ratedBags.size
+}
+
+@Composable
+fun RatingSelector(
+    rating: Int?,
+    onRatingChanged: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        for (i in 1..5) {
+            IconButton(onClick = { onRatingChanged(i) }) {
+                Icon(
+                    imageVector = if (i <= (rating ?: 0)) Icons.Filled.Star else Icons.Filled.StarBorder,
+                    contentDescription = "Star $i",
+                    tint = if (i <= (rating ?: 0)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StarRating(rating: Int?) {
+    if (rating != null) {
+        Row {
+            for (i in 1..5) {
+                Icon(
+                    imageVector = if (i <= rating) Icons.Filled.Star else Icons.Filled.StarBorder,
+                    contentDescription = "Star $i",
+                    tint = if (i <= rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    modifier = Modifier.height(16.dp)
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun StatisticsBanner(stockList: List<CoffeeStock>) {
     val averageOpenTime = calculateAverageOpenTime(stockList)
+    val averageRating = calculateAverageRating(stockList)
     
     Card(
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -369,6 +506,19 @@ fun StatisticsBanner(stockList: List<CoffeeStock>) {
             } else {
                 Text(
                     text = "Average open time: No finished bags yet",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            if (averageRating != null) {
+                val roundedRating = averageRating.roundToInt()
+                Text(
+                    text = "Average rating: $roundedRating stars",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                Text(
+                    text = "Average rating: No rated bags yet",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -451,6 +601,18 @@ fun StockItem(
                     Text(text = "${remaining.toInt()}g", style = MaterialTheme.typography.bodySmall)
                 }
             }
+
+if (stock.origin != null || stock.process != null || stock.tastingNotes != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                stock.origin?.let { Text(text = "Origin: $it", style = MaterialTheme.typography.bodySmall) }
+                stock.process?.let { Text(text = "Process: ${it.name.replace("_", " ")}", style = MaterialTheme.typography.bodySmall) }
+                stock.tastingNotes?.let { Text(text = "Notes: $it", style = MaterialTheme.typography.bodySmall) }
+            }
+
+            if (stock.state == CoffeeState.FINISHED && stock.rating != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                StarRating(stock.rating)
+            }
             
             if (stock.state != CoffeeState.FINISHED) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -466,6 +628,55 @@ fun StockItem(
                         OutlinedButton(onClick = onFinishClick) {
                             Text("Finish")
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FinishStockDialog(
+    stock: CoffeeStock,
+    onDismiss: () -> Unit,
+    onConfirm: (rating: Int?) -> Unit
+) {
+    var rating by remember { mutableStateOf<Int?>(null) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text(
+                    text = "Finish ${stock.name}?",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Text(
+                    text = "Rate this coffee (optional)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                RatingSelector(
+                    rating = rating,
+                    onRatingChanged = { rating = it }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = { onConfirm(rating) }
+                    ) {
+                        Text("Finish")
                     }
                 }
             }

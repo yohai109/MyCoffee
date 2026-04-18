@@ -183,7 +183,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _, _ -> }
+                onConfirm = { _, _, _, _, _, _, _ -> }
             )
         }
 
@@ -217,7 +217,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _, _ -> },
+                onConfirm = { _, _, _, _, _, _, _ -> },
                 initialStock = initialStock
             )
         }
@@ -258,7 +258,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { name, roaster, size, roastDate ->
+                onConfirm = { name, roaster, size, roastDate, origin, process, notes ->
                     confirmCalled = true
                     confirmedName = name
                     confirmedRoaster = roaster
@@ -718,5 +718,240 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         assertEquals("Open Coffee", activeStock[0].name)
         assertEquals("New Coffee", activeStock[1].name)
         assertEquals("Finished Coffee", finishedStock[0].name)
+    }
+
+    @Test
+    fun calculateAverageRating_withNoRatedBags_returnsNull() {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val stockList = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Test Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.FINISHED,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = today,
+                rating = null
+            )
+        )
+
+        val result = calculateAverageRating(stockList)
+
+        assertNull(result)
+    }
+
+    @Test
+    fun calculateAverageRating_withRatedBags_returnsAverage() {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val stockList = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Coffee 1",
+                roaster = "Test Roaster",
+                state = CoffeeState.FINISHED,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = today,
+                rating = 4
+            ),
+            CoffeeStock(
+                id = 2,
+                name = "Coffee 2",
+                roaster = "Test Roaster",
+                state = CoffeeState.FINISHED,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = today,
+                rating = 5
+            )
+        )
+
+        val result = calculateAverageRating(stockList)
+
+        assertEquals(4.5, result)
+    }
+
+    @Test
+    fun calculateAverageRating_ignoresNonFinishedBags() {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val stockList = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Coffee 1",
+                roaster = "Test Roaster",
+                state = CoffeeState.OPEN,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = null,
+                rating = 3
+            ),
+            CoffeeStock(
+                id = 2,
+                name = "Coffee 2",
+                roaster = "Test Roaster",
+                state = CoffeeState.FINISHED,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = today,
+                rating = 5
+            )
+        )
+
+        val result = calculateAverageRating(stockList)
+
+        assertEquals(5.0, result)
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun statisticsBanner_displaysAverageRating() = runComposeUiTest {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val stockList = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Coffee",
+                roaster = "Roaster",
+                state = CoffeeState.FINISHED,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = today,
+                rating = 4
+            )
+        )
+
+        setContent {
+            StatisticsBanner(stockList)
+        }
+
+        onNodeWithText("Average rating: 4 stars").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun statisticsBanner_displaysNoRatedBagsMessage() = runComposeUiTest {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val stockList = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Coffee",
+                roaster = "Roaster",
+                state = CoffeeState.FINISHED,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = today,
+                rating = null
+            )
+        )
+
+        setContent {
+            StatisticsBanner(stockList)
+        }
+
+        onNodeWithText("Average rating: No rated bags yet").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun starRating_displaysFiveStars() = runComposeUiTest {
+        setContent {
+            StarRating(3)
+        }
+
+        onNodeWithContentDescription("Star 1").assertIsDisplayed()
+        onNodeWithContentDescription("Star 2").assertIsDisplayed()
+        onNodeWithContentDescription("Star 3").assertIsDisplayed()
+        onNodeWithContentDescription("Star 4").assertIsDisplayed()
+        onNodeWithContentDescription("Star 5").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItem_displaysRatingForFinishedState() = runComposeUiTest {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val testStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.FINISHED,
+            size = 250.0,
+            roastDate = today,
+            openDate = today,
+            finishDate = today,
+            rating = 4
+        )
+
+        setContent {
+            StockItem(testStock)
+        }
+
+        onNodeWithContentDescription("Star 1").assertIsDisplayed()
+        onNodeWithContentDescription("Star 4").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun finishStockDialog_displaysCorrectly() = runComposeUiTest {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val stock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.OPEN,
+            size = 250.0,
+            roastDate = today,
+            openDate = today,
+            finishDate = null
+        )
+
+        setContent {
+            FinishStockDialog(
+                stock = stock,
+                onDismiss = {},
+                onConfirm = {}
+            )
+        }
+
+        onNodeWithText("Finish Test Coffee?").assertIsDisplayed()
+        onNodeWithText("Rate this coffee (optional)").assertIsDisplayed()
+        onNodeWithText("Cancel").assertIsDisplayed()
+        onNodeWithText("Finish").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun finishStockDialog_callsOnConfirmWithRating() = runComposeUiTest {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val stock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.OPEN,
+            size = 250.0,
+            roastDate = today,
+            openDate = today,
+            finishDate = null
+        )
+        var confirmedRating: Int? = null
+
+        setContent {
+            FinishStockDialog(
+                stock = stock,
+                onDismiss = {},
+                onConfirm = { rating -> confirmedRating = rating }
+            )
+        }
+
+        onNodeWithContentDescription("Star 4").performClick()
+        onNodeWithText("Finish").performClick()
+
+        assertEquals(4, confirmedRating)
     }
 }

@@ -1,51 +1,58 @@
 ---
 name: spec-writing
-description: skill that explains how to create new specs and manage the SPECS catalog
+description: skill that explains how to create new specs using GitHub Issues
 ---
 
 # Overview
 
-This skill explains how to create new feature specifications and properly maintain the SPECS catalog.
+This skill explains how to create new feature specifications using GitHub Issues.
 
 # Steps
 
 ## Creating a New Specification
 
-1. Create a new file in the `SPECS/` directory
-2. The filename should be descriptive and match the feature (e.g., `brew-timer.md`)
-3. Include the following sections in your spec:
-   - **Title**: Clear feature name
+1. Create a new GitHub Issue using `gh issue create`
+2. The issue title should be the feature name
+3. Use labels to categorize: `spec`, `priority:high`, `priority:medium`, `priority:low`
+4. In the issue body, include:
    - **Description**: What the feature does and why
    - **Requirements**: List of specific requirements
    - **Implementation Notes**: Any technical details or considerations
    - **Testing**: How to verify the feature works
 
+## Issue Labels
+
+Use these labels to track spec status:
+- `spec` - Marks the issue as a feature specification
+- `priority:high`, `priority:medium`, `priority:low` - Priority level
+- `pending` - Not yet started
+- `in_progress` - Currently being implemented
+- `in_review` - Ready for review
+- `completed` - Merged and done
+
+## Creating an Issue
+
+```bash
+gh issue create --title "Feature: Brew Timer" \
+  --body "Description: ..." \
+  --label "spec,priority:high,pending"
+```
+
 ## Updating the Catalog
 
-The catalog (`SPECS/catalog.csv`) tracks all specs with these columns:
-- `number`: Sequential ID
-- `title`: Feature title
-- `filename`: Reference to spec file
-- `priority`: `high`, `medium`, or `low`
-- `status`: `pending`, `in_progress`, `in_review`, `completed`
-- `branch_name`: Feature branch name
-- `pr_number`: PR number when created
+To list all specs, use `gh issue list` with label filtering:
 
-When adding a new spec:
-1. Add a new row to the catalog with `pending` status
-2. Assign priority based on importance
-3. Generate the next sequential number
+```bash
+# List all pending specs
+gh issue list --label "spec,pending"
 
-# Catalog Format
-
-```csv
-number,title,filename,priority,status,branch_name,pr_number
-1,Example Feature,example-feature.md,high,pending,,
+# List specs by priority
+gh issue list --label "spec,priority:high"
 ```
 
 # Guidelines
 
 - Keep specs focused and actionable
 - Each spec should be implementable in one PR
-- Update status at each workflow stage
-- Include the PR number when known
+- Update labels at each workflow stage
+- Reference the issue number in commit messages and PRs

@@ -5,46 +5,56 @@ description: skill that explains how to properly go over specs and implement the
 
 # Overview
 
-This skill explains how to properly implement new features and solve open issue of this project while following correct development work flows
+This skill explains how to properly implement new features by working with GitHub Issues and following correct development workflow.
 
 # Steps
 
-## Understanding the available tasks
+## Understanding the Available Tasks
 
-all the features and issue of the project will be inside the folder named 'SPECS'. inside that folder there will be a catalog file.
-the catalog file will contain a table with all the specs that needs to be implemented
-each task will have number, title, filename, priority, status, branch name, pr number
-each task will have it own file inside the specs folder with more details about the task
+All features and issues are tracked as GitHub Issues with the `spec` label. Use `gh issue list` to see available specs:
 
-## Deciding on what task to work
+```bash
+# List all pending specs
+gh issue list --label "spec,pending"
 
-after you saw the available tasks you now have 3 options to choose from according to the users request.
+# List by priority
+gh issue list --label "spec,priority:high"
 
-1. go over them one by one, by order of priority and implement all of them
-2. implement a specific one the user requested
-3. implement something else
+# List all specs regardless of status
+gh issue list --label "spec"
+```
 
-make sure you do not work on finished tasks. look at the status in the catalog for this info
+## Deciding on What Task to Work On
 
+After viewing available tasks, you have 3 options:
 
-## Work flow of working on one task
+1. Go over them one by one, by priority, and implement all of them
+2. Implement a specific one the user requested
+3. Implement something else
 
-when working on a task you should follow this workflow exactly
+Make sure not to work on completed tasks (filter by labels).
 
-1. change the status in the catalog to in progress
-2. read the task's file to fully understand the requirements
-3. switch branches to master
-4. create a new branch for the task
-5. implement the requirements
-6. write tests that verify that every thing working as expected (when possible)
-7. update the status in the catalog to in review
-8. commit the changes. include the catalog and any spec changes
-9. create a pr for this branch
-10. update the catalog with the pr number and the branch name
-11. commit the updates to the catalog
+## Work Flow of Working on One Task
 
-# guidelines
+When working on a task, follow this workflow exactly:
 
-* always make sure everything works as expected
-* each pr should be small yet complete. for example if adding an infra of some sort, add the most basic functionality and one usage of it to make sure its work
-* do not forget tests 
+1. Assign the issue to yourself (optional): `gh issue update <number> --add-assignee @me`
+2. Change labels to mark as in progress: `gh issue update <number> --remove-label "pending" --add-label "in_progress"`
+3. Read the issue to fully understand the requirements
+4. Switch to master branch
+5. update master to match remote
+6. Create a new branch for the task (use issue number in branch name)
+7. Implement the requirements
+8. Write tests that verify everything working as expected
+9. Change labels to mark as in review: `gh issue update <number> --remove-label "in_progress" --add-label "in_review"`
+10. Commit the changes, referencing the issue number
+11. Create a PR for this branch
+12. Update issue labels to mark as merged/completed after PR is merged
+
+# Guidelines
+
+- Always make sure everything works as expected
+- Each PR should be small yet complete - for example if adding infrastructure, also add a basic usage to verify it works
+- Do not forget tests
+- Reference the issue number in commit messages (e.g., "Closes #123")
+- pr should be linked to the issue so merging the pr will close the issue
