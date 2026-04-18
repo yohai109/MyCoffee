@@ -7,25 +7,37 @@ class SettingsScreenTest : com.yohai.mycoffee.BaseTest() {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun settingsScreenDisplaysCorrectText() = runComposeUiTest {
+    fun settingsScreenDisplaysUnitsSection() = runComposeUiTest {
         // When
         setContent {
             SettingsScreen()
         }
 
         // Then
-        onNodeWithText("App settings and preferences").assertIsDisplayed()
+        onNodeWithText("Units").assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun settingsScreenRendersSuccessfully() = runComposeUiTest {
+    fun settingsScreenDisplaysSaveButton() = runComposeUiTest {
         // When
         setContent {
             SettingsScreen()
         }
 
         // Then
-        onRoot().assertExists()
+        onAllNodesWithText("Save").onFirst().assertExists()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun settingsScreenDisplaysDefaultBrewMethod() = runComposeUiTest {
+        // When
+        setContent {
+            SettingsScreen()
+        }
+
+        // Then
+        onNodeWithText("Default Brew Method").assertIsDisplayed()
     }
 }
