@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Star
@@ -125,12 +126,13 @@ fun StockScreen() {
                                 database.coffeeDao().updateStock(
                                     stock.copy(
                                         state = CoffeeState.OPEN,
-                                        openDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
+openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                                        remainingWeight = stock.size
                                     )
                                 )
                             }
                         },
-                        onFinishClick = {
+onFinishClick = {
                             finishingStock = stock
                         },
                         onEditClick = {
@@ -586,7 +588,18 @@ fun StockItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(text = "State: ${stock.state}", style = MaterialTheme.typography.bodySmall)
-                Text(text = "Size: ${stock.size}g", style = MaterialTheme.typography.bodySmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val remaining = stock.remainingWeight ?: stock.size
+                    if (remaining < 50) {
+                        Icon(
+                            Icons.Default.Error,
+                            contentDescription = "Low stock",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
+                    }
+                    Text(text = "${remaining.toInt()}g", style = MaterialTheme.typography.bodySmall)
+                }
             }
 
 if (stock.origin != null || stock.process != null || stock.tastingNotes != null) {
