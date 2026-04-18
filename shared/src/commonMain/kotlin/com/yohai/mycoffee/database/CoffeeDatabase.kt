@@ -55,15 +55,6 @@ data class BrewRecord(
     val notes: String?
 )
 
-@Entity
-data class Settings(
-    @PrimaryKey val id: Int = 1,
-    val defaultBrewMethod: BrewMethod? = null,
-    val defaultBagSize: Double = 340.0,
-    val useGrams: Boolean = true,
-    val darkTheme: Boolean? = null
-)
-
 @Dao
 interface BrewDao {
     @Query("SELECT * FROM BrewRecord ORDER BY date DESC")
@@ -97,28 +88,11 @@ interface CoffeeDao {
     suspend fun deleteStock(stock: CoffeeStock)
 }
 
-<<<<<<< HEAD
-@Dao
-interface SettingsDao {
-    @Query("SELECT * FROM Settings WHERE id = 1")
-    fun getSettings(): Flow<Settings?>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSettings(settings: Settings)
-
-    @Update
-    suspend fun updateSettings(settings: Settings)
-}
-
-@Database(entities = [CoffeeStock::class, BrewRecord::class, Settings::class], version = 4)
-=======
-@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 2)
->>>>>>> origin/master
+@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 3)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
     abstract fun brewDao(): BrewDao
-    abstract fun settingsDao(): SettingsDao
 }
 
 class Converters {
