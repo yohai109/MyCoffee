@@ -3,6 +3,7 @@ package com.yohai.mycoffee.ui.screens
 import androidx.compose.ui.test.*
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
+import com.yohai.mycoffee.database.ProcessMethod
 import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -29,6 +30,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
             openDate = null,
             finishDate = null,
+            remainingWeight = 250.0,
         )
 
         // When
