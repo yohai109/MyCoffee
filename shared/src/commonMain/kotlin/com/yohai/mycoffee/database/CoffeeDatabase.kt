@@ -97,6 +97,7 @@ interface CoffeeDao {
     suspend fun deleteStock(stock: CoffeeStock)
 }
 
+<<<<<<< HEAD
 @Dao
 interface SettingsDao {
     @Query("SELECT * FROM Settings WHERE id = 1")
@@ -110,6 +111,9 @@ interface SettingsDao {
 }
 
 @Database(entities = [CoffeeStock::class, BrewRecord::class, Settings::class], version = 4)
+=======
+@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 2)
+>>>>>>> origin/master
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
