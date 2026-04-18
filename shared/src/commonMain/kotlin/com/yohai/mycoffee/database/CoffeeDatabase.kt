@@ -122,8 +122,8 @@ class Converters {
     }
 
     @TypeConverter
-    fun toProcessMethod(value: String?): ProcessMethod? {
-        return value?.let { ProcessMethod.valueOf(it) }
+    fun toProcessMethod(value: ProcessMethod?): String? {
+        return value?.name
     }
 }
 
