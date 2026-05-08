@@ -11,6 +11,8 @@ This skill guides you through creating a pull request for the MyCoffee project.
 
 **Do NOT commit to the `master` branch.** Always work on feature branches and submit PRs.
 
+A pre-commit hook prevents direct commits to `master` or `main`. If a commit is attempted on these branches, it will be rejected.
+
 ## Prerequisites
 
 1. Fork the repository on GitHub
@@ -36,6 +38,12 @@ git checkout -b feature/your-feature-name
 ```bash
 git add .
 git commit -m "feat: add new feature description"
+```
+
+Reference the issue number in the commit message body:
+
+```bash
+git commit -m "feat: add brew timer feature" -m "Closes #123"
 ```
 
 ## Commit Message Format
@@ -111,6 +119,9 @@ Brief description of changes.
 - [ ] No force unwrapping (`!!`)
 - [ ] Error handling in place
 - [ ] Documentation updated if needed
+- [ ] Issue referenced in commit or PR body (e.g., `Closes #123`)
+- [ ] `./gradlew test` passes
+- [ ] `./gradlew :composeApp:assembleDebug` builds successfully
 
 ## After Approval
 
@@ -119,6 +130,11 @@ Once your PR is approved:
 2. Delete the feature branch
 3. Pull latest changes to local master:
    ```bash
-   git checkout master
-   git pull origin master
-   ```
+    git checkout master
+    git pull origin master
+    ```
+
+## Related Skills
+
+- [Spec Reading](../spec-reading/SKILL.md) — full workflow from issue to PR, including label management
+- [Build & Test](../build-and-test/SKILL.md) — build and test commands to verify before pushing

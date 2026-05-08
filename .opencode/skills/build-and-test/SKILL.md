@@ -28,13 +28,30 @@ This skill provides commands for building and testing the MyCoffee Kotlin Multip
 ```
 
 ### iOS
-Open `/iosApp` directory in Xcode and run from there.
+Open `/iosApp` directory in Xcode and run from there. **Requires macOS.**
+
+## Platform Requirements
+
+| Target | Requires |
+|--------|----------|
+| Android build | Android SDK (configured in local.properties) |
+| Android tests | `./gradlew :composeApp:testDebugUnitTest` runs on JVM with Robolectric — no emulator needed |
+| iOS build/test | macOS only |
+| Desktop (JVM) | Any OS with JDK 11+ |
+| Server | Any OS with JDK 11+ |
 
 ## Test Commands
 
-### Run All Tests
+### Run All JVM Tests (Cross-Platform)
 ```bash
 ./gradlew test
+```
+This runs JVM tests across all modules. Platform-specific tests (iOS, Android) are excluded.
+
+### Run All Tests Including Platform-Specific
+```bash
+./gradlew :composeApp:allTests               # All composeApp tests (aggregate report)
+./gradlew :shared:allTests                    # All shared module tests
 ```
 
 ### Run Single Test Class
@@ -67,3 +84,8 @@ Open `/iosApp` directory in Xcode and run from there.
 | composeApp | /composeApp | Compose Multiplatform UI |
 | server | /server | Ktor server application |
 | shared | /shared | Common code with Room database |
+
+## Related Skills
+
+- [Write Tests](../write-tests/SKILL.md) — comprehensive testing patterns for Compose UI, unit, and server tests
+- [Creating a PR](../creating-pr/SKILL.md) — PR workflow including pre-submit verification

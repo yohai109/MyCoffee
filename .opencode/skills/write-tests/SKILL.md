@@ -2,7 +2,6 @@
 name: write-tests
 description: Guide for writing Compose UI tests, unit tests, and Ktor server tests with patterns and examples.
 ---
-
 # Write Tests
 
 This skill guides you through writing tests for the MyCoffee project.
@@ -18,11 +17,53 @@ This skill guides you through writing tests for the MyCoffee project.
 | Server Tests | `server/src/test/kotlin/` |
 | Shared Tests | `shared/src/commonTest/kotlin/` |
 
+## Base Test Setup
+
+All screen tests use a `BaseTest` class that initializes an in-memory Room database:
+
+```kotlin
+// composeApp/src/commonTest/kotlin/com/yohai/mycoffee/BaseTest.kt
+package com.yohai.mycoffee
+
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import com.yohai.mycoffee.database.CoffeeDatabase
+import com.yohai.mycoffee.database.DatabaseFactory
+import com.yohai.mycoffee.database.initDatabase
+import kotlin.test.BeforeTest
+
+class TestDatabaseFactory : DatabaseFactory {
+    override fun createBuilder(): RoomDatabase.Builder<CoffeeDatabase> {
+        return Room.inMemoryDatabaseBuilder<CoffeeDatabase>()
+    }
+}
+
+open class BaseTest {
+    @BeforeTest
+    fun setup() {
+        initDatabase(TestDatabaseFactory())
+    }
+}
+```
+
+Screen test classes extend `BaseTest`:
+
+```kotlin
+class MyScreenTest : com.yohai.mycoffee.BaseTest() {
+    // tests here
+}
+```
+
 ## Compose UI Tests
 
 ### Setup
 ```kotlin
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertDoesNotExist
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,13 +75,14 @@ import kotlin.test.assertEquals
 @Test
 fun componentName_behavior_expectedResult() = runComposeUiTest {
     // Given
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
     val testData = TestData(...)
-    
+
     // When
     setContent {
         ComponentUnderTest(testData)
     }
-    
+
     // Then
     onNodeWithText("Expected Text").assertIsDisplayed()
 }
@@ -50,26 +92,193 @@ fun componentName_behavior_expectedResult() = runComposeUiTest {
 ```kotlin
 onNodeWithText("Text").assertIsDisplayed()
 onNodeWithText("Text").assertDoesNotExist()
-onNodeWithText("Text").assertIsEnabled()
-onNodeWithText("Text").assertIsNotEnabled()
 onNodeWithText("Text", substring = true).assertIsDisplayed()
+onNodeWithContentDescription("Edit").assertIsDisplayed()
+onNodeWithContentDescription("Delete").assertDoesNotExist()
 ```
 
 ### Interacting with UI
 ```kotlin
-onNodeWithText("Button").performClick()
-onNodeWithText("TextField").performTextInput("user input")
-onNodeWithText("Checkbox").performToggle()
+// Click buttons
+onNodeWithText("Save").performClick()
+onNodeWithContentDescription("Edit").performClick()
+
+// Assert callbacks fired
+var callbackCalled = false
+onNodeWithText("Save").performClick()
+assert(callbackCalled)
+```
+
+### Full Compose UI Test Example (from StockScreenTest)
+
+```kotlin
+@OptIn(ExperimentalTestApi::class)
+@Test
+fun stockItemDisplaysCorrectInformation() = runComposeUiTest {
+    // Given
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val testStock = CoffeeStock(
+        id = 1,
+        name = "Ethiopian Yirgacheffe",
+        roaster = "Blue Bottle",
+        state = CoffeeState.NEW,
+        size = 250.0,
+        roastDate = today,
+        openDate = null,
+        finishDate = null,
+        remainingWeight = 250.0,
+    )
+
+    // When
+    setContent {
+        StockItem(testStock)
+    }
+
+    // Then
+    onNodeWithText("Ethiopian Yirgacheffe").assertIsDisplayed()
+    onNodeWithText("Roaster: Blue Bottle").assertIsDisplayed()
+    onNodeWithText("State: NEW").assertIsDisplayed()
+    onNodeWithText("250g").assertIsDisplayed()
+}
+```
+
+### Testing State-Dependent Visibility
+
+```kotlin
+@OptIn(ExperimentalTestApi::class)
+@Test
+fun stockItemShowsOpenButtonForNewState() = runComposeUiTest {
+    val testStock = CoffeeStock(
+        id = 1, name = "Test Coffee", roaster = "Test Roaster",
+        state = CoffeeState.NEW, size = 250.0,
+        roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+        openDate = null, finishDate = null,
+    )
+    setContent { StockItem(testStock) }
+    onNodeWithText("Open").assertIsDisplayed()
+    onNodeWithText("Finish").assertDoesNotExist()
+}
+
+@OptIn(ExperimentalTestApi::class)
+@Test
+fun stockItemHidesButtonsForFinishedState() = runComposeUiTest {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val testStock = CoffeeStock(
+        id = 3, name = "Test Coffee", roaster = "Test Roaster",
+        state = CoffeeState.FINISHED, size = 250.0,
+        roastDate = today, openDate = today, finishDate = today,
+    )
+    setContent { StockItem(testStock) }
+    onNodeWithText("Open").assertDoesNotExist()
+    onNodeWithText("Finish").assertDoesNotExist()
+}
+```
+
+### Testing Callback Invocation
+
+```kotlin
+@OptIn(ExperimentalTestApi::class)
+@Test
+fun stockItemEditButtonCallsOnEditClick() = runComposeUiTest {
+    // Given
+    var editClicked = false
+    val testStock = CoffeeStock(
+        id = 1, name = "Test Coffee", roaster = "Test Roaster",
+        state = CoffeeState.NEW, size = 250.0,
+        roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+        openDate = null, finishDate = null,
+    )
+
+    // When
+    setContent {
+        StockItem(stock = testStock, onEditClick = { editClicked = true })
+    }
+    onNodeWithContentDescription("Edit").performClick()
+
+    // Then
+    assert(editClicked)
+}
+```
+
+### Testing Dialogs
+
+```kotlin
+@OptIn(ExperimentalTestApi::class)
+@Test
+fun addDialogDisplaysCorrectly() = runComposeUiTest {
+    setContent {
+        AddDialog(onDismiss = {}, onConfirm = { _, _, _, _, _, _, _ -> })
+    }
+    onNodeWithText("Add New Item").assertIsDisplayed()
+    onNodeWithText("Name").assertIsDisplayed()
+    onNodeWithText("Cancel").assertIsDisplayed()
+    onNodeWithText("Add").assertIsDisplayed()
+}
+
+@OptIn(ExperimentalTestApi::class)
+@Test
+fun addDialogWithInitialData_prefillsFields() = runComposeUiTest {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val initialItem = CoffeeStock(
+        id = 1, name = "Ethiopian Yirgacheffe", roaster = "Blue Bottle",
+        state = CoffeeState.NEW, size = 250.0, roastDate = today,
+        openDate = null, finishDate = null,
+    )
+    setContent {
+        AddDialog(onDismiss = {}, onConfirm = { _, _, _, _, _, _, _ -> }, initialStock = initialItem)
+    }
+    onNodeWithText("Edit Stock").assertIsDisplayed()
+    onNodeWithText("Save").assertIsDisplayed()
+    onNodeWithText("Ethiopian Yirgacheffe").assertIsDisplayed()
+}
+```
+
+### Testing callbacks with assertions
+
+```kotlin
+@OptIn(ExperimentalTestApi::class)
+@Test
+fun addDialog_callsOnConfirmWithPreFilledValues() = runComposeUiTest {
+    // Given
+    var confirmCalled = false
+    var confirmedName = ""
+
+    setContent {
+        AddDialog(
+            onDismiss = {},
+            onConfirm = { name, _, _, _, _, _, _ ->
+                confirmCalled = true
+                confirmedName = name
+            },
+            initialStock = initialStock
+        )
+    }
+
+    // When
+    onNodeWithText("Save").performClick()
+
+    // Then
+    assert(confirmCalled)
+    assertEquals("Test Coffee", confirmedName)
+}
 ```
 
 ## Unit Tests
 
-### Setup
+Unit tests for utility functions live in the same file as the corresponding screen test.
+
+### Date API
+
+Always use `Clock.System.todayIn(TimeZone.currentSystemDefault())` for current date:
+
 ```kotlin
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 ```
 
 ### Test Template
@@ -77,13 +286,66 @@ import kotlin.test.assertTrue
 @Test
 fun functionName_withCondition_expectedResult() {
     // Given
-    val input = prepareInput()
-    
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val input = listOf(...)
+
     // When
     val result = functionUnderTest(input)
-    
+
     // Then
     assertEquals(expected, result)
+}
+```
+
+### Full Unit Test Example
+
+```kotlin
+@Test
+fun calculateAverageOpenTime_withNoFinishedBags_returnsNull() {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val stockList = listOf(
+        CoffeeStock(id = 1, state = CoffeeState.NEW, size = 250.0, roastDate = today,
+            openDate = null, finishDate = null, roaster = "R", name = "C"),
+        CoffeeStock(id = 2, state = CoffeeState.OPEN, size = 250.0, roastDate = today,
+            openDate = today, finishDate = null, roaster = "R", name = "C"),
+    )
+    val result = calculateAverageOpenTime(stockList)
+    assertNull(result)
+}
+
+@Test
+fun calculateAverageOpenTime_withFinishedBags_returnsAverage() {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val tenDaysAgo = today.minus(10, DateTimeUnit.DAY)
+    val stockList = listOf(
+        CoffeeStock(id = 1, state = CoffeeState.FINISHED, size = 250.0,
+            roastDate = tenDaysAgo, openDate = tenDaysAgo, finishDate = today,
+            roaster = "R", name = "C"),
+        CoffeeStock(id = 2, state = CoffeeState.FINISHED, size = 250.0,
+            roastDate = tenDaysAgo, openDate = tenDaysAgo, finishDate = today,
+            roaster = "R", name = "C"),
+    )
+    val result = calculateAverageOpenTime(stockList)
+    assertEquals(10.0, result)
+}
+```
+
+## Testing with In-Memory Database
+
+Use `TestDatabaseFactory` to test DAO operations without a real database:
+
+```kotlin
+@Test
+fun insertAndQueryStock() = runTest {
+    val db = getDatabase()
+    val dao = db.coffeeDao()
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+
+    dao.insertStock(CoffeeStock(name = "Test", roaster = "R", state = CoffeeState.NEW,
+        size = 250.0, roastDate = today, openDate = null, finishDate = null))
+
+    val all = dao.getAllStock().first()
+    assertEquals(1, all.size)
 }
 ```
 
@@ -103,32 +365,6 @@ fun endpoint_returnsExpectedResponse() = testApplication {
 }
 ```
 
-## Testing Helper Functions
-
-Functions like `calculateAverageOpenTime()` at the bottom of screen files should be tested with unit tests:
-
-```kotlin
-@Test
-fun calculateAverageOpenTime_withEmptyList_returnsNull() {
-    val result = calculateAverageOpenTime(emptyList())
-    assertNull(result)
-}
-
-@Test
-fun calculateAverageOpenTime_withFinishedBags_returnsAverage() {
-    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-    val tenDaysAgo = today.minus(10, DateTimeUnit.DAY)
-    
-    val stockList = listOf(
-        CoffeeStock(id = 1, state = CoffeeState.FINISHED, openDate = tenDaysAgo, finishDate = today, ...),
-        CoffeeStock(id = 2, state = CoffeeState.FINISHED, openDate = tenDaysAgo, finishDate = today, ...)
-    )
-    
-    val result = calculateAverageOpenTime(stockList)
-    assertEquals(10.0, result)
-}
-```
-
 ## Running Tests
 
 ```bash
@@ -142,7 +378,13 @@ fun calculateAverageOpenTime_withFinishedBags_returnsAverage() {
 ./gradlew test
 ```
 
+See [build-and-test](../build-and-test/SKILL.md) for the full list of test commands per module.
+
 ## Test Naming Convention
 
 - Class: `<Component>Test` (e.g., `StockScreenTest`)
 - Method: `methodName_scenario_expectedBehavior` (e.g., `calculateAverageOpenTime_withNoFinishedBags_returnsNull`)
+
+## Related Skills
+
+- [Build & Test](../build-and-test/SKILL.md) — for running tests and interpreting results

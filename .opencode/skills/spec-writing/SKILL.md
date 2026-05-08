@@ -56,3 +56,9 @@ gh issue list --label "spec,priority:high"
 - Each spec should be implementable in one PR
 - Update labels at each workflow stage
 - Reference the issue number in commit messages and PRs
+- Labels must exist in the repository before use. Run `gh label list` to verify available labels.
+
+## Related Skills
+
+- [Spec Reading](../spec-reading/SKILL.md) — workflow for implementing specs
+- [Creating a PR](../creating-pr/SKILL.md) — PR creation workflow
