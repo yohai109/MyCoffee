@@ -46,10 +46,11 @@ When working on a task, follow this workflow exactly:
 6. Create a new branch for the task (use issue number in branch name)
 7. Implement the requirements
 8. Write tests that verify everything working as expected
-9. Change labels to mark as in review: `gh issue update <number> --remove-label "in_progress" --add-label "in_review"`
-10. Commit the changes, referencing the issue number
-11. Create a PR for this branch
-12. Update issue labels to mark as merged/completed after PR is merged
+9. Run `./gradlew test` to ensure all tests pass
+10. Change labels to mark as in review: `gh issue update <number> --remove-label "in_progress" --add-label "in_review"`
+11. Commit the changes, referencing the issue number
+12. Create a PR for this branch (see [Creating a PR](../creating-pr/SKILL.md))
+13. Update issue labels to mark as merged/completed after PR is merged
 
 # Guidelines
 
@@ -58,3 +59,8 @@ When working on a task, follow this workflow exactly:
 - Do not forget tests
 - Reference the issue number in commit messages (e.g., "Closes #123")
 - pr should be linked to the issue so merging the pr will close the issue
+
+## Related Skills
+
+- [Creating a PR](../creating-pr/SKILL.md) — PR creation, commit message format, and review checklist
+- [Spec Writing](../spec-writing/SKILL.md) — creating new feature specifications
