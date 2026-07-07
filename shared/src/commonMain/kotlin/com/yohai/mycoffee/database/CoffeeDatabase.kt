@@ -11,6 +11,8 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Update
+import androidx.room.migration.Migration
+import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
@@ -33,7 +35,9 @@ val size: Double,
     val rating: Int? = null,
     val origin: String? = null,
     val process: ProcessMethod? = null,
-    val tastingNotes: String? = null
+    val tastingNotes: String? = null,
+    val height: Int? = null,
+    val species: String? = null
 )
 
 enum class CoffeeState {
@@ -89,7 +93,7 @@ interface CoffeeDao {
     suspend fun deleteStock(stock: CoffeeStock)
 }
 
-@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 3)
+@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 4)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
@@ -128,10 +132,23 @@ class Converters {
     }
 }
 
+private val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(connection: SQLiteConnection) {
+        for (sql in listOf(
+            "ALTER TABLE CoffeeStock ADD COLUMN height INTEGER DEFAULT NULL",
+            "ALTER TABLE CoffeeStock ADD COLUMN species TEXT DEFAULT NULL"
+        )) {
+            val stmt = connection.prepare(sql)
+            try { stmt.step() } finally { stmt.close() }
+        }
+    }
+}
+
 fun getRoomDatabase(
     builder: RoomDatabase.Builder<CoffeeDatabase>
 ): CoffeeDatabase {
     return builder
+        .addMigrations(MIGRATION_3_4)
         .setDriver(BundledSQLiteDriver())
         .build()
 }
