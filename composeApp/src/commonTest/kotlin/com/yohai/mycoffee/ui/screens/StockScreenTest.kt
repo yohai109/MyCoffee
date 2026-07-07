@@ -930,6 +930,111 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
+    fun stockItemShowsDeleteButtonForNewState() = runComposeUiTest {
+        // Given
+        val testStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.NEW,
+            size = 250.0,
+            roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            openDate = null,
+            finishDate = null,
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithContentDescription("Delete").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemShowsDeleteButtonForOpenState() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val testStock = CoffeeStock(
+            id = 2,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.OPEN,
+            size = 250.0,
+            roastDate = today,
+            openDate = today,
+            finishDate = null,
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithContentDescription("Delete").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemShowsDeleteButtonForFinishedState() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val testStock = CoffeeStock(
+            id = 3,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.FINISHED,
+            size = 250.0,
+            roastDate = today,
+            openDate = today,
+            finishDate = today,
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithContentDescription("Delete").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemDeleteButtonCallsOnDeleteClick() = runComposeUiTest {
+        // Given
+        val testStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.NEW,
+            size = 250.0,
+            roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            openDate = null,
+            finishDate = null,
+        )
+        var deleteClicked = false
+
+        // When
+        setContent {
+            StockItem(
+                stock = testStock,
+                onDeleteClick = { deleteClicked = true }
+            )
+        }
+
+        // Click the delete button
+        onNodeWithContentDescription("Delete").performClick()
+
+        // Then
+        assert(deleteClicked)
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
     fun finishStockDialog_callsOnConfirmWithRating() = runComposeUiTest {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         val stock = CoffeeStock(
