@@ -18,12 +18,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
@@ -78,6 +80,7 @@ fun StockScreen() {
     var showAddDialog by remember { mutableStateOf(false) }
     var editingStock by remember { mutableStateOf<CoffeeStock?>(null) }
     var finishingStock by remember { mutableStateOf<CoffeeStock?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf<CoffeeStock?>(null) }
     var finishedBagsExpanded by remember { mutableStateOf(false) }
     
     val activeStockList = remember(stockList) {
@@ -127,7 +130,7 @@ fun StockScreen() {
                                 database.coffeeDao().updateStock(
                                     stock.copy(
                                         state = CoffeeState.OPEN,
-openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                                        openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
                                         remainingWeight = stock.size
                                     )
                                 )
@@ -138,6 +141,9 @@ onFinishClick = {
                         },
                         onEditClick = {
                             editingStock = stock
+                        },
+                        onDeleteClick = {
+                            showDeleteConfirm = stock
                         }
                     )
                 }
@@ -157,7 +163,10 @@ onFinishClick = {
                                 stock = stock,
                                 onOpenClick = {},
                                 onFinishClick = {},
-                                onEditClick = {}
+                                onEditClick = {},
+                                onDeleteClick = {
+                                    showDeleteConfirm = stock
+                                }
                             )
                         }
                     }
@@ -227,6 +236,29 @@ onFinishClick = {
                             )
                         )
                         finishingStock = null
+                    }
+                }
+            )
+        }
+
+        showDeleteConfirm?.let { stock ->
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirm = null },
+                title = { Text("Delete Bag") },
+                text = { Text("Are you sure you want to delete this bag?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        scope.launch {
+                            database.coffeeDao().deleteStock(stock)
+                            showDeleteConfirm = null
+                        }
+                    }) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirm = null }) {
+                        Text("Cancel")
                     }
                 }
             )
@@ -572,7 +604,8 @@ fun StockItem(
     stock: CoffeeStock,
     onOpenClick: () -> Unit = {},
     onFinishClick: () -> Unit = {},
-    onEditClick: () -> Unit = {}
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -584,9 +617,14 @@ fun StockItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = stock.name, style = MaterialTheme.typography.titleLarge)
-                if (stock.state != CoffeeState.FINISHED) {
-                    TextButton(onClick = onEditClick) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.width(20.dp))
+                Row {
+                    if (stock.state != CoffeeState.FINISHED) {
+                        TextButton(onClick = onEditClick) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.width(20.dp))
+                        }
+                    }
+                    TextButton(onClick = onDeleteClick) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete")
                     }
                 }
             }
