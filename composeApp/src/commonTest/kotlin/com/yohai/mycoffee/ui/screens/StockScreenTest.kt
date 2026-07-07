@@ -186,7 +186,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _, _, _, _, _ -> }
+                onConfirm = { _, _, _, _, _, _, _, _, _ -> }
             )
         }
 
@@ -220,7 +220,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _, _, _, _, _ -> },
+                onConfirm = { _, _, _, _, _, _, _, _, _ -> },
                 initialStock = initialStock
             )
         }
@@ -261,7 +261,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { name, roaster, size, roastDate, origin, process, notes ->
+                onConfirm = { name, roaster, size, roastDate, origin, process, notes, height, species ->
                     confirmCalled = true
                     confirmedName = name
                     confirmedRoaster = roaster
@@ -1061,5 +1061,110 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         onNodeWithText("Finish").performClick()
 
         assertEquals(4, confirmedRating)
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItem_displaysHeightAndSpeciesWhenPresent() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val testStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.NEW,
+            size = 250.0,
+            roastDate = today,
+            openDate = null,
+            finishDate = null,
+            height = 1800,
+            species = "Arabica"
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithText("Height: 1800m").assertIsDisplayed()
+        onNodeWithText("Species: Arabica").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItem_doesNotDisplayHeightAndSpeciesWhenNull() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val testStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.NEW,
+            size = 250.0,
+            roastDate = today,
+            openDate = null,
+            finishDate = null,
+        )
+
+        // When
+        setContent {
+            StockItem(testStock)
+        }
+
+        // Then
+        onNodeWithText("Height:").assertDoesNotExist()
+        onNodeWithText("Species:").assertDoesNotExist()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun addStockDialog_displaysHeightAndSpeciesFields() = runComposeUiTest {
+        // When
+        setContent {
+            AddStockDialog(
+                onDismiss = {},
+                onConfirm = { _, _, _, _, _, _, _, _, _ -> }
+            )
+        }
+
+        // Then
+        onNodeWithText("Height (masl)").assertIsDisplayed()
+        onNodeWithText("Species").assertIsDisplayed()
+        onNodeWithText("Origin").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun addStockDialogWithInitialStock_prefillsHeightAndSpecies() = runComposeUiTest {
+        // Given
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val initialStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.NEW,
+            size = 250.0,
+            roastDate = today,
+            openDate = null,
+            finishDate = null,
+            height = 1500,
+            species = "Robusta",
+            origin = "Ethiopia"
+        )
+
+        // When
+        setContent {
+            AddStockDialog(
+                onDismiss = {},
+                onConfirm = { _, _, _, _, _, _, _, _, _ -> },
+                initialStock = initialStock
+            )
+        }
+
+        // Then
+        onNodeWithText("1500").assertIsDisplayed()
+        onNodeWithText("Robusta").assertIsDisplayed()
+        onNodeWithText("Ethiopia").assertIsDisplayed()
     }
 }

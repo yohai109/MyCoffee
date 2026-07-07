@@ -33,6 +33,8 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -70,6 +72,14 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.math.roundToInt
+
+private val ORIGIN_OPTIONS = listOf(
+    "Ethiopia", "Colombia", "Kenya", "Brazil", "Costa Rica", "Guatemala",
+    "Sumatra", "Tanzania", "Rwanda", "Honduras", "Mexico", "Panama",
+    "Peru", "Java", "Yemen", "India", "Uganda", "Burundi", "Papua New Guinea", "Other"
+)
+
+private val SPECIES_OPTIONS = listOf("Arabica", "Robusta", "Liberica", "Excelsa")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -177,7 +187,7 @@ onFinishClick = {
         if (showAddDialog) {
             AddStockDialog(
                 onDismiss = { showAddDialog = false },
-                onConfirm = { name, roaster, size, roastDate, origin, process, notes ->
+                onConfirm = { name, roaster, size, roastDate, origin, process, notes, height, species ->
                     scope.launch {
                         database.coffeeDao().insertStock(
                             CoffeeStock(
@@ -191,6 +201,8 @@ onFinishClick = {
                                 origin = origin,
                                 process = process,
                                 tastingNotes = notes,
+                                height = height,
+                                species = species,
                             )
                         )
                         showAddDialog = false
@@ -203,7 +215,7 @@ onFinishClick = {
             AddStockDialog(
                 initialStock = stock,
                 onDismiss = { editingStock = null },
-                onConfirm = { name, roaster, size, roastDate, origin, process, notes ->
+                onConfirm = { name, roaster, size, roastDate, origin, process, notes, height, species ->
                     scope.launch {
                         database.coffeeDao().updateStock(
                             stock.copy(
@@ -214,6 +226,8 @@ onFinishClick = {
                                 origin = origin,
                                 process = process,
                                 tastingNotes = notes,
+                                height = height,
+                                species = species,
                             )
                         )
                         editingStock = null
@@ -270,7 +284,7 @@ onFinishClick = {
 @Composable
 fun AddStockDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String, roaster: String, size: Double, roastDate: LocalDate, origin: String?, process: ProcessMethod?, tastingNotes: String?) -> Unit,
+    onConfirm: (name: String, roaster: String, size: Double, roastDate: LocalDate, origin: String?, process: ProcessMethod?, tastingNotes: String?, height: Int?, species: String?) -> Unit,
     initialStock: CoffeeStock? = null
 ) {
     val isEditing = initialStock != null
@@ -280,8 +294,12 @@ fun AddStockDialog(
     var selectedDate by remember { mutableStateOf(initialStock?.roastDate) }
     var showDatePicker by remember { mutableStateOf(false) }
     var origin by remember { mutableStateOf(initialStock?.origin ?: "") }
+    var originExpanded by remember { mutableStateOf(false) }
     var process by remember { mutableStateOf(initialStock?.process) }
     var tastingNotes by remember { mutableStateOf(initialStock?.tastingNotes ?: "") }
+    var heightText by remember { mutableStateOf(initialStock?.height?.toString() ?: "") }
+    var species by remember { mutableStateOf(initialStock?.species ?: "") }
+    var speciesExpanded by remember { mutableStateOf(false) }
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
@@ -362,12 +380,33 @@ fun AddStockDialog(
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = origin,
-                    onValueChange = { origin = it },
-                    label = { Text("Origin") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                val filteredOrigins = ORIGIN_OPTIONS.filter { it.contains(origin, ignoreCase = true) }
+                ExposedDropdownMenuBox(
+                    expanded = originExpanded && filteredOrigins.isNotEmpty(),
+                    onExpandedChange = { originExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = origin,
+                        onValueChange = { origin = it; originExpanded = true },
+                        label = { Text("Origin") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = originExpanded) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = originExpanded && filteredOrigins.isNotEmpty(),
+                        onDismissRequest = { originExpanded = false }
+                    ) {
+                        filteredOrigins.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    origin = option
+                                    originExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 var processExpanded by remember { mutableStateOf(false) }
                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -402,6 +441,41 @@ fun AddStockDialog(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
+                    value = heightText,
+                    onValueChange = { heightText = it },
+                    label = { Text("Height (masl)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                val filteredSpecies = SPECIES_OPTIONS.filter { it.contains(species, ignoreCase = true) }
+                ExposedDropdownMenuBox(
+                    expanded = speciesExpanded && filteredSpecies.isNotEmpty(),
+                    onExpandedChange = { speciesExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = species,
+                        onValueChange = { species = it; speciesExpanded = true },
+                        label = { Text("Species") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speciesExpanded) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = speciesExpanded && filteredSpecies.isNotEmpty(),
+                        onDismissRequest = { speciesExpanded = false }
+                    ) {
+                        filteredSpecies.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    species = option
+                                    speciesExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
                     value = tastingNotes,
                     onValueChange = { tastingNotes = it },
                     label = { Text("Tasting Notes") },
@@ -425,7 +499,9 @@ fun AddStockDialog(
                                 name, roaster, size, selectedDate!!,
                                 origin.ifBlank { null },
                                 process,
-                                tastingNotes.ifBlank { null }
+                                tastingNotes.ifBlank { null },
+                                heightText.toIntOrNull(),
+                                species.ifBlank { null }
                             )
                         },
                         enabled = isValid
@@ -648,9 +724,11 @@ fun StockItem(
                 }
             }
 
-if (stock.origin != null || stock.process != null || stock.tastingNotes != null) {
+if (stock.origin != null || stock.process != null || stock.tastingNotes != null || stock.height != null || stock.species != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 stock.origin?.let { Text(text = "Origin: $it", style = MaterialTheme.typography.bodySmall) }
+                stock.species?.let { Text(text = "Species: $it", style = MaterialTheme.typography.bodySmall) }
+                stock.height?.let { Text(text = "Height: ${it}m", style = MaterialTheme.typography.bodySmall) }
                 stock.process?.let { Text(text = "Process: ${it.name.replace("_", " ")}", style = MaterialTheme.typography.bodySmall) }
                 stock.tastingNotes?.let { Text(text = "Notes: $it", style = MaterialTheme.typography.bodySmall) }
             }
