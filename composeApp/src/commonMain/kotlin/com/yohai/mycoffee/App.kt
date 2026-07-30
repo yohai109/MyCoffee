@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -27,7 +26,11 @@ import com.yohai.mycoffee.ui.screens.SettingsScreen
 import com.yohai.mycoffee.ui.screens.StockScreen
 import com.yohai.mycoffee.ui.theme.MyCoffeeTheme
 
-sealed class Screen(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+sealed class Screen(
+    val route: String,
+    val label: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
     data object Stock : Screen("stock", "Stock", Icons.AutoMirrored.Filled.List)
     data object Brew : Screen("brew", "Brew", Icons.Default.Refresh)
     data object Settings : Screen("settings", "Settings", Icons.Default.Settings)
@@ -63,7 +66,8 @@ fun App() {
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                             onClick = {
                                 navController.navigate(screen.route) {
-                                    val startRoute = navController.graph.findStartDestination().route
+                                    val startRoute =
+                                        navController.graph.findStartDestination().route
                                     if (startRoute != null) {
                                         popUpTo(startRoute) {
                                             saveState = true

@@ -20,7 +20,8 @@ fun App() {
 }
 ```
 
-The theme automatically adapts to the system's dark mode setting. You can also force a specific theme:
+The theme automatically adapts to the system's dark mode setting. You can also force a specific
+theme:
 
 ```kotlin
 MyCoffeeTheme(darkTheme = true) {
@@ -40,6 +41,7 @@ val Cream = Color(0xFFF5E6D3)        // Change this to modify the secondary colo
 ```
 
 The color scheme follows Material3 conventions:
+
 - **primary** - Main brand color used for prominent UI elements
 - **secondary** - Accent color for less prominent UI elements
 - **background** - Color of the app background
