@@ -51,20 +51,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.yohai.mycoffee.database.BrewDao
 import com.yohai.mycoffee.database.BrewMethod
 import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.math.roundToInt
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Composable
 fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
@@ -81,7 +80,10 @@ fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
             Text("Total brews: $totalBrews", style = MaterialTheme.typography.bodyMedium)
             Text("Average dose: ${avgDose}g", style = MaterialTheme.typography.bodyMedium)
             topMethod?.let {
-                Text("Favorite method: ${it.name.replace("_", " ")}", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "Favorite method: ${it.name.replace("_", " ")}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }
@@ -92,9 +94,11 @@ fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
 fun BrewScreen() {
     val database = remember { getDatabase() }
     val scope = rememberCoroutineScope()
-    val brewList: List<BrewRecord> by database.brewDao().getAllBrews().collectAsState(initial = emptyList())
-    val coffeeStock: List<CoffeeStock> by database.coffeeDao().getAllStock().collectAsState(initial = emptyList())
-    
+    val brewList: List<BrewRecord> by database.brewDao().getAllBrews()
+        .collectAsState(initial = emptyList())
+    val coffeeStock: List<CoffeeStock> by database.coffeeDao().getAllStock()
+        .collectAsState(initial = emptyList())
+
     var showAddDialog by remember { mutableStateOf(false) }
     var editingBrew by remember { mutableStateOf<BrewRecord?>(null) }
     var showDeleteConfirm by remember { mutableStateOf<BrewRecord?>(null) }
@@ -115,7 +119,7 @@ fun BrewScreen() {
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -293,7 +297,11 @@ fun AddBrewDialog(
 ) {
     val isEditing = initialBrew != null
     var selectedCoffee by remember { mutableStateOf(initialBrew?.coffeeStockId) }
-    var selectedDate by remember { mutableStateOf(initialBrew?.date ?: Clock.System.todayIn(TimeZone.currentSystemDefault())) }
+    var selectedDate by remember {
+        mutableStateOf(
+            initialBrew?.date ?: Clock.System.todayIn(TimeZone.currentSystemDefault())
+        )
+    }
     var selectedMethod by remember { mutableStateOf(initialBrew?.method ?: BrewMethod.ESPRESSO) }
     var doseText by remember { mutableStateOf(initialBrew?.dose?.toString() ?: "") }
     var brewTimeMinutes by remember { mutableStateOf(initialBrew?.brewTime?.div(60) ?: 0) }
@@ -306,7 +314,8 @@ fun AddBrewDialog(
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDate.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+            initialSelectedDateMillis = selectedDate.atStartOfDayIn(TimeZone.UTC)
+                .toEpochMilliseconds()
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -345,14 +354,18 @@ fun AddBrewDialog(
                 )
 
                 if (coffeeStock.isEmpty()) {
-                    Text("No coffee in stock. Add coffee first.", color = MaterialTheme.colorScheme.error)
+                    Text(
+                        "No coffee in stock. Add coffee first.",
+                        color = MaterialTheme.colorScheme.error
+                    )
                 } else {
                     ExposedDropdownMenuBox(
                         expanded = coffeeExpanded,
                         onExpandedChange = { coffeeExpanded = it }
                     ) {
                         OutlinedTextField(
-                            value = coffeeStock.find { it.id == selectedCoffee }?.name ?: selectedCoffeeName ?: "",
+                            value = coffeeStock.find { it.id == selectedCoffee }?.name
+                                ?: selectedCoffeeName ?: "",
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Coffee") },
@@ -488,7 +501,14 @@ fun AddBrewDialog(
                     Button(
                         onClick = {
                             val yield = yieldText.toDoubleOrNull()
-                            onConfirm(selectedCoffee!!, selectedDate, selectedMethod, dose, totalBrewTime, yield, notes.ifBlank { null })
+                            onConfirm(
+                                selectedCoffee!!,
+                                selectedDate,
+                                selectedMethod,
+                                dose,
+                                totalBrewTime,
+                                yield,
+                                notes.ifBlank { null })
                         },
                         enabled = isValid && selectedCoffee != null
                     ) {

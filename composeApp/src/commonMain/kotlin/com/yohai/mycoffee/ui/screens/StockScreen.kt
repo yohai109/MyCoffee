@@ -57,21 +57,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.CoffeeDatabase
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
-import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.ProcessMethod
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.math.roundToInt
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 private val ORIGIN_OPTIONS = listOf(
     "Ethiopia", "Colombia", "Kenya", "Brazil", "Costa Rica", "Guatemala",
@@ -86,15 +86,16 @@ private val SPECIES_OPTIONS = listOf("Arabica", "Robusta", "Liberica", "Excelsa"
 fun StockScreen() {
     val database = remember { getDatabase() }
     val scope = rememberCoroutineScope()
-    val stockList: List<CoffeeStock> by database.coffeeDao().getAllStock().collectAsState(initial = emptyList())
+    val stockList: List<CoffeeStock> by database.coffeeDao().getAllStock()
+        .collectAsState(initial = emptyList())
     var showAddDialog by remember { mutableStateOf(false) }
     var editingStock by remember { mutableStateOf<CoffeeStock?>(null) }
     var finishingStock by remember { mutableStateOf<CoffeeStock?>(null) }
     var showDeleteConfirm by remember { mutableStateOf<CoffeeStock?>(null) }
     var finishedBagsExpanded by remember { mutableStateOf(false) }
-    
+
     val activeStockList = remember(stockList) {
-        stockList.filter { it.state != CoffeeState.FINISHED }.sortedBy { 
+        stockList.filter { it.state != CoffeeState.FINISHED }.sortedBy {
             when (it.state) {
                 CoffeeState.OPEN -> 0
                 CoffeeState.NEW -> 1
@@ -102,11 +103,11 @@ fun StockScreen() {
             }
         }
     }
-    
+
     val finishedStockList = remember(stockList) {
         stockList.filter { it.state == CoffeeState.FINISHED }.sortedByDescending { it.rating ?: 0 }
     }
-    
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
@@ -125,7 +126,7 @@ fun StockScreen() {
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -146,7 +147,7 @@ fun StockScreen() {
                                 )
                             }
                         },
-onFinishClick = {
+                        onFinishClick = {
                             finishingStock = stock
                         },
                         onEditClick = {
@@ -157,7 +158,7 @@ onFinishClick = {
                         }
                     )
                 }
-                
+
                 if (finishedStockList.isNotEmpty()) {
                     item {
                         FinishedBagsHeader(
@@ -166,7 +167,7 @@ onFinishClick = {
                             onToggle = { finishedBagsExpanded = !finishedBagsExpanded }
                         )
                     }
-                    
+
                     if (finishedBagsExpanded) {
                         items(finishedStockList) { stock ->
                             StockItem(
@@ -303,7 +304,8 @@ fun AddStockDialog(
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDate?.atStartOfDayIn(TimeZone.UTC)?.toEpochMilliseconds()
+            initialSelectedDateMillis = selectedDate?.atStartOfDayIn(TimeZone.UTC)
+                ?.toEpochMilliseconds()
                 ?: Clock.System.now().toEpochMilliseconds()
         )
         DatePickerDialog(
@@ -380,7 +382,8 @@ fun AddStockDialog(
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                val filteredOrigins = ORIGIN_OPTIONS.filter { it.contains(origin, ignoreCase = true) }
+                val filteredOrigins =
+                    ORIGIN_OPTIONS.filter { it.contains(origin, ignoreCase = true) }
                 ExposedDropdownMenuBox(
                     expanded = originExpanded && filteredOrigins.isNotEmpty(),
                     onExpandedChange = { originExpanded = it }
@@ -447,7 +450,8 @@ fun AddStockDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                val filteredSpecies = SPECIES_OPTIONS.filter { it.contains(species, ignoreCase = true) }
+                val filteredSpecies =
+                    SPECIES_OPTIONS.filter { it.contains(species, ignoreCase = true) }
                 ExposedDropdownMenuBox(
                     expanded = speciesExpanded && filteredSpecies.isNotEmpty(),
                     onExpandedChange = { speciesExpanded = it }
@@ -492,7 +496,8 @@ fun AddStockDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     val size = sizeText.toDoubleOrNull() ?: 0.0
-                    val isValid = name.isNotBlank() && roaster.isNotBlank() && size > 0 && selectedDate != null
+                    val isValid =
+                        name.isNotBlank() && roaster.isNotBlank() && size > 0 && selectedDate != null
                     TextButton(
                         onClick = {
                             onConfirm(
@@ -516,42 +521,44 @@ fun AddStockDialog(
 }
 
 suspend fun insertDummyStock(database: CoffeeDatabase) {
-    database.coffeeDao().insertStock(CoffeeStock(
-        name = "tmp",
-        roaster = "tmp",
-        state = CoffeeState.NEW,
-        size = 250.0,
-        roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
-        openDate = null,
-        finishDate = null,
-    ))
+    database.coffeeDao().insertStock(
+        CoffeeStock(
+            name = "tmp",
+            roaster = "tmp",
+            state = CoffeeState.NEW,
+            size = 250.0,
+            roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            openDate = null,
+            finishDate = null,
+        )
+    )
 }
 
 fun calculateAverageOpenTime(stockList: List<CoffeeStock>): Double? {
     val finishedBags = stockList.filter { stock ->
         stock.openDate != null && stock.finishDate != null
     }
-    
+
     if (finishedBags.isEmpty()) {
         return null
     }
-    
+
     val totalDays = finishedBags.sumOf { stock ->
         val openDate = stock.openDate!!
         val finishDate = stock.finishDate!!
         (finishDate.toEpochDays() - openDate.toEpochDays()).toDouble()
     }
-    
+
     return totalDays / finishedBags.size
 }
 
 fun calculateAverageRating(stockList: List<CoffeeStock>): Double? {
     val ratedBags = stockList.filter { it.state == CoffeeState.FINISHED && it.rating != null }
-    
+
     if (ratedBags.isEmpty()) {
         return null
     }
-    
+
     return ratedBags.sumOf { it.rating!! }.toDouble() / ratedBags.size
 }
 
@@ -567,9 +574,13 @@ fun RatingSelector(
         for (i in 1..5) {
             IconButton(onClick = { onRatingChanged(i) }) {
                 Icon(
-                    imageVector = if (i <= (rating ?: 0)) Icons.Filled.Star else Icons.Filled.StarBorder,
+                    imageVector = if (i <= (rating
+                            ?: 0)
+                    ) Icons.Filled.Star else Icons.Filled.StarBorder,
                     contentDescription = "Star $i",
-                    tint = if (i <= (rating ?: 0)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    tint = if (i <= (rating
+                            ?: 0)
+                    ) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -584,7 +595,9 @@ fun StarRating(rating: Int?) {
                 Icon(
                     imageVector = if (i <= rating) Icons.Filled.Star else Icons.Filled.StarBorder,
                     contentDescription = "Star $i",
-                    tint = if (i <= rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    tint = if (i <= rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.5f
+                    ),
                     modifier = Modifier.height(16.dp)
                 )
             }
@@ -696,7 +709,11 @@ fun StockItem(
                 Row {
                     if (stock.state != CoffeeState.FINISHED) {
                         TextButton(onClick = onEditClick) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.width(20.dp))
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                modifier = Modifier.width(20.dp)
+                            )
                         }
                     }
                     TextButton(onClick = onDeleteClick) {
@@ -724,20 +741,45 @@ fun StockItem(
                 }
             }
 
-if (stock.origin != null || stock.process != null || stock.tastingNotes != null || stock.height != null || stock.species != null) {
+            if (stock.origin != null || stock.process != null || stock.tastingNotes != null || stock.height != null || stock.species != null) {
                 Spacer(modifier = Modifier.height(8.dp))
-                stock.origin?.let { Text(text = "Origin: $it", style = MaterialTheme.typography.bodySmall) }
-                stock.species?.let { Text(text = "Species: $it", style = MaterialTheme.typography.bodySmall) }
-                stock.height?.let { Text(text = "Height: ${it}m", style = MaterialTheme.typography.bodySmall) }
-                stock.process?.let { Text(text = "Process: ${it.name.replace("_", " ")}", style = MaterialTheme.typography.bodySmall) }
-                stock.tastingNotes?.let { Text(text = "Notes: $it", style = MaterialTheme.typography.bodySmall) }
+                stock.origin?.let {
+                    Text(
+                        text = "Origin: $it",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                stock.species?.let {
+                    Text(
+                        text = "Species: $it",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                stock.height?.let {
+                    Text(
+                        text = "Height: ${it}m",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                stock.process?.let {
+                    Text(
+                        text = "Process: ${it.name.replace("_", " ")}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                stock.tastingNotes?.let {
+                    Text(
+                        text = "Notes: $it",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
             if (stock.state == CoffeeState.FINISHED && stock.rating != null) {
                 Spacer(modifier = Modifier.height(4.dp))
                 StarRating(stock.rating)
             }
-            
+
             if (stock.state != CoffeeState.FINISHED) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
