@@ -274,6 +274,16 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                 confirmButton = {
                     TextButton(onClick = {
                         scope.launch {
+                            coffeeStock.find { it.id == brew.coffeeStockId }?.let { stock ->
+                                database.coffeeDao().updateStock(
+                                    stock.copy(
+                                        remainingWeight = remainingAfterRestoringBrew(
+                                            stock = stock,
+                                            dose = brew.dose
+                                        )
+                                    )
+                                )
+                            }
                             database.brewDao().deleteBrew(brew)
                             showDeleteConfirm = null
                         }
