@@ -828,7 +828,7 @@ fun StockItem(
                 }
                 stock.height?.let {
                     Text(
-                        text = "Height: ${it}m",
+                        text = "Height: ${it} masl",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
