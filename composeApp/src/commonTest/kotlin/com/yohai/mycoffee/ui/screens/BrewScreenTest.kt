@@ -451,4 +451,14 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
     fun formatBrewTime_withOnlyMinutes_returnsMinutes() {
         assertEquals("3m 0s", formatBrewTime(180))
     }
+
+    @Test
+    fun isValidBrewTime_withOutOfRangeSeconds_returnsFalse() {
+        assertEquals(false, isValidBrewTime(minutes = 1, seconds = 60))
+    }
+
+    @Test
+    fun isValidBrewTime_withValidMinutesAndSeconds_returnsTrue() {
+        assertEquals(true, isValidBrewTime(minutes = 1, seconds = 30))
+    }
 }
