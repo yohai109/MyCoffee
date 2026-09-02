@@ -283,10 +283,11 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
             AlertDialog(
                 onDismissRequest = { showDeleteConfirm = null },
                 title = { Text("Delete Bag") },
-                text = { Text("Are you sure you want to delete this bag?") },
+                 text = { Text("Are you sure you want to delete this bag and its brew records?") },
                 confirmButton = {
                     TextButton(onClick = {
                         scope.launch {
+                            database.brewDao().deleteBrewsForCoffee(stock.id)
                             database.coffeeDao().deleteStock(stock)
                             showDeleteConfirm = null
                         }
