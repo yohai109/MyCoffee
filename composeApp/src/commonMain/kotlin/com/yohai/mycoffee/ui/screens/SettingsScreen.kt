@@ -1,6 +1,7 @@
 package com.yohai.mycoffee.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,9 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +42,7 @@ fun SettingsScreen() {
     var defaultBagSize by remember { mutableStateOf("340") }
     var useDarkTheme by remember { mutableStateOf<Boolean?>(null) }
     var selectedBrewMethod by remember { mutableStateOf<BrewMethod?>(null) }
+    var brewMethodExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = { }
@@ -104,20 +109,26 @@ fun SettingsScreen() {
 
             Text("Default Brew Method", style = MaterialTheme.typography.titleMedium)
 
-            Column {
-                BrewMethod.entries.forEach { method ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = selectedBrewMethod == method,
-                            onClick = { selectedBrewMethod = method }
-                        )
-                        Text(
-                            method.name.replace("_", " ").lowercase()
-                                .replaceFirstChar { it.uppercase() },
-                            modifier = Modifier.padding(start = 8.dp)
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = selectedBrewMethod?.let(::formatBrewMethod) ?: "Choose a method",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Method") },
+                    modifier = Modifier.fillMaxWidth().clickable { brewMethodExpanded = true }
+                )
+                DropdownMenu(
+                    expanded = brewMethodExpanded,
+                    onDismissRequest = { brewMethodExpanded = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    BrewMethod.entries.forEach { method ->
+                        DropdownMenuItem(
+                            text = { Text(formatBrewMethod(method)) },
+                            onClick = {
+                                selectedBrewMethod = method
+                                brewMethodExpanded = false
+                            }
                         )
                     }
                 }
