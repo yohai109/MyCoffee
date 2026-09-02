@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -55,8 +58,15 @@ fun SettingsScreen() {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("App settings and preferences", style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("App settings and preferences", style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                Button(onClick = { /* TODO: Save settings */ }) { Text("Save") }
+            }
             Text("Units", style = MaterialTheme.typography.titleMedium)
 
             Surface(
@@ -115,6 +125,7 @@ fun SettingsScreen() {
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Method") },
+                    trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = "Choose brew method") },
                     modifier = Modifier.fillMaxWidth().clickable { brewMethodExpanded = true }
                 )
                 DropdownMenu(
@@ -134,16 +145,6 @@ fun SettingsScreen() {
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Button(onClick = { /* TODO: Save settings */ }) {
-                    Text("Save")
-                }
-            }
         }
     }
 }
