@@ -377,10 +377,13 @@ fun AddBrewDialog(
     settings: Settings = Settings.DEFAULT
 ) {
     val isEditing = initialBrew != null
+    val eligibleCoffeeStock = coffeeStock.filter {
+        it.state == CoffeeState.OPEN || it.id == initialBrew?.coffeeStockId
+    }
     var selectedCoffee by remember {
         mutableStateOf(
             initialBrew?.coffeeStockId
-                ?: coffeeStock.firstOrNull { it.state == CoffeeState.OPEN }?.id
+                ?: eligibleCoffeeStock.firstOrNull()?.id
         )
     }
     var selectedDate by remember {
@@ -440,9 +443,9 @@ fun AddBrewDialog(
                 )
                 BrewFormSection("COFFEE & DATE")
 
-                if (coffeeStock.isEmpty()) {
+                if (eligibleCoffeeStock.isEmpty()) {
                     Text(
-                        "No coffee in stock. Add coffee first.",
+                        "No open coffee in stock. Open a coffee bag first.",
                         color = MaterialTheme.colorScheme.error
                     )
                 } else {
@@ -451,7 +454,7 @@ fun AddBrewDialog(
                         onExpandedChange = { coffeeExpanded = it }
                     ) {
                         OutlinedTextField(
-                            value = coffeeStock.find { it.id == selectedCoffee }?.name
+                            value = eligibleCoffeeStock.find { it.id == selectedCoffee }?.name
                                 ?: selectedCoffeeName ?: "",
                             onValueChange = {},
                             readOnly = true,
@@ -463,7 +466,7 @@ fun AddBrewDialog(
                             expanded = coffeeExpanded,
                             onDismissRequest = { coffeeExpanded = false }
                         ) {
-                            coffeeStock.forEach { coffee ->
+                            eligibleCoffeeStock.forEach { coffee ->
                                 DropdownMenuItem(
                                     text = { Text(coffee.name) },
                                     onClick = {
