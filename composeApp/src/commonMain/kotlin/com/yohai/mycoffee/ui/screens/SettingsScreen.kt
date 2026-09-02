@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,9 +40,7 @@ fun SettingsScreen() {
     var selectedBrewMethod by remember { mutableStateOf<BrewMethod?>(null) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Settings") })
-        }
+        topBar = { }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -51,29 +50,26 @@ fun SettingsScreen() {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            Text("App settings and preferences", style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             Text("Units", style = MaterialTheme.typography.titleMedium)
 
-            Row(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = useGrams,
-                    onClick = { useGrams = true }
-                )
-                Text("Grams", modifier = Modifier.padding(start = 8.dp))
-            }
+                color = MaterialTheme.colorScheme.surface,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+                tonalElevation = 1.dp
+            ) { Column(Modifier.padding(4.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = useGrams, onClick = { useGrams = true })
+                    Text("Grams", modifier = Modifier.padding(start = 8.dp))
+                }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = !useGrams,
-                    onClick = { useGrams = false }
-                )
-                Text("Ounces", modifier = Modifier.padding(start = 8.dp))
-            }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = !useGrams, onClick = { useGrams = false })
+                    Text("Ounces", modifier = Modifier.padding(start = 8.dp))
+                }
+            } }
 
             HorizontalDivider()
 

@@ -122,7 +122,13 @@ fun StockScreen() {
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No coffee stock tracked yet")
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Your shelf is waiting", style = MaterialTheme.typography.titleLarge)
+                    Spacer(Modifier.height(6.dp))
+                    Text("Add a bag to start keeping track.", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { showAddDialog = true }) { Text("Add coffee") }
+                }
             }
         } else {
             LazyColumn(
@@ -132,6 +138,13 @@ fun StockScreen() {
             ) {
                 item {
                     StatisticsBanner(stockList)
+                }
+                if (activeStockList.any { it.state == CoffeeState.OPEN }) {
+                    item {
+                        Text("CURRENTLY OPEN", style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 8.dp))
+                    }
                 }
                 items(activeStockList) { stock ->
                     StockItem(
@@ -610,14 +623,25 @@ fun StatisticsBanner(stockList: List<CoffeeStock>, brewCount: Int = 0, avgDose: 
     val averageOpenTime = calculateAverageOpenTime(stockList)
     val averageRating = calculateAverageRating(stockList)
 
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
+        shape = RoundedCornerShape(10.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = "Statistics",
                 style = MaterialTheme.typography.titleMedium
             )
+            Text("A quick read of your shelf", style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                ShelfStat("${stockList.count { it.state != CoffeeState.FINISHED }}", "active")
+                ShelfStat("${stockList.count { it.state == CoffeeState.OPEN }}", "open")
+                ShelfStat("${stockList.count { it.state == CoffeeState.NEW }}", "unopened")
+            }
+            Spacer(modifier = Modifier.height(10.dp))
             if (averageOpenTime != null) {
                 val roundedDays = averageOpenTime.roundToInt()
                 val daysText = if (roundedDays == 1) "day" else "days"
@@ -648,6 +672,14 @@ fun StatisticsBanner(stockList: List<CoffeeStock>, brewCount: Int = 0, avgDose: 
     }
 }
 
+@Composable
+private fun ShelfStat(value: String, label: String) {
+    Column {
+        Text(value, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+        Text(label, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinishedBagsHeader(
@@ -655,11 +687,14 @@ fun FinishedBagsHeader(
     expanded: Boolean,
     onToggle: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        onClick = onToggle
+        onClick = onToggle,
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(8.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier
@@ -696,8 +731,16 @@ fun StockItem(
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {}
 ) {
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
+        color = if (stock.state == CoffeeState.OPEN) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+        else MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(10.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (stock.state == CoffeeState.OPEN) MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
+            else MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -705,23 +748,23 @@ fun StockItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = stock.name, style = MaterialTheme.typography.titleLarge)
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    StatusDot(stock.state)
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        Text(text = stock.name, style = MaterialTheme.typography.titleLarge)
+                        Text(text = "Roaster: ${stock.roaster}", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
                 Row {
                     if (stock.state != CoffeeState.FINISHED) {
-                        TextButton(onClick = onEditClick) {
-                            Icon(
-                                Icons.Default.Edit,
-                                contentDescription = "Edit",
-                                modifier = Modifier.width(20.dp)
-                            )
-                        }
+                        IconButton(onClick = onEditClick) { Icon(Icons.Default.Edit, contentDescription = "Edit") }
                     }
-                    TextButton(onClick = onDeleteClick) {
+                    IconButton(onClick = onDeleteClick) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete")
                     }
                 }
             }
-            Text(text = "Roaster: ${stock.roaster}", style = MaterialTheme.typography.bodyMedium)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -799,6 +842,17 @@ fun StockItem(
             }
         }
     }
+}
+
+@Composable
+private fun StatusDot(state: CoffeeState) {
+    val color = when (state) {
+        CoffeeState.OPEN -> MaterialTheme.colorScheme.primary
+        CoffeeState.NEW -> MaterialTheme.colorScheme.tertiary
+        CoffeeState.FINISHED -> MaterialTheme.colorScheme.outline
+    }
+    Surface(shape = androidx.compose.foundation.shape.CircleShape, color = color,
+        modifier = Modifier.width(8.dp).height(8.dp)) {}
 }
 
 @Composable
