@@ -5,6 +5,7 @@ import com.yohai.mycoffee.database.BrewMethod
 import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
+import com.yohai.mycoffee.database.Settings
 import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -46,6 +47,34 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
         finishDate = null,
         remainingWeight = remainingWeight
     )
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun brewItemUsesOuncesWhenConfigured() = runComposeUiTest {
+        val testBrew = BrewRecord(
+            id = 1,
+            coffeeStockId = 1,
+            date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            method = BrewMethod.ESPRESSO,
+            dose = 18.0,
+            brewTime = 30,
+            yield = 36.0,
+            notes = null
+        )
+
+        setContent {
+            BrewItem(
+                brew = testBrew,
+                coffeeName = "Test Coffee",
+                settings = Settings(useGrams = false),
+                onEditClick = {},
+                onDeleteClick = {}
+            )
+        }
+
+        onNodeWithText("0.634931833012928oz").assertIsDisplayed()
+        onNodeWithText("18g").assertDoesNotExist()
+    }
 
     @OptIn(ExperimentalTestApi::class)
     @Test

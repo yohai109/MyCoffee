@@ -73,7 +73,10 @@ private fun formatBrewWeight(grams: Double, useGrams: Boolean): String =
     if (useGrams) grams.toString() else (grams / BREW_GRAMS_PER_OUNCE).toString()
 
 @Composable
-fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
+fun BrewAnalyticsCard(
+    brewList: List<BrewRecord>,
+    settings: Settings = Settings.DEFAULT
+) {
     if (brewList.isEmpty()) return
 
     val totalBrews = brewList.size
@@ -94,7 +97,10 @@ fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BrewStat("$totalBrews", "brews")
-                BrewStat("${avgDose}g", "average dose")
+                BrewStat(
+                    formatBrewDisplayWeight(avgDose.toDouble(), settings.useGrams),
+                    "average dose"
+                )
                 topMethod?.let { BrewStat(formatBrewMethod(it), "favorite method") }
             }
         }
@@ -150,7 +156,7 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
-                    BrewAnalyticsCard(brewList)
+                    BrewAnalyticsCard(brewList, settings)
                     Text("RECENT BREWS", style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 8.dp, bottom = 2.dp))
@@ -160,6 +166,7 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                     BrewItem(
                         brew = brew,
                         coffeeName = coffee?.name ?: "Unknown Coffee",
+                        settings = settings,
                         onEditClick = { editingBrew = brew },
                         onDeleteClick = { showDeleteConfirm = brew }
                     )
@@ -288,6 +295,7 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
 fun BrewItem(
     brew: BrewRecord,
     coffeeName: String,
+    settings: Settings = Settings.DEFAULT,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
@@ -330,7 +338,10 @@ fun BrewItem(
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Dose", style = MaterialTheme.typography.labelSmall)
-                    Text("${brew.dose.toInt()}g", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        formatBrewDisplayWeight(brew.dose, settings.useGrams),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Time", style = MaterialTheme.typography.labelSmall)
@@ -339,7 +350,10 @@ fun BrewItem(
                 if (brew.yield != null) {
                     Column(horizontalAlignment = Alignment.End) {
                         Text("Yield", style = MaterialTheme.typography.labelSmall)
-                        Text("${brew.yield?.toInt()}g", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            formatBrewDisplayWeight(brew.yield ?: 0.0, settings.useGrams),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }
@@ -603,6 +617,10 @@ private fun BrewFormSection(text: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
     )
+}
+
+private fun formatBrewDisplayWeight(grams: Double, useGrams: Boolean): String {
+    return if (useGrams) "${grams.toInt()}g" else "${formatBrewWeight(grams, useGrams = false)}oz"
 }
 
 fun formatBrewMethod(method: BrewMethod): String {
