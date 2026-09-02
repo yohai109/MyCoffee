@@ -1109,7 +1109,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         }
 
         // Then
-        onNodeWithText("Height: 1800m").assertIsDisplayed()
+        onNodeWithText("Height: 1800 masl").assertIsDisplayed()
         onNodeWithText("Species: Arabica").assertIsDisplayed()
     }
 
