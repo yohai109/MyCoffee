@@ -513,6 +513,7 @@ fun AddBrewDialog(
                         value = if (brewTimeMinutes > 0) brewTimeMinutes.toString() else "",
                         onValueChange = { brewTimeMinutes = it.toIntOrNull() ?: 0 },
                         label = { Text("Minutes") },
+                        isError = brewTimeMinutes < 0,
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -520,6 +521,10 @@ fun AddBrewDialog(
                         value = if (brewTimeSeconds > 0) brewTimeSeconds.toString() else "",
                         onValueChange = { brewTimeSeconds = it.toIntOrNull() ?: 0 },
                         label = { Text("Seconds") },
+                        isError = brewTimeSeconds !in 0..59,
+                        supportingText = if (brewTimeSeconds !in 0..59) {
+                            { Text("Enter 0 to 59 seconds") }
+                        } else null,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -547,7 +552,8 @@ fun AddBrewDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     val dose = doseText.toDoubleOrNull() ?: 0.0
                     val totalBrewTime = brewTimeMinutes * 60 + brewTimeSeconds
-                    val isValid = selectedCoffee != null && dose > 0 && totalBrewTime > 0
+                    val isValid = selectedCoffee != null && dose > 0 &&
+                        isValidBrewTime(brewTimeMinutes, brewTimeSeconds)
                     Button(
                         onClick = {
                             val yield = yieldText.toDoubleOrNull()
@@ -589,3 +595,6 @@ fun formatBrewTime(seconds: Int): String {
     val secs = seconds % 60
     return if (minutes > 0) "${minutes}m ${secs}s" else "${secs}s"
 }
+
+fun isValidBrewTime(minutes: Int, seconds: Int): Boolean =
+    minutes >= 0 && seconds in 0..59 && minutes * 60 + seconds > 0
