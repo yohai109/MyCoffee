@@ -1,7 +1,6 @@
 package com.yohai.mycoffee.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,14 +9,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -131,19 +129,21 @@ fun SettingsScreen(
 
             Text("Default Brew Method", style = MaterialTheme.typography.titleMedium)
 
-            Box(modifier = Modifier.fillMaxWidth()) {
+            ExposedDropdownMenuBox(
+                expanded = brewMethodExpanded,
+                onExpandedChange = { brewMethodExpanded = it }
+            ) {
                 OutlinedTextField(
                     value = formatBrewMethod(selectedBrewMethod),
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Method") },
-                    trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = "Choose brew method") },
-                    modifier = Modifier.fillMaxWidth().clickable { brewMethodExpanded = true }
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = brewMethodExpanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
                 )
-                DropdownMenu(
+                ExposedDropdownMenu(
                     expanded = brewMethodExpanded,
                     onDismissRequest = { brewMethodExpanded = false },
-                    modifier = Modifier.fillMaxWidth()
                 ) {
                     BrewMethod.entries.forEach { method ->
                         DropdownMenuItem(
