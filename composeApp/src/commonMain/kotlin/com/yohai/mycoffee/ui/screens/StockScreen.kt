@@ -830,11 +830,11 @@ fun StockItem(
                     horizontalArrangement = Arrangement.End
                 ) {
                     if (stock.state == CoffeeState.NEW) {
-                        Button(onClick = onOpenClick) {
+                        TextButton(onClick = onOpenClick) {
                             Text("Open")
                         }
                     } else if (stock.state == CoffeeState.OPEN) {
-                        OutlinedButton(onClick = onFinishClick) {
+                        TextButton(onClick = onFinishClick) {
                             Text("Finish")
                         }
                     }

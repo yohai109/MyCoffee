@@ -74,18 +74,31 @@ fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
     val methodCounts = brewList.groupBy { it.method }.mapValues { it.value.size }
     val topMethod = methodCounts.maxByOrNull { it.value }?.key
 
-    Card(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
+        shape = RoundedCornerShape(10.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text("Brew Analytics", style = MaterialTheme.typography.titleMedium)
-            Text("Total brews: $totalBrews", style = MaterialTheme.typography.bodyMedium)
-            Text("Average dose: ${avgDose}g", style = MaterialTheme.typography.bodyMedium)
-            topMethod?.let {
-                Text(
-                    "Favorite method: ${it.name.replace("_", " ")}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                BrewStat("$totalBrews", "brews")
+                BrewStat("${avgDose}g", "average dose")
+                topMethod?.let { BrewStat(formatBrewMethod(it), "favorite method") }
             }
         }
+    }
+}
+
+@Composable
+private fun BrewStat(value: String, label: String) {
+    Column {
+        Text(value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+        Text(label, style = MaterialTheme.typography.labelSmall)
     }
 }
 
