@@ -92,6 +92,9 @@ interface BrewDao {
 
     @Delete
     suspend fun deleteBrew(brew: BrewRecord)
+
+    @Query("DELETE FROM BrewRecord WHERE coffeeStockId = :coffeeStockId")
+    suspend fun deleteBrewsForCoffee(coffeeStockId: Long)
 }
 
 @Dao
