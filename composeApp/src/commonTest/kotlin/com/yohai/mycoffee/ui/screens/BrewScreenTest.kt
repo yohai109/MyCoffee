@@ -14,6 +14,39 @@ import kotlin.test.assertEquals
 
 class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
 
+    @Test
+    fun remainingAfterBrewEdit_withChangedDose_appliesOnlyTheDifference() {
+        val stock = testStock(remainingWeight = 232.0)
+
+        assertEquals(230.0, remainingAfterBrewEdit(stock, oldDose = 18.0, newDose = 20.0))
+    }
+
+    @Test
+    fun remainingAfterBrewEdit_withSameDose_doesNotChangeStock() {
+        val stock = testStock(remainingWeight = 232.0)
+
+        assertEquals(232.0, remainingAfterBrewEdit(stock, oldDose = 18.0, newDose = 18.0))
+    }
+
+    @Test
+    fun remainingAfterBrew_deductsDoseFromCurrentStock() {
+        val stock = testStock(remainingWeight = 250.0)
+
+        assertEquals(232.0, remainingAfterBrew(stock, dose = 18.0))
+    }
+
+    private fun testStock(remainingWeight: Double?) = CoffeeStock(
+        id = 1,
+        name = "Test Coffee",
+        roaster = "Test Roaster",
+        state = CoffeeState.OPEN,
+        size = 250.0,
+        roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+        openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+        finishDate = null,
+        remainingWeight = remainingWeight
+    )
+
     @OptIn(ExperimentalTestApi::class)
     @Test
     fun brewItemDisplaysCorrectInformation() = runComposeUiTest {
