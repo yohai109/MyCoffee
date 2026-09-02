@@ -58,6 +58,10 @@ Open `/iosApp` directory in Xcode and run from there.
 
 ## Code Style Guidelines
 
+### Product Design
+
+All Compose UI work must follow [`DESIGN_GUIDELINES.md`](DESIGN_GUIDELINES.md). Read it before adding or substantially changing a screen, component, form, navigation action, or theme value. The guide defines the shared coffee visual language, layout rules, accessibility expectations, and screen-specific hierarchy.
+
 ### Naming Conventions
 
 | Element | Convention | Example |
