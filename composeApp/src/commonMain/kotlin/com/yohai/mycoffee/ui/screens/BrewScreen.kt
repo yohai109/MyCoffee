@@ -220,13 +220,38 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                                 notes = notes
                             )
                         )
-                        val stock = coffeeStock.find { it.id == coffeeStockId }
-                        stock?.let {
-                            val currentRemaining = it.remainingWeight ?: it.size
-                            val newRemaining = (currentRemaining - dose).coerceAtLeast(0.0)
-                            database.coffeeDao().updateStock(
-                                it.copy(remainingWeight = newRemaining)
-                            )
+                        val oldStock = coffeeStock.find { it.id == brew.coffeeStockId }
+                        val newStock = coffeeStock.find { it.id == coffeeStockId }
+                        if (oldStock?.id == newStock?.id) {
+                            newStock?.let {
+                                database.coffeeDao().updateStock(
+                                    it.copy(
+                                        remainingWeight = remainingAfterBrewEdit(
+                                            stock = it,
+                                            oldDose = brew.dose,
+                                            newDose = dose
+                                        )
+                                    )
+                                )
+                            }
+                        } else {
+                            oldStock?.let {
+                                database.coffeeDao().updateStock(
+                                    it.copy(
+                                        remainingWeight = remainingAfterRestoringBrew(
+                                            stock = it,
+                                            dose = brew.dose
+                                        )
+                                    )
+                                )
+                            }
+                            newStock?.let {
+                                database.coffeeDao().updateStock(
+                                    it.copy(
+                                        remainingWeight = remainingAfterBrew(dose = dose, stock = it)
+                                    )
+                                )
+                            }
                         }
                         editingBrew = null
                     }
@@ -588,4 +613,19 @@ fun formatBrewTime(seconds: Int): String {
     val minutes = seconds / 60
     val secs = seconds % 60
     return if (minutes > 0) "${minutes}m ${secs}s" else "${secs}s"
+}
+
+fun remainingAfterBrew(stock: CoffeeStock, dose: Double): Double {
+    val currentRemaining = stock.remainingWeight ?: stock.size
+    return (currentRemaining - dose).coerceAtLeast(0.0)
+}
+
+fun remainingAfterRestoringBrew(stock: CoffeeStock, dose: Double): Double {
+    val currentRemaining = stock.remainingWeight ?: stock.size
+    return (currentRemaining + dose).coerceAtMost(stock.size)
+}
+
+fun remainingAfterBrewEdit(stock: CoffeeStock, oldDose: Double, newDose: Double): Double {
+    val currentRemaining = stock.remainingWeight ?: stock.size
+    return (currentRemaining + oldDose - newDose).coerceIn(0.0, stock.size)
 }
