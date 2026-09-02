@@ -192,10 +192,10 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 id = 1,
                 name = "Test Coffee",
                 roaster = "Test Roaster",
-                state = CoffeeState.NEW,
+                state = CoffeeState.OPEN,
                 size = 250.0,
                 roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                openDate = null,
+                openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 finishDate = null
             )
         )
@@ -255,6 +255,41 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
         }
 
         onNodeWithText("Open Coffee").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun addBrewDialogDoesNotOfferUnopenedCoffee() = runComposeUiTest {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val coffeeStock = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Unopened Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.NEW,
+                size = 250.0,
+                roastDate = today,
+                openDate = null,
+                finishDate = null
+            ),
+            CoffeeStock(
+                id = 2,
+                name = "Open Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.OPEN,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = null
+            )
+        )
+
+        setContent {
+            AddBrewDialog(coffeeStock = coffeeStock, onDismiss = {}, onConfirm = { _, _, _, _, _, _, _ -> })
+        }
+
+        onNodeWithText("Open Coffee").performClick()
+        onNodeWithText("Unopened Coffee").assertDoesNotExist()
     }
 
     @OptIn(ExperimentalTestApi::class)
