@@ -36,6 +36,13 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
         assertEquals(232.0, remainingAfterBrew(stock, dose = 18.0))
     }
 
+    @Test
+    fun remainingAfterRestoringBrew_restoresDoseWithoutExceedingBagSize() {
+        val stock = testStock(remainingWeight = 245.0)
+
+        assertEquals(250.0, remainingAfterRestoringBrew(stock, dose = 18.0))
+    }
+
     private fun testStock(remainingWeight: Double?) = CoffeeStock(
         id = 1,
         name = "Test Coffee",
