@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.font.FontFamily
 
 private val LightColorScheme = lightColorScheme(
     primary = CoffeeBrown,
@@ -17,8 +18,11 @@ private val LightColorScheme = lightColorScheme(
     onSecondaryContainer = DarkRoast,
     background = LightCream,
     onBackground = DarkRoast,
-    surface = LightCream,
+    surface = LightSurface,
     onSurface = DarkRoast,
+    surfaceVariant = LatteFoam,
+    outline = LightOutline,
+    tertiary = Sage,
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -32,8 +36,11 @@ private val DarkColorScheme = darkColorScheme(
     onSecondaryContainer = WhiteFoam,
     background = DarkBackground,
     onBackground = WhiteFoam,
-    surface = DarkBackground,
+    surface = DarkSurface,
     onSurface = WhiteFoam,
+    surfaceVariant = DarkEspresso,
+    outline = DarkOutline,
+    tertiary = Sage,
 )
 
 @Composable
@@ -49,6 +56,15 @@ fun MyCoffeeTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
+        typography = CoffeeTypography,
         content = content
+    )
+}
+
+private val CoffeeTypography = androidx.compose.material3.Typography().run {
+    copy(
+        titleLarge = titleLarge.copy(fontFamily = FontFamily.Serif),
+        headlineSmall = headlineSmall.copy(fontFamily = FontFamily.Serif),
+        displaySmall = displaySmall.copy(fontFamily = FontFamily.Serif)
     )
 }

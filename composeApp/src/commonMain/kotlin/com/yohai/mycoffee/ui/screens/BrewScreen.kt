@@ -74,18 +74,31 @@ fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
     val methodCounts = brewList.groupBy { it.method }.mapValues { it.value.size }
     val topMethod = methodCounts.maxByOrNull { it.value }?.key
 
-    Card(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
+        shape = RoundedCornerShape(10.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text("Brew Analytics", style = MaterialTheme.typography.titleMedium)
-            Text("Total brews: $totalBrews", style = MaterialTheme.typography.bodyMedium)
-            Text("Average dose: ${avgDose}g", style = MaterialTheme.typography.bodyMedium)
-            topMethod?.let {
-                Text(
-                    "Favorite method: ${it.name.replace("_", " ")}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                BrewStat("$totalBrews", "brews")
+                BrewStat("${avgDose}g", "average dose")
+                topMethod?.let { BrewStat(formatBrewMethod(it), "favorite method") }
             }
         }
+    }
+}
+
+@Composable
+private fun BrewStat(value: String, label: String) {
+    Column {
+        Text(value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+        Text(label, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -115,7 +128,13 @@ fun BrewScreen() {
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No brews recorded yet")
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Your brew journal is quiet", style = MaterialTheme.typography.titleLarge)
+                    Spacer(Modifier.height(6.dp))
+                    Text("Record a brew to remember what worked.", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { showAddDialog = true }) { Text("Log a brew") }
+                }
             }
         } else {
             LazyColumn(
@@ -123,6 +142,12 @@ fun BrewScreen() {
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                item {
+                    BrewAnalyticsCard(brewList)
+                    Text("RECENT BREWS", style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp))
+                }
                 items(brewList) { brew ->
                     val coffee = coffeeStock.find { it.id == brew.coffeeStockId }
                     BrewItem(
@@ -232,7 +257,12 @@ fun BrewItem(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(10.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -253,7 +283,9 @@ fun BrewItem(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+            Text("${formatBrewMethod(brew.method)} · ${brew.date}", style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -352,6 +384,7 @@ fun AddBrewDialog(
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
+                BrewFormSection("COFFEE & DATE")
 
                 if (coffeeStock.isEmpty()) {
                     Text(
@@ -411,6 +444,7 @@ fun AddBrewDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                BrewFormSection("RECIPE")
                 ExposedDropdownMenuBox(
                     expanded = methodExpanded,
                     onExpandedChange = { methodExpanded = it }
@@ -477,6 +511,7 @@ fun AddBrewDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                BrewFormSection("BREW NOTES")
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
@@ -518,6 +553,16 @@ fun AddBrewDialog(
             }
         }
     }
+}
+
+@Composable
+private fun BrewFormSection(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+    )
 }
 
 fun formatBrewMethod(method: BrewMethod): String {
