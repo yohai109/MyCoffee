@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
@@ -113,10 +114,11 @@ interface SettingsDao {
     @Query("SELECT * FROM Settings WHERE id = 1")
     fun getSettings(): Flow<Settings?>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSettings(settings: Settings)
 
-    @Update
+    // Settings always has one row; replace also handles the first-save startup race.
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateSettings(settings: Settings)
 }
 
