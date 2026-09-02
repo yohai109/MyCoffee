@@ -60,6 +60,21 @@ data class BrewRecord(
     val notes: String?
 )
 
+@Entity
+data class Settings(
+    @PrimaryKey val id: Int = 1,
+    val useGrams: Boolean = true,
+    val defaultBagSize: Double = 340.0,
+    val darkMode: Boolean = false,
+    val defaultBrewMethod: BrewMethod = BrewMethod.ESPRESSO,
+    val defaultBrewDose: Double = 18.0,
+    val defaultBrewYield: Double = 36.0
+) {
+    companion object {
+        val DEFAULT = Settings()
+    }
+}
+
 @Dao
 interface BrewDao {
     @Query("SELECT * FROM BrewRecord ORDER BY date DESC")
@@ -93,11 +108,24 @@ interface CoffeeDao {
     suspend fun deleteStock(stock: CoffeeStock)
 }
 
-@Database(entities = [CoffeeStock::class, BrewRecord::class], version = 4)
+@Dao
+interface SettingsDao {
+    @Query("SELECT * FROM Settings WHERE id = 1")
+    fun getSettings(): Flow<Settings?>
+
+    @Insert
+    suspend fun insertSettings(settings: Settings)
+
+    @Update
+    suspend fun updateSettings(settings: Settings)
+}
+
+@Database(entities = [CoffeeStock::class, BrewRecord::class, Settings::class], version = 5)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
     abstract fun brewDao(): BrewDao
+    abstract fun settingsDao(): SettingsDao
 }
 
 class Converters {
@@ -144,11 +172,29 @@ private val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
+private val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(connection: SQLiteConnection) {
+        val stmt = connection.prepare(
+            """CREATE TABLE IF NOT EXISTS Settings (
+                id INTEGER NOT NULL PRIMARY KEY,
+                useGrams INTEGER NOT NULL,
+                defaultBagSize REAL NOT NULL,
+                darkMode INTEGER NOT NULL,
+                defaultBrewMethod TEXT NOT NULL,
+                defaultBrewDose REAL NOT NULL,
+                defaultBrewYield REAL NOT NULL
+            )"""
+        )
+        try { stmt.step() } finally { stmt.close() }
+    }
+}
+
 fun getRoomDatabase(
     builder: RoomDatabase.Builder<CoffeeDatabase>
 ): CoffeeDatabase {
     return builder
         .addMigrations(MIGRATION_3_4)
+        .addMigrations(MIGRATION_4_5)
         .setDriver(BundledSQLiteDriver())
         .build()
 }
