@@ -5,6 +5,7 @@ import com.yohai.mycoffee.database.BrewMethod
 import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
+import com.yohai.mycoffee.database.Settings
 import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -13,6 +14,74 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
+
+    @Test
+    fun remainingAfterBrewEdit_withChangedDose_appliesOnlyTheDifference() {
+        val stock = testStock(remainingWeight = 232.0)
+
+        assertEquals(230.0, remainingAfterBrewEdit(stock, oldDose = 18.0, newDose = 20.0))
+    }
+
+    @Test
+    fun remainingAfterBrewEdit_withSameDose_doesNotChangeStock() {
+        val stock = testStock(remainingWeight = 232.0)
+
+        assertEquals(232.0, remainingAfterBrewEdit(stock, oldDose = 18.0, newDose = 18.0))
+    }
+
+    @Test
+    fun remainingAfterBrew_deductsDoseFromCurrentStock() {
+        val stock = testStock(remainingWeight = 250.0)
+
+        assertEquals(232.0, remainingAfterBrew(stock, dose = 18.0))
+    }
+
+    @Test
+    fun remainingAfterRestoringBrew_restoresDoseWithoutExceedingBagSize() {
+        val stock = testStock(remainingWeight = 245.0)
+
+        assertEquals(250.0, remainingAfterRestoringBrew(stock, dose = 18.0))
+    }
+
+    private fun testStock(remainingWeight: Double?) = CoffeeStock(
+        id = 1,
+        name = "Test Coffee",
+        roaster = "Test Roaster",
+        state = CoffeeState.OPEN,
+        size = 250.0,
+        roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+        openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+        finishDate = null,
+        remainingWeight = remainingWeight
+    )
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun brewItemUsesOuncesWhenConfigured() = runComposeUiTest {
+        val testBrew = BrewRecord(
+            id = 1,
+            coffeeStockId = 1,
+            date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            method = BrewMethod.ESPRESSO,
+            dose = 18.0,
+            brewTime = 30,
+            yield = 36.0,
+            notes = null
+        )
+
+        setContent {
+            BrewItem(
+                brew = testBrew,
+                coffeeName = "Test Coffee",
+                settings = Settings(useGrams = false),
+                onEditClick = {},
+                onDeleteClick = {}
+            )
+        }
+
+        onNodeWithText("0.634931833012928oz").assertIsDisplayed()
+        onNodeWithText("18g").assertDoesNotExist()
+    }
 
     @OptIn(ExperimentalTestApi::class)
     @Test
@@ -192,10 +261,10 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 id = 1,
                 name = "Test Coffee",
                 roaster = "Test Roaster",
-                state = CoffeeState.NEW,
+                state = CoffeeState.OPEN,
                 size = 250.0,
                 roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                openDate = null,
+                openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 finishDate = null
             )
         )
@@ -255,6 +324,41 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
         }
 
         onNodeWithText("Open Coffee").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun addBrewDialogDoesNotOfferUnopenedCoffee() = runComposeUiTest {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val coffeeStock = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Unopened Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.NEW,
+                size = 250.0,
+                roastDate = today,
+                openDate = null,
+                finishDate = null
+            ),
+            CoffeeStock(
+                id = 2,
+                name = "Open Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.OPEN,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = null
+            )
+        )
+
+        setContent {
+            AddBrewDialog(coffeeStock = coffeeStock, onDismiss = {}, onConfirm = { _, _, _, _, _, _, _ -> })
+        }
+
+        onNodeWithText("Open Coffee").performClick()
+        onNodeWithText("Unopened Coffee").assertDoesNotExist()
     }
 
     @OptIn(ExperimentalTestApi::class)

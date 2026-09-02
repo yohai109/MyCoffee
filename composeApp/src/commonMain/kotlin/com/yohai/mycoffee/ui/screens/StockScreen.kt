@@ -144,7 +144,7 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
-                    StatisticsBanner(stockList)
+                    StatisticsBanner(stockList, settings = settings)
                 }
                 if (activeStockList.any { it.state == CoffeeState.OPEN }) {
                     item {
@@ -156,6 +156,7 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
                 items(activeStockList) { stock ->
                     StockItem(
                         stock = stock,
+                        settings = settings,
                         onOpenClick = {
                             scope.launch {
                                 database.coffeeDao().updateStock(
@@ -192,6 +193,7 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
                         items(finishedStockList) { stock ->
                             StockItem(
                                 stock = stock,
+                                settings = settings,
                                 onOpenClick = {},
                                 onFinishClick = {},
                                 onEditClick = {},
@@ -283,10 +285,11 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
             AlertDialog(
                 onDismissRequest = { showDeleteConfirm = null },
                 title = { Text("Delete Bag") },
-                text = { Text("Are you sure you want to delete this bag?") },
+                 text = { Text("Are you sure you want to delete this bag and its brew records?") },
                 confirmButton = {
                     TextButton(onClick = {
                         scope.launch {
+                            database.brewDao().deleteBrewsForCoffee(stock.id)
                             database.coffeeDao().deleteStock(stock)
                             showDeleteConfirm = null
                         }
@@ -631,7 +634,12 @@ fun StarRating(rating: Int?) {
 }
 
 @Composable
-fun StatisticsBanner(stockList: List<CoffeeStock>, brewCount: Int = 0, avgDose: Int = 0) {
+fun StatisticsBanner(
+    stockList: List<CoffeeStock>,
+    brewCount: Int = 0,
+    avgDose: Int = 0,
+    settings: Settings = Settings.DEFAULT
+) {
     val averageOpenTime = calculateAverageOpenTime(stockList)
     val averageRating = calculateAverageRating(stockList)
 
@@ -738,6 +746,7 @@ fun calculateBrewStats(brewList: List<BrewRecord>): Pair<Int, Int>? {
 @Composable
 fun StockItem(
     stock: CoffeeStock,
+    settings: Settings = Settings.DEFAULT,
     onOpenClick: () -> Unit = {},
     onFinishClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
@@ -792,7 +801,14 @@ fun StockItem(
                             modifier = Modifier.padding(end = 4.dp)
                         )
                     }
-                    Text(text = "${remaining.toInt()}g", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = if (settings.useGrams) {
+                            "${remaining.toInt()}g"
+                        } else {
+                            "${formatWeight(remaining, useGrams = false)}oz"
+                        },
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
 
@@ -812,7 +828,7 @@ fun StockItem(
                 }
                 stock.height?.let {
                     Text(
-                        text = "Height: ${it}m",
+                        text = "Height: ${it} masl",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

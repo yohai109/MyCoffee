@@ -4,6 +4,7 @@ import androidx.compose.ui.test.*
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.ProcessMethod
+import com.yohai.mycoffee.database.Settings
 import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -16,6 +17,27 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class StockScreenTest : com.yohai.mycoffee.BaseTest() {
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun stockItemUsesOuncesWhenConfigured() = runComposeUiTest {
+        val testStock = CoffeeStock(
+            id = 1,
+            name = "Test Coffee",
+            roaster = "Test Roaster",
+            state = CoffeeState.OPEN,
+            size = 250.0,
+            roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            finishDate = null,
+            remainingWeight = 250.0
+        )
+
+        setContent { StockItem(testStock, settings = Settings(useGrams = false)) }
+
+        onNode(hasText("oz", substring = true)).assertIsDisplayed()
+        onNodeWithText("250g").assertDoesNotExist()
+    }
 
     @OptIn(ExperimentalTestApi::class)
     @Test
@@ -1087,7 +1109,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         }
 
         // Then
-        onNodeWithText("Height: 1800m").assertIsDisplayed()
+        onNodeWithText("Height: 1800 masl").assertIsDisplayed()
         onNodeWithText("Species: Arabica").assertIsDisplayed()
     }
 

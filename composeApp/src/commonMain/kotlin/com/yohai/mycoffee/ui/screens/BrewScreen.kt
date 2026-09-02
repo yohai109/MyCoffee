@@ -73,7 +73,10 @@ private fun formatBrewWeight(grams: Double, useGrams: Boolean): String =
     if (useGrams) grams.toString() else (grams / BREW_GRAMS_PER_OUNCE).toString()
 
 @Composable
-fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
+fun BrewAnalyticsCard(
+    brewList: List<BrewRecord>,
+    settings: Settings = Settings.DEFAULT
+) {
     if (brewList.isEmpty()) return
 
     val totalBrews = brewList.size
@@ -94,7 +97,10 @@ fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BrewStat("$totalBrews", "brews")
-                BrewStat("${avgDose}g", "average dose")
+                BrewStat(
+                    formatBrewDisplayWeight(avgDose.toDouble(), settings.useGrams),
+                    "average dose"
+                )
                 topMethod?.let { BrewStat(formatBrewMethod(it), "favorite method") }
             }
         }
@@ -150,7 +156,7 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
-                    BrewAnalyticsCard(brewList)
+                    BrewAnalyticsCard(brewList, settings)
                     Text("RECENT BREWS", style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 8.dp, bottom = 2.dp))
@@ -160,6 +166,7 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                     BrewItem(
                         brew = brew,
                         coffeeName = coffee?.name ?: "Unknown Coffee",
+                        settings = settings,
                         onEditClick = { editingBrew = brew },
                         onDeleteClick = { showDeleteConfirm = brew }
                     )
@@ -220,13 +227,38 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                                 notes = notes
                             )
                         )
-                        val stock = coffeeStock.find { it.id == coffeeStockId }
-                        stock?.let {
-                            val currentRemaining = it.remainingWeight ?: it.size
-                            val newRemaining = (currentRemaining - dose).coerceAtLeast(0.0)
-                            database.coffeeDao().updateStock(
-                                it.copy(remainingWeight = newRemaining)
-                            )
+                        val oldStock = coffeeStock.find { it.id == brew.coffeeStockId }
+                        val newStock = coffeeStock.find { it.id == coffeeStockId }
+                        if (oldStock?.id == newStock?.id) {
+                            newStock?.let {
+                                database.coffeeDao().updateStock(
+                                    it.copy(
+                                        remainingWeight = remainingAfterBrewEdit(
+                                            stock = it,
+                                            oldDose = brew.dose,
+                                            newDose = dose
+                                        )
+                                    )
+                                )
+                            }
+                        } else {
+                            oldStock?.let {
+                                database.coffeeDao().updateStock(
+                                    it.copy(
+                                        remainingWeight = remainingAfterRestoringBrew(
+                                            stock = it,
+                                            dose = brew.dose
+                                        )
+                                    )
+                                )
+                            }
+                            newStock?.let {
+                                database.coffeeDao().updateStock(
+                                    it.copy(
+                                        remainingWeight = remainingAfterBrew(dose = dose, stock = it)
+                                    )
+                                )
+                            }
                         }
                         editingBrew = null
                     }
@@ -242,6 +274,16 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                 confirmButton = {
                     TextButton(onClick = {
                         scope.launch {
+                            coffeeStock.find { it.id == brew.coffeeStockId }?.let { stock ->
+                                database.coffeeDao().updateStock(
+                                    stock.copy(
+                                        remainingWeight = remainingAfterRestoringBrew(
+                                            stock = stock,
+                                            dose = brew.dose
+                                        )
+                                    )
+                                )
+                            }
                             database.brewDao().deleteBrew(brew)
                             showDeleteConfirm = null
                         }
@@ -263,6 +305,7 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
 fun BrewItem(
     brew: BrewRecord,
     coffeeName: String,
+    settings: Settings = Settings.DEFAULT,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
@@ -305,7 +348,10 @@ fun BrewItem(
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Dose", style = MaterialTheme.typography.labelSmall)
-                    Text("${brew.dose.toInt()}g", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        formatBrewDisplayWeight(brew.dose, settings.useGrams),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Time", style = MaterialTheme.typography.labelSmall)
@@ -314,7 +360,10 @@ fun BrewItem(
                 if (brew.yield != null) {
                     Column(horizontalAlignment = Alignment.End) {
                         Text("Yield", style = MaterialTheme.typography.labelSmall)
-                        Text("${brew.yield?.toInt()}g", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            formatBrewDisplayWeight(brew.yield ?: 0.0, settings.useGrams),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }
@@ -338,10 +387,13 @@ fun AddBrewDialog(
     settings: Settings = Settings.DEFAULT
 ) {
     val isEditing = initialBrew != null
+    val eligibleCoffeeStock = coffeeStock.filter {
+        it.state == CoffeeState.OPEN || it.id == initialBrew?.coffeeStockId
+    }
     var selectedCoffee by remember {
         mutableStateOf(
             initialBrew?.coffeeStockId
-                ?: coffeeStock.firstOrNull { it.state == CoffeeState.OPEN }?.id
+                ?: eligibleCoffeeStock.firstOrNull()?.id
         )
     }
     var selectedDate by remember {
@@ -401,9 +453,9 @@ fun AddBrewDialog(
                 )
                 BrewFormSection("COFFEE & DATE")
 
-                if (coffeeStock.isEmpty()) {
+                if (eligibleCoffeeStock.isEmpty()) {
                     Text(
-                        "No coffee in stock. Add coffee first.",
+                        "No open coffee in stock. Open a coffee bag first.",
                         color = MaterialTheme.colorScheme.error
                     )
                 } else {
@@ -412,7 +464,7 @@ fun AddBrewDialog(
                         onExpandedChange = { coffeeExpanded = it }
                     ) {
                         OutlinedTextField(
-                            value = coffeeStock.find { it.id == selectedCoffee }?.name
+                            value = eligibleCoffeeStock.find { it.id == selectedCoffee }?.name
                                 ?: selectedCoffeeName ?: "",
                             onValueChange = {},
                             readOnly = true,
@@ -424,7 +476,7 @@ fun AddBrewDialog(
                             expanded = coffeeExpanded,
                             onDismissRequest = { coffeeExpanded = false }
                         ) {
-                            coffeeStock.forEach { coffee ->
+                            eligibleCoffeeStock.forEach { coffee ->
                                 DropdownMenuItem(
                                     text = { Text(coffee.name) },
                                     onClick = {
@@ -586,6 +638,10 @@ private fun BrewFormSection(text: String) {
     )
 }
 
+private fun formatBrewDisplayWeight(grams: Double, useGrams: Boolean): String {
+    return if (useGrams) "${grams.toInt()}g" else "${formatBrewWeight(grams, useGrams = false)}oz"
+}
+
 fun formatBrewMethod(method: BrewMethod): String {
     return method.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
 }
@@ -598,3 +654,18 @@ fun formatBrewTime(seconds: Int): String {
 
 fun isValidBrewTime(minutes: Int, seconds: Int): Boolean =
     minutes >= 0 && seconds in 0..59 && minutes * 60 + seconds > 0
+
+fun remainingAfterBrew(stock: CoffeeStock, dose: Double): Double {
+    val currentRemaining = stock.remainingWeight ?: stock.size
+    return (currentRemaining - dose).coerceAtLeast(0.0)
+}
+
+fun remainingAfterRestoringBrew(stock: CoffeeStock, dose: Double): Double {
+    val currentRemaining = stock.remainingWeight ?: stock.size
+    return (currentRemaining + dose).coerceAtMost(stock.size)
+}
+
+fun remainingAfterBrewEdit(stock: CoffeeStock, oldDose: Double, newDose: Double): Double {
+    val currentRemaining = stock.remainingWeight ?: stock.size
+    return (currentRemaining + oldDose - newDose).coerceIn(0.0, stock.size)
+}
