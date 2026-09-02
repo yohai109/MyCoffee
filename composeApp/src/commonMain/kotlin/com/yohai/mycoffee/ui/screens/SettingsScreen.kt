@@ -1,7 +1,6 @@
 package com.yohai.mycoffee.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,14 +8,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,20 +29,37 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.yohai.mycoffee.database.BrewMethod
+import com.yohai.mycoffee.database.CoffeeDatabase
+import com.yohai.mycoffee.database.Settings
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
-    var useGrams by remember { mutableStateOf(true) }
-    var defaultBagSize by remember { mutableStateOf("340") }
-    var useDarkTheme by remember { mutableStateOf<Boolean?>(null) }
-    var selectedBrewMethod by remember { mutableStateOf<BrewMethod?>(null) }
+fun SettingsScreen(
+    database: CoffeeDatabase? = null,
+    settings: Settings = Settings.DEFAULT
+) {
+    val currentSettings = settings
+    val scope = rememberCoroutineScope()
+    var useGrams by remember(currentSettings) { mutableStateOf(currentSettings.useGrams) }
+    var defaultBagSize by remember(currentSettings) { mutableStateOf(currentSettings.defaultBagSize.toString()) }
+    var useDarkTheme by remember(currentSettings) { mutableStateOf(currentSettings.darkMode) }
+    var selectedBrewMethod by remember(currentSettings) { mutableStateOf(currentSettings.defaultBrewMethod) }
+    var defaultBrewDose by remember(currentSettings) { mutableStateOf(currentSettings.defaultBrewDose.toString()) }
+    var defaultBrewYield by remember(currentSettings) { mutableStateOf(currentSettings.defaultBrewYield.toString()) }
     var brewMethodExpanded by remember { mutableStateOf(false) }
+
+    fun save(update: (Settings) -> Settings) {
+        database?.let { db ->
+            scope.launch { db.settingsDao().updateSettings(update(currentSettings)) }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -59,7 +75,7 @@ fun SettingsScreen() {
             ) {
                 Text("App settings and preferences", style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                TextButton(onClick = { /* TODO: Save settings */ }) { Text("Save") }
+                TextButton(onClick = { save { it.copy(defaultBagSize = defaultBagSize.toDoubleOrNull() ?: it.defaultBagSize, defaultBrewDose = defaultBrewDose.toDoubleOrNull() ?: it.defaultBrewDose, defaultBrewYield = defaultBrewYield.toDoubleOrNull() ?: it.defaultBrewYield) } }) { Text("Save") }
             }
             Text("Units", style = MaterialTheme.typography.titleMedium)
 
@@ -70,12 +86,12 @@ fun SettingsScreen() {
                 tonalElevation = 1.dp
             ) { Column(Modifier.padding(4.dp)) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = useGrams, onClick = { useGrams = true })
+                    RadioButton(selected = useGrams, onClick = { useGrams = true; save { it.copy(useGrams = true) } })
                     Text("Grams", modifier = Modifier.padding(start = 8.dp))
                 }
 
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = !useGrams, onClick = { useGrams = false })
+                    RadioButton(selected = !useGrams, onClick = { useGrams = false; save { it.copy(useGrams = false) } })
                     Text("Ounces", modifier = Modifier.padding(start = 8.dp))
                 }
             } }
@@ -86,7 +102,7 @@ fun SettingsScreen() {
 
             OutlinedTextField(
                 value = defaultBagSize,
-                onValueChange = { defaultBagSize = it },
+                onValueChange = { defaultBagSize = it; it.toDoubleOrNull()?.takeIf { value -> value > 0 }?.let { value -> save { settings -> settings.copy(defaultBagSize = value) } } },
                 label = { Text("Size") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -100,11 +116,11 @@ fun SettingsScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Switch(
-                    checked = useDarkTheme == true,
-                    onCheckedChange = { useDarkTheme = if (it) true else null }
+                    checked = useDarkTheme,
+                    onCheckedChange = { useDarkTheme = it; save { settings -> settings.copy(darkMode = it) } }
                 )
                 Text(
-                    if (useDarkTheme == true) "Dark theme" else "System theme",
+                    if (useDarkTheme) "Dark theme" else "Light theme",
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
@@ -113,30 +129,50 @@ fun SettingsScreen() {
 
             Text("Default Brew Method", style = MaterialTheme.typography.titleMedium)
 
-            Box(modifier = Modifier.fillMaxWidth()) {
+            ExposedDropdownMenuBox(
+                expanded = brewMethodExpanded,
+                onExpandedChange = { brewMethodExpanded = it }
+            ) {
                 OutlinedTextField(
-                    value = selectedBrewMethod?.let(::formatBrewMethod) ?: "Choose a method",
+                    value = formatBrewMethod(selectedBrewMethod),
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Method") },
-                    trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = "Choose brew method") },
-                    modifier = Modifier.fillMaxWidth().clickable { brewMethodExpanded = true }
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = brewMethodExpanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
                 )
-                DropdownMenu(
+                ExposedDropdownMenu(
                     expanded = brewMethodExpanded,
                     onDismissRequest = { brewMethodExpanded = false },
-                    modifier = Modifier.fillMaxWidth()
                 ) {
                     BrewMethod.entries.forEach { method ->
                         DropdownMenuItem(
                             text = { Text(formatBrewMethod(method)) },
                             onClick = {
                                 selectedBrewMethod = method
+                                save { it.copy(defaultBrewMethod = method) }
                                 brewMethodExpanded = false
                             }
                         )
                     }
                 }
+             }
+
+            Text("Default Brew Recipe", style = MaterialTheme.typography.titleMedium)
+            Row(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = defaultBrewDose,
+                    onValueChange = { defaultBrewDose = it; it.toDoubleOrNull()?.takeIf { value -> value > 0 }?.let { value -> save { settings -> settings.copy(defaultBrewDose = value) } } },
+                    label = { Text("Dose (grams)") },
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                OutlinedTextField(
+                    value = defaultBrewYield,
+                    onValueChange = { defaultBrewYield = it; it.toDoubleOrNull()?.takeIf { value -> value > 0 }?.let { value -> save { settings -> settings.copy(defaultBrewYield = value) } } },
+                    label = { Text("Yield (grams)") },
+                    modifier = Modifier.weight(1f)
+                )
             }
 
     }

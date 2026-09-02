@@ -221,6 +221,44 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
+    fun addBrewDialogDefaultsToOpenCoffee() = runComposeUiTest {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val coffeeStock = listOf(
+            CoffeeStock(
+                id = 1,
+                name = "Unopened Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.NEW,
+                size = 250.0,
+                roastDate = today,
+                openDate = null,
+                finishDate = null
+            ),
+            CoffeeStock(
+                id = 2,
+                name = "Open Coffee",
+                roaster = "Test Roaster",
+                state = CoffeeState.OPEN,
+                size = 250.0,
+                roastDate = today,
+                openDate = today,
+                finishDate = null
+            )
+        )
+
+        setContent {
+            AddBrewDialog(
+                coffeeStock = coffeeStock,
+                onDismiss = {},
+                onConfirm = { _, _, _, _, _, _, _ -> }
+            )
+        }
+
+        onNodeWithText("Open Coffee").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
     fun addBrewDialogWithInitialBrew_prefillsFields() = runComposeUiTest {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         val coffeeStock = listOf(

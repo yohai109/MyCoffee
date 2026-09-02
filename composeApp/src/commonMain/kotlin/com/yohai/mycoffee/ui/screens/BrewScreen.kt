@@ -52,7 +52,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.yohai.mycoffee.database.BrewMethod
+import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.BrewRecord
+import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
@@ -64,6 +66,11 @@ import kotlinx.datetime.todayIn
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.time.Instant
+
+private const val BREW_GRAMS_PER_OUNCE = 28.3495
+
+private fun formatBrewWeight(grams: Double, useGrams: Boolean): String =
+    if (useGrams) grams.toString() else (grams / BREW_GRAMS_PER_OUNCE).toString()
 
 @Composable
 fun BrewAnalyticsCard(brewList: List<BrewRecord>) {
@@ -104,7 +111,7 @@ private fun BrewStat(value: String, label: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BrewScreen() {
+fun BrewScreen(settings: Settings = Settings.DEFAULT) {
     val database = remember { getDatabase() }
     val scope = rememberCoroutineScope()
     val brewList: List<BrewRecord> by database.brewDao().getAllBrews()
@@ -163,6 +170,7 @@ fun BrewScreen() {
         if (showAddDialog) {
             AddBrewDialog(
                 coffeeStock = coffeeStock,
+                settings = settings,
                 onDismiss = { showAddDialog = false },
                 onConfirm = { coffeeStockId, date, method, dose, brewTime, yield, notes ->
                     scope.launch {
@@ -196,6 +204,7 @@ fun BrewScreen() {
             AddBrewDialog(
                 initialBrew = brew,
                 coffeeStock = coffeeStock,
+                settings = settings,
                 selectedCoffeeName = coffee?.name,
                 onDismiss = { editingBrew = null },
                 onConfirm = { coffeeStockId, date, method, dose, brewTime, yield, notes ->
@@ -325,20 +334,26 @@ fun AddBrewDialog(
     onDismiss: () -> Unit,
     onConfirm: (coffeeStockId: Long, date: LocalDate, method: BrewMethod, dose: Double, brewTime: Int, yield: Double?, notes: String?) -> Unit,
     initialBrew: BrewRecord? = null,
-    selectedCoffeeName: String? = null
+    selectedCoffeeName: String? = null,
+    settings: Settings = Settings.DEFAULT
 ) {
     val isEditing = initialBrew != null
-    var selectedCoffee by remember { mutableStateOf(initialBrew?.coffeeStockId) }
+    var selectedCoffee by remember {
+        mutableStateOf(
+            initialBrew?.coffeeStockId
+                ?: coffeeStock.firstOrNull { it.state == CoffeeState.OPEN }?.id
+        )
+    }
     var selectedDate by remember {
         mutableStateOf(
             initialBrew?.date ?: Clock.System.todayIn(TimeZone.currentSystemDefault())
         )
     }
-    var selectedMethod by remember { mutableStateOf(initialBrew?.method ?: BrewMethod.ESPRESSO) }
-    var doseText by remember { mutableStateOf(initialBrew?.dose?.toString() ?: "") }
+    var selectedMethod by remember { mutableStateOf(initialBrew?.method ?: settings.defaultBrewMethod) }
+    var doseText by remember { mutableStateOf(initialBrew?.dose?.let { formatBrewWeight(it, settings.useGrams) } ?: formatBrewWeight(settings.defaultBrewDose, settings.useGrams)) }
     var brewTimeMinutes by remember { mutableStateOf(initialBrew?.brewTime?.div(60) ?: 0) }
     var brewTimeSeconds by remember { mutableStateOf(initialBrew?.brewTime?.rem(60) ?: 0) }
-    var yieldText by remember { mutableStateOf(initialBrew?.yield?.toString() ?: "") }
+    var yieldText by remember { mutableStateOf(initialBrew?.yield?.let { formatBrewWeight(it, settings.useGrams) } ?: formatBrewWeight(settings.defaultBrewYield, settings.useGrams)) }
     var notes by remember { mutableStateOf(initialBrew?.notes ?: "") }
     var showDatePicker by remember { mutableStateOf(false) }
     var methodExpanded by remember { mutableStateOf(false) }
@@ -479,14 +494,14 @@ fun AddBrewDialog(
                     OutlinedTextField(
                         value = doseText,
                         onValueChange = { doseText = it },
-                        label = { Text("Dose (g)") },
+                        label = { Text("Dose (${if (settings.useGrams) "g" else "oz"})") },
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     OutlinedTextField(
                         value = yieldText,
                         onValueChange = { yieldText = it },
-                        label = { Text("Yield (g)") },
+                        label = { Text("Yield (${if (settings.useGrams) "g" else "oz"})") },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -540,9 +555,9 @@ fun AddBrewDialog(
                                 selectedCoffee!!,
                                 selectedDate,
                                 selectedMethod,
-                                dose,
+                                if (settings.useGrams) dose else dose * BREW_GRAMS_PER_OUNCE,
                                 totalBrewTime,
-                                yield,
+                                 yield?.let { if (settings.useGrams) it else it * BREW_GRAMS_PER_OUNCE },
                                 notes.ifBlank { null })
                         },
                         enabled = isValid && selectedCoffee != null

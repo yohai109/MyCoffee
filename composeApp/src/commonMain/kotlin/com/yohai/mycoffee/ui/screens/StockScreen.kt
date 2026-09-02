@@ -62,6 +62,7 @@ import com.yohai.mycoffee.database.CoffeeDatabase
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.ProcessMethod
+import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -80,10 +81,16 @@ private val ORIGIN_OPTIONS = listOf(
 )
 
 private val SPECIES_OPTIONS = listOf("Arabica", "Robusta", "Liberica", "Excelsa")
+private const val GRAMS_PER_OUNCE = 28.3495
+
+private fun formatWeight(grams: Double, useGrams: Boolean): String =
+    if (useGrams) grams.toString() else (grams / GRAMS_PER_OUNCE).toString()
+
+private fun weightUnit(useGrams: Boolean): String = if (useGrams) "grams" else "oz"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StockScreen() {
+fun StockScreen(settings: Settings = Settings.DEFAULT) {
     val database = remember { getDatabase() }
     val scope = rememberCoroutineScope()
     val stockList: List<CoffeeStock> by database.coffeeDao().getAllStock()
@@ -200,8 +207,10 @@ fun StockScreen() {
 
         if (showAddDialog) {
             AddStockDialog(
+                defaultBagSize = settings.defaultBagSize,
+                useGrams = settings.useGrams,
                 onDismiss = { showAddDialog = false },
-                onConfirm = { name, roaster, size, roastDate, origin, process, notes, height, species ->
+                    onConfirm = { name, roaster, size, roastDate, origin, process, notes, height, species ->
                     scope.launch {
                         database.coffeeDao().insertStock(
                             CoffeeStock(
@@ -228,6 +237,7 @@ fun StockScreen() {
         editingStock?.let { stock ->
             AddStockDialog(
                 initialStock = stock,
+                useGrams = settings.useGrams,
                 onDismiss = { editingStock = null },
                 onConfirm = { name, roaster, size, roastDate, origin, process, notes, height, species ->
                     scope.launch {
@@ -299,12 +309,14 @@ fun StockScreen() {
 fun AddStockDialog(
     onDismiss: () -> Unit,
     onConfirm: (name: String, roaster: String, size: Double, roastDate: LocalDate, origin: String?, process: ProcessMethod?, tastingNotes: String?, height: Int?, species: String?) -> Unit,
-    initialStock: CoffeeStock? = null
+    initialStock: CoffeeStock? = null,
+    defaultBagSize: Double = Settings.DEFAULT.defaultBagSize,
+    useGrams: Boolean = Settings.DEFAULT.useGrams
 ) {
     val isEditing = initialStock != null
     var name by remember { mutableStateOf(initialStock?.name ?: "") }
     var roaster by remember { mutableStateOf(initialStock?.roaster ?: "") }
-    var sizeText by remember { mutableStateOf(initialStock?.size?.toString() ?: "") }
+    var sizeText by remember { mutableStateOf(initialStock?.size?.let { formatWeight(it, useGrams) } ?: formatWeight(defaultBagSize, useGrams)) }
     var selectedDate by remember { mutableStateOf(initialStock?.roastDate) }
     var showDatePicker by remember { mutableStateOf(false) }
     var origin by remember { mutableStateOf(initialStock?.origin ?: "") }
@@ -373,7 +385,7 @@ fun AddStockDialog(
                 OutlinedTextField(
                     value = sizeText,
                     onValueChange = { sizeText = it },
-                    label = { Text("Size (grams)") },
+                    label = { Text("Size (${weightUnit(useGrams)})") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -514,7 +526,7 @@ fun AddStockDialog(
                     TextButton(
                         onClick = {
                             onConfirm(
-                                name, roaster, size, selectedDate!!,
+                                name, roaster, if (useGrams) size else size * GRAMS_PER_OUNCE, selectedDate!!,
                                 origin.ifBlank { null },
                                 process,
                                 tastingNotes.ifBlank { null },

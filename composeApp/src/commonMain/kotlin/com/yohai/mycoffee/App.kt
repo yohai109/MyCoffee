@@ -20,7 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -33,6 +36,8 @@ import com.yohai.mycoffee.ui.screens.BrewScreen
 import com.yohai.mycoffee.ui.screens.SettingsScreen
 import com.yohai.mycoffee.ui.screens.StockScreen
 import com.yohai.mycoffee.ui.theme.MyCoffeeTheme
+import com.yohai.mycoffee.database.Settings
+import com.yohai.mycoffee.database.getDatabase
 
 sealed class Screen(
     val route: String,
@@ -47,7 +52,17 @@ sealed class Screen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
-    MyCoffeeTheme {
+    val database = remember { getDatabase() }
+    val storedSettings by database.settingsDao().getSettings().collectAsState(initial = null)
+    val settings = storedSettings ?: Settings.DEFAULT
+
+    LaunchedEffect(storedSettings) {
+        if (storedSettings == null) {
+            database.settingsDao().insertSettings(Settings.DEFAULT)
+        }
+    }
+
+    MyCoffeeTheme(darkTheme = settings.darkMode) {
         val navController = rememberNavController()
         val items = listOf(
             Screen.Stock,
@@ -110,9 +125,9 @@ fun App() {
                 startDestination = Screen.Stock.route,
                 Modifier.padding(innerPadding)
             ) {
-                composable(Screen.Stock.route) { StockScreen() }
-                composable(Screen.Brew.route) { BrewScreen() }
-                composable(Screen.Settings.route) { SettingsScreen() }
+                composable(Screen.Stock.route) { StockScreen(settings = settings) }
+                composable(Screen.Brew.route) { BrewScreen(settings = settings) }
+                composable(Screen.Settings.route) { SettingsScreen(database = database, settings = settings) }
             }
         }
     }
