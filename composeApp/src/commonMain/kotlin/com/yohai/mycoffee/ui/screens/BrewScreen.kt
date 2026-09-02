@@ -54,6 +54,7 @@ import androidx.compose.ui.window.Dialog
 import com.yohai.mycoffee.database.BrewMethod
 import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.BrewRecord
+import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
@@ -337,7 +338,12 @@ fun AddBrewDialog(
     settings: Settings = Settings.DEFAULT
 ) {
     val isEditing = initialBrew != null
-    var selectedCoffee by remember { mutableStateOf(initialBrew?.coffeeStockId) }
+    var selectedCoffee by remember {
+        mutableStateOf(
+            initialBrew?.coffeeStockId
+                ?: coffeeStock.firstOrNull { it.state == CoffeeState.OPEN }?.id
+        )
+    }
     var selectedDate by remember {
         mutableStateOf(
             initialBrew?.date ?: Clock.System.todayIn(TimeZone.currentSystemDefault())
