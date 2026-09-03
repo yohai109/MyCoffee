@@ -58,7 +58,12 @@ data class BrewRecord(
     val dose: Double,
     val brewTime: Int, // in seconds
     val yield: Double?, // in grams
-    val notes: String?
+    val notes: String?,
+    val tastingNotes: String? = null,
+    val tastingTags: String? = null,
+    val whatWentWell: String? = null,
+    val whatToImprove: String? = null,
+    val wouldMakeAgain: Boolean? = null
 )
 
 @Entity
@@ -217,8 +222,14 @@ private val MIGRATION_4_5 = object : Migration(4, 5) {
 
 private val MIGRATION_5_6 = object : Migration(5, 6) {
     override fun migrate(connection: SQLiteConnection) {
-        val stmt = connection.prepare("CREATE TABLE IF NOT EXISTS BrewRecipe (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, method TEXT NOT NULL, dose REAL NOT NULL, yield REAL, brewTime INTEGER NOT NULL, waterTemperature REAL, notes TEXT)")
+        listOf("tastingNotes", "tastingTags", "whatWentWell", "whatToImprove").forEach { column ->
+            val stmt = connection.prepare("ALTER TABLE BrewRecord ADD COLUMN $column TEXT DEFAULT NULL")
+            try { stmt.step() } finally { stmt.close() }
+        }
+        val stmt = connection.prepare("ALTER TABLE BrewRecord ADD COLUMN wouldMakeAgain INTEGER DEFAULT NULL")
         try { stmt.step() } finally { stmt.close() }
+        val recipeStmt = connection.prepare("CREATE TABLE IF NOT EXISTS BrewRecipe (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, method TEXT NOT NULL, dose REAL NOT NULL, yield REAL, brewTime INTEGER NOT NULL, waterTemperature REAL, notes TEXT)")
+        try { recipeStmt.step() } finally { recipeStmt.close() }
     }
 }
 
