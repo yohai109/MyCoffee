@@ -35,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import com.yohai.mycoffee.ui.screens.BrewScreen
 import com.yohai.mycoffee.ui.screens.SettingsScreen
 import com.yohai.mycoffee.ui.screens.StockScreen
+import com.yohai.mycoffee.ui.screens.RecipeScreen
 import com.yohai.mycoffee.ui.theme.MyCoffeeTheme
 import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.getDatabase
@@ -47,6 +48,7 @@ sealed class Screen(
     data object Stock : Screen("stock", "Stock", Icons.AutoMirrored.Filled.List)
     data object Brew : Screen("brew", "Brew", Icons.Default.Refresh)
     data object Settings : Screen("settings", "Settings", Icons.Default.Settings)
+    data object Recipes : Screen("recipes", "Recipes", Icons.Default.Refresh)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,6 +70,7 @@ fun App() {
             Screen.Stock,
             Screen.Brew,
             Screen.Settings,
+            Screen.Recipes,
         )
 
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -128,6 +131,7 @@ fun App() {
                 composable(Screen.Stock.route) { StockScreen(settings = settings) }
                 composable(Screen.Brew.route) { BrewScreen(settings = settings) }
                 composable(Screen.Settings.route) { SettingsScreen(database = database, settings = settings) }
+                composable(Screen.Recipes.route) { RecipeScreen(database) }
             }
         }
     }
