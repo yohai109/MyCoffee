@@ -36,6 +36,7 @@ import com.yohai.mycoffee.ui.screens.BrewScreen
 import com.yohai.mycoffee.ui.screens.SettingsScreen
 import com.yohai.mycoffee.ui.screens.StockScreen
 import com.yohai.mycoffee.ui.screens.RecipeScreen
+import com.yohai.mycoffee.ui.screens.TimerScreen
 import com.yohai.mycoffee.ui.theme.MyCoffeeTheme
 import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.getDatabase
@@ -49,6 +50,7 @@ sealed class Screen(
     data object Brew : Screen("brew", "Brew", Icons.Default.Refresh)
     data object Settings : Screen("settings", "Settings", Icons.Default.Settings)
     data object Recipes : Screen("recipes", "Recipes", Icons.Default.Refresh)
+    data object Timer : Screen("timer", "Timer", Icons.Default.Refresh)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,6 +73,7 @@ fun App() {
             Screen.Brew,
             Screen.Settings,
             Screen.Recipes,
+            Screen.Timer,
         )
 
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -132,6 +135,7 @@ fun App() {
                 composable(Screen.Brew.route) { BrewScreen(settings = settings) }
                 composable(Screen.Settings.route) { SettingsScreen(database = database, settings = settings) }
                 composable(Screen.Recipes.route) { RecipeScreen(database) }
+                composable(Screen.Timer.route) { TimerScreen() }
             }
         }
     }
