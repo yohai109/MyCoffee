@@ -83,7 +83,7 @@ data class Settings(
     @PrimaryKey val id: Int = 1,
     val useGrams: Boolean = true,
     val defaultBagSize: Double = 340.0,
-    val darkMode: Boolean = false,
+    val darkMode: Boolean? = null,
     val defaultBrewMethod: BrewMethod = BrewMethod.ESPRESSO,
     val defaultBrewDose: Double = 18.0,
     val defaultBrewYield: Double = 36.0
@@ -150,7 +150,7 @@ interface RecipeDao {
     @Delete suspend fun deleteRecipe(recipe: BrewRecipe)
 }
 
-@Database(entities = [CoffeeStock::class, BrewRecord::class, BrewRecipe::class, Settings::class], version = 6)
+@Database(entities = [CoffeeStock::class, BrewRecord::class, BrewRecipe::class, Settings::class], version = 7)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
@@ -233,6 +233,36 @@ private val MIGRATION_5_6 = object : Migration(5, 6) {
     }
 }
 
+private val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(connection: SQLiteConnection) {
+        val create = connection.prepare(
+            """CREATE TABLE Settings_new (
+                id INTEGER NOT NULL PRIMARY KEY,
+                useGrams INTEGER NOT NULL,
+                defaultBagSize REAL NOT NULL,
+                darkMode INTEGER,
+                defaultBrewMethod TEXT NOT NULL,
+                defaultBrewDose REAL NOT NULL,
+                defaultBrewYield REAL NOT NULL
+            )"""
+        )
+        try { create.step() } finally { create.close() }
+
+        val copy = connection.prepare(
+            """INSERT INTO Settings_new
+                SELECT id, useGrams, defaultBagSize, darkMode,
+                    defaultBrewMethod, defaultBrewDose, defaultBrewYield
+                FROM Settings"""
+        )
+        try { copy.step() } finally { copy.close() }
+
+        for (sql in listOf("DROP TABLE Settings", "ALTER TABLE Settings_new RENAME TO Settings")) {
+            val stmt = connection.prepare(sql)
+            try { stmt.step() } finally { stmt.close() }
+        }
+    }
+}
+
 fun getRoomDatabase(
     builder: RoomDatabase.Builder<CoffeeDatabase>
 ): CoffeeDatabase {
@@ -240,6 +270,7 @@ fun getRoomDatabase(
         .addMigrations(MIGRATION_3_4)
         .addMigrations(MIGRATION_4_5)
         .addMigrations(MIGRATION_5_6)
+        .addMigrations(MIGRATION_6_7)
         .setDriver(BundledSQLiteDriver())
         .build()
 }
