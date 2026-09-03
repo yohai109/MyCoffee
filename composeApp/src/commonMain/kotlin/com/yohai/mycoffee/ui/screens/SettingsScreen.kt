@@ -54,6 +54,9 @@ fun SettingsScreen(
     var defaultBrewDose by remember(currentSettings) { mutableStateOf(formatMeasurement(currentSettings.defaultBrewDose, currentSettings.useGrams)) }
     var defaultBrewYield by remember(currentSettings) { mutableStateOf(formatMeasurement(currentSettings.defaultBrewYield, currentSettings.useGrams)) }
     var brewMethodExpanded by remember { mutableStateOf(false) }
+    val bagSizeError = measurementError(defaultBagSize, "Size", 0.1, 10000.0)
+    val doseError = measurementError(defaultBrewDose, "Dose", 0.1, 1000.0)
+    val yieldError = optionalMeasurementError(defaultBrewYield, "Yield", 0.1, 5000.0)
 
     fun save(update: (Settings) -> Settings) {
         database?.let { db ->
@@ -84,7 +87,7 @@ fun SettingsScreen(
                             useGrams = useGrams
                         )
                     }
-                }) { Text("Save") }
+                }, enabled = bagSizeError == null && doseError == null && yieldError == null) { Text("Save") }
             }
             Text("Units", style = MaterialTheme.typography.titleMedium)
 
@@ -129,6 +132,8 @@ fun SettingsScreen(
                 value = defaultBagSize,
                 onValueChange = { defaultBagSize = it },
                 label = { Text("Size (${if (useGrams) "grams" else "oz"})") },
+                isError = bagSizeError != null,
+                supportingText = bagSizeError?.let { { Text(it) } },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -189,6 +194,8 @@ fun SettingsScreen(
                     value = defaultBrewDose,
                     onValueChange = { defaultBrewDose = it },
                     label = { Text("Dose (${if (useGrams) "grams" else "oz"})") },
+                    isError = doseError != null,
+                    supportingText = doseError?.let { { Text(it) } },
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -196,6 +203,8 @@ fun SettingsScreen(
                     value = defaultBrewYield,
                     onValueChange = { defaultBrewYield = it },
                     label = { Text("Yield (${if (useGrams) "grams" else "oz"})") },
+                    isError = yieldError != null,
+                    supportingText = yieldError?.let { { Text(it) } },
                     modifier = Modifier.weight(1f)
                 )
             }

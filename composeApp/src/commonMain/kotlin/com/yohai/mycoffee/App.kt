@@ -8,6 +8,10 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,12 +22,18 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -40,6 +50,8 @@ import com.yohai.mycoffee.ui.screens.TimerScreen
 import com.yohai.mycoffee.ui.theme.MyCoffeeTheme
 import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.getDatabase
+import com.yohai.mycoffee.ui.WindowLayoutClass
+import com.yohai.mycoffee.ui.windowLayoutClassForWidth
 
 sealed class Screen(
     val route: String,
@@ -72,22 +84,37 @@ fun App() {
             Screen.Stock,
             Screen.Brew,
             Screen.Settings,
-            Screen.Recipes,
-            Screen.Timer,
         )
+        val destinations = items + listOf(Screen.Recipes, Screen.Timer)
+        var secondaryExpanded by remember { mutableStateOf(false) }
 
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
-        val currentScreen = items.find { it.route == currentDestination?.route } ?: Screen.Stock
+        val currentScreen = destinations.find { it.route == currentDestination?.route } ?: Screen.Stock
 
+        BoxWithConstraints {
+        val layoutClass = windowLayoutClassForWidth(maxWidth.value.toInt())
         Scaffold(
             topBar = {
-                TopAppBar(
+                 TopAppBar(
                     title = {
                         Column {
                             Text(currentScreen.label, style = MaterialTheme.typography.titleLarge)
                             if (currentScreen == Screen.Stock) {
                                 Text("Your coffee, at a glance", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { secondaryExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More destinations")
+                        }
+                        DropdownMenu(expanded = secondaryExpanded, onDismissRequest = { secondaryExpanded = false }) {
+                            listOf(Screen.Recipes, Screen.Timer).forEach { screen ->
+                                DropdownMenuItem(text = { Text(screen.label) }, onClick = {
+                                    secondaryExpanded = false
+                                    navController.navigate(screen.route)
+                                })
                             }
                         }
                     }
@@ -126,17 +153,20 @@ fun App() {
                 }
             }
         ) { innerPadding ->
-            NavHost(
-                navController,
-                startDestination = Screen.Stock.route,
-                Modifier.padding(innerPadding)
-            ) {
+             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+             NavHost(
+                 navController,
+                 startDestination = Screen.Stock.route,
+                 Modifier.padding(innerPadding).widthIn(max = if (layoutClass == WindowLayoutClass.EXPANDED) 1100.dp else 720.dp)
+             ) {
                 composable(Screen.Stock.route) { StockScreen(settings = settings) }
                 composable(Screen.Brew.route) { BrewScreen(settings = settings) }
                 composable(Screen.Settings.route) { SettingsScreen(database = database, settings = settings) }
-                composable(Screen.Recipes.route) { RecipeScreen(database) }
+                 composable(Screen.Recipes.route) { RecipeScreen(database, settings) }
                 composable(Screen.Timer.route) { TimerScreen() }
-            }
-        }
-    }
+             }
+             }
+         }
+     }
+     }
 }

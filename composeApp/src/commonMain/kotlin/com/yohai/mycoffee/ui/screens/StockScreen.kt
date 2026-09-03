@@ -41,7 +41,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -82,11 +81,6 @@ private val ORIGIN_OPTIONS = listOf(
 )
 
 private val SPECIES_OPTIONS = listOf("Arabica", "Robusta", "Liberica", "Excelsa")
-private const val GRAMS_PER_OUNCE = 28.3495
-
-private fun formatWeight(grams: Double, useGrams: Boolean): String =
-    if (useGrams) grams.toString() else (grams / GRAMS_PER_OUNCE).toString()
-
 private fun weightUnit(useGrams: Boolean): String = if (useGrams) "grams" else "oz"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -116,96 +110,64 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
         stockList.filter { it.state == CoffeeState.FINISHED }.sortedByDescending { it.rating ?: 0 }
     }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = {
-                showAddDialog = true
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Stock")
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            val contentPadding = PaddingValues(bottom = 96.dp)
+            if (stockList.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(contentPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Your shelf is waiting", style = MaterialTheme.typography.titleLarge)
+                        Spacer(Modifier.height(6.dp))
+                        Text("Add a bag to start keeping track.", style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = { showAddDialog = true }) { Text("Add coffee") }
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item { StatisticsBanner(stockList, settings = settings) }
+                    if (activeStockList.any { it.state == CoffeeState.OPEN }) {
+                        item {
+                            Text("CURRENTLY OPEN", style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 8.dp))
+                        }
+                    }
+                    items(activeStockList, key = { it.id }) { stock ->
+                        StockItem(stock = stock, settings = settings, onOpenClick = {
+                            scope.launch {
+                                database.coffeeDao().updateStock(stock.copy(
+                                    state = CoffeeState.OPEN,
+                                    openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                                    remainingWeight = stock.size
+                                ))
+                            }
+                        }, onFinishClick = { finishingStock = stock }, onEditClick = { editingStock = stock },
+                            onDeleteClick = { showDeleteConfirm = stock })
+                    }
+                    if (finishedStockList.isNotEmpty()) {
+                        item { FinishedBagsHeader(finishedStockList.size, finishedBagsExpanded) { finishedBagsExpanded = !finishedBagsExpanded } }
+                        if (finishedBagsExpanded) {
+                            items(finishedStockList, key = { it.id }) { stock ->
+                                StockItem(stock, settings, onDeleteClick = { showDeleteConfirm = stock })
+                            }
+                        }
+                    }
+                }
             }
         }
-    ) { padding ->
-        if (stockList.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Your shelf is waiting", style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.height(6.dp))
-                    Text("Add a bag to start keeping track.", style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = { showAddDialog = true }) { Text("Add coffee") }
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item {
-                    StatisticsBanner(stockList, settings = settings)
-                }
-                if (activeStockList.any { it.state == CoffeeState.OPEN }) {
-                    item {
-                        Text("CURRENTLY OPEN", style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(top = 8.dp))
-                    }
-                }
-                items(activeStockList) { stock ->
-                    StockItem(
-                        stock = stock,
-                        settings = settings,
-                        onOpenClick = {
-                            scope.launch {
-                                database.coffeeDao().updateStock(
-                                    stock.copy(
-                                        state = CoffeeState.OPEN,
-                                        openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                                        remainingWeight = stock.size
-                                    )
-                                )
-                            }
-                        },
-                        onFinishClick = {
-                            finishingStock = stock
-                        },
-                        onEditClick = {
-                            editingStock = stock
-                        },
-                        onDeleteClick = {
-                            showDeleteConfirm = stock
-                        }
-                    )
-                }
-
-                if (finishedStockList.isNotEmpty()) {
-                    item {
-                        FinishedBagsHeader(
-                            count = finishedStockList.size,
-                            expanded = finishedBagsExpanded,
-                            onToggle = { finishedBagsExpanded = !finishedBagsExpanded }
-                        )
-                    }
-
-                    if (finishedBagsExpanded) {
-                        items(finishedStockList) { stock ->
-                            StockItem(
-                                stock = stock,
-                                settings = settings,
-                                onOpenClick = {},
-                                onFinishClick = {},
-                                onEditClick = {},
-                                onDeleteClick = {
-                                    showDeleteConfirm = stock
-                                }
-                            )
-                        }
-                    }
-                }
-            }
+        FloatingActionButton(
+            onClick = { showAddDialog = true },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Add Stock")
         }
 
         if (showAddDialog) {
@@ -320,7 +282,7 @@ fun AddStockDialog(
     val isEditing = initialStock != null
     var name by remember { mutableStateOf(initialStock?.name ?: "") }
     var roaster by remember { mutableStateOf(initialStock?.roaster ?: "") }
-    var sizeText by remember { mutableStateOf(initialStock?.size?.let { formatWeight(it, useGrams) } ?: formatWeight(defaultBagSize, useGrams)) }
+    var sizeText by remember { mutableStateOf(initialStock?.size?.let { formatMeasurement(it, useGrams) } ?: formatMeasurement(defaultBagSize, useGrams)) }
     var selectedDate by remember { mutableStateOf(initialStock?.roastDate) }
     var showDatePicker by remember { mutableStateOf(false) }
     var origin by remember { mutableStateOf(initialStock?.origin ?: "") }
@@ -536,7 +498,7 @@ fun AddStockDialog(
                     TextButton(
                         onClick = {
                             onConfirm(
-                                name, roaster, if (useGrams) size else size * GRAMS_PER_OUNCE, selectedDate!!,
+                                 name, roaster, if (useGrams) size else ouncesToGrams(size), selectedDate!!,
                                 origin.ifBlank { null },
                                 process,
                                 tastingNotes.ifBlank { null },
@@ -813,7 +775,7 @@ fun StockItem(
                         text = if (settings.useGrams) {
                             "${remaining.toInt()}g"
                         } else {
-                            "${formatWeight(remaining, useGrams = false)}oz"
+                            "${formatDisplayMeasurement(remaining, useGrams = false)}oz"
                         },
                         style = MaterialTheme.typography.bodySmall
                     )

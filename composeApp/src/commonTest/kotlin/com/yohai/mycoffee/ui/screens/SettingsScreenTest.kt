@@ -50,7 +50,7 @@ class SettingsScreenTest : com.yohai.mycoffee.BaseTest() {
 
         onNodeWithText("Dose (oz)").assertIsDisplayed()
         onNodeWithText("Yield (oz)").assertIsDisplayed()
-        onNodeWithText("0.634931833012928").assertIsDisplayed()
-        onNodeWithText("1.269863666025856").assertIsDisplayed()
+        onNodeWithText("0.63").assertIsDisplayed()
+        onNodeWithText("1.27").assertIsDisplayed()
     }
 }

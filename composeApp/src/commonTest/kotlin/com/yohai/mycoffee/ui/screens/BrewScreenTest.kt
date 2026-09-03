@@ -79,7 +79,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             )
         }
 
-        onNodeWithText("0.634931833012928oz").assertIsDisplayed()
+        onNodeWithText("0.63oz").assertIsDisplayed()
         onNodeWithText("18g").assertDoesNotExist()
     }
 

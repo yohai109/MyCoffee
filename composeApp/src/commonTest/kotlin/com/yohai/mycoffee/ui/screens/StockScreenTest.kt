@@ -254,7 +254,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         onNodeWithText("Add").assertDoesNotExist()
         onNodeWithText("Ethiopian Yirgacheffe").assertIsDisplayed()
         onNodeWithText("Blue Bottle").assertIsDisplayed()
-        onNodeWithText("250.0").assertIsDisplayed()
+        onNodeWithText("250").assertIsDisplayed()
         onNodeWithText(today.toString()).assertIsDisplayed()
     }
 
