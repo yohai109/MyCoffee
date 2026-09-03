@@ -13,6 +13,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -111,7 +112,7 @@ private fun RecipeFormDialog(
                 Text(if (initial == null) "New recipe" else "Edit recipe", style = MaterialTheme.typography.headlineSmall)
                 OutlinedTextField(name, { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth(), isError = name.isBlank())
                 ExposedDropdownMenuBox(expanded, { expanded = it }) {
-                    OutlinedTextField(formatBrewMethod(method), {}, readOnly = true, label = { Text("Method") }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) }, modifier = Modifier.fillMaxWidth().menuAnchor())
+                    OutlinedTextField(formatBrewMethod(method), {}, readOnly = true, label = { Text("Method") }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) }, modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable))
                     ExposedDropdownMenu(expanded, { expanded = false }) {
                         BrewMethod.entries.forEach { option -> DropdownMenuItem({ Text(formatBrewMethod(option)) }, { method = option; expanded = false }) }
                     }
