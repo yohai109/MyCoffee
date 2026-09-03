@@ -20,6 +20,13 @@ class ComposeAppCommonTest {
     }
 
     @Test
+    fun secondaryDestinationsUseSingleTopNavigation() {
+        assertTrue(secondaryNavigationOptions().shouldLaunchSingleTop())
+        assertEquals("recipes", Screen.Recipes.route)
+        assertEquals("timer", Screen.Timer.route)
+    }
+
+    @Test
     fun testScreenLabelsAreDefined() {
         // Test that all screen labels are properly defined
         assertEquals("Stock", Screen.Stock.label)
