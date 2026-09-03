@@ -33,10 +33,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -57,6 +57,11 @@ import com.yohai.mycoffee.ui.windowLayoutClassForWidth
 internal fun secondaryNavigationOptions() = navOptions {
     launchSingleTop = true
 }
+
+internal fun originatingPrimaryRoute(currentRoute: String?, secondaryOrigin: String) =
+    currentRoute?.takeIf {
+        it == Screen.Stock.route || it == Screen.Brew.route || it == Screen.Settings.route
+    } ?: secondaryOrigin
 
 sealed class Screen(
     val route: String,
@@ -92,10 +97,13 @@ fun App() {
         )
         val destinations = items + listOf(Screen.Recipes, Screen.Timer)
         var secondaryExpanded by remember { mutableStateOf(false) }
+        var secondaryOrigin by rememberSaveable { mutableStateOf(Screen.Stock.route) }
 
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
-        val currentScreen = destinations.find { it.route == currentDestination?.route } ?: Screen.Stock
+        val currentRoute = currentDestination?.route
+        val originatingRoute = originatingPrimaryRoute(currentRoute, secondaryOrigin)
+        val currentScreen = destinations.find { it.route == currentRoute } ?: Screen.Stock
 
         BoxWithConstraints {
         val layoutClass = windowLayoutClassForWidth(maxWidth.value.toInt())
@@ -118,7 +126,11 @@ fun App() {
                             listOf(Screen.Recipes, Screen.Timer).forEach { screen ->
                                 DropdownMenuItem(text = { Text(screen.label) }, onClick = {
                                     secondaryExpanded = false
-                                    navController.navigate(screen.route, secondaryNavigationOptions())
+                                    secondaryOrigin = originatingRoute
+                                    navController.navigate(
+                                        screen.route,
+                                        secondaryNavigationOptions()
+                                    )
                                 })
                             }
                         }
@@ -134,7 +146,7 @@ fun App() {
                         NavigationBarItem(
                             icon = { Icon(screen.icon, contentDescription = screen.label) },
                             label = { Text(screen.label) },
-                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                             selected = originatingRoute == screen.route,
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.onPrimary,
                                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -167,8 +179,8 @@ fun App() {
                 composable(Screen.Stock.route) { StockScreen(settings = settings) }
                 composable(Screen.Brew.route) { BrewScreen(settings = settings) }
                 composable(Screen.Settings.route) { SettingsScreen(database = database, settings = settings) }
-                 composable(Screen.Recipes.route) { RecipeScreen(database, settings) }
-                composable(Screen.Timer.route) { TimerScreen() }
+                 composable("${Screen.Recipes.route}?origin={origin}") { RecipeScreen(database, settings) }
+                 composable("${Screen.Timer.route}?origin={origin}") { TimerScreen() }
              }
              }
          }

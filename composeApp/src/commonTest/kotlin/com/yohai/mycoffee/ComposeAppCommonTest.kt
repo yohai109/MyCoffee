@@ -27,6 +27,13 @@ class ComposeAppCommonTest {
     }
 
     @Test
+    fun secondaryDestinationsPreserveOriginatingPrimaryRoute() {
+        assertEquals("brew", originatingPrimaryRoute("brew", "stock"))
+        assertEquals("brew", originatingPrimaryRoute("timer", "brew"))
+        assertEquals("settings", originatingPrimaryRoute("settings", "stock"))
+    }
+
+    @Test
     fun testScreenLabelsAreDefined() {
         // Test that all screen labels are properly defined
         assertEquals("Stock", Screen.Stock.label)
