@@ -23,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -50,7 +49,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     var useGrams by remember(currentSettings) { mutableStateOf(currentSettings.useGrams) }
     var defaultBagSize by remember(currentSettings) { mutableStateOf(formatMeasurement(currentSettings.defaultBagSize, currentSettings.useGrams)) }
-    var useDarkTheme by remember(currentSettings) { mutableStateOf(currentSettings.darkMode) }
+    var darkTheme by remember(currentSettings) { mutableStateOf(currentSettings.darkMode) }
     var selectedBrewMethod by remember(currentSettings) { mutableStateOf(currentSettings.defaultBrewMethod) }
     var defaultBrewDose by remember(currentSettings) { mutableStateOf(formatMeasurement(currentSettings.defaultBrewDose, currentSettings.useGrams)) }
     var defaultBrewYield by remember(currentSettings) { mutableStateOf(formatMeasurement(currentSettings.defaultBrewYield, currentSettings.useGrams)) }
@@ -142,18 +141,24 @@ fun SettingsScreen(
 
             Text("Theme", style = MaterialTheme.typography.titleMedium)
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Switch(
-                    checked = useDarkTheme,
-                    onCheckedChange = { useDarkTheme = it; save { settings -> settings.copy(darkMode = it) } }
-                )
-                Text(
-                    if (useDarkTheme) "Dark theme" else "Light theme",
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+            listOf(
+                null to "Same as system",
+                true to "Dark",
+                false to "Light"
+            ).forEach { (value, label) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = darkTheme == value,
+                        onClick = {
+                            darkTheme = value
+                            save { settings -> settings.copy(darkMode = value) }
+                        }
+                    )
+                    Text(label, modifier = Modifier.padding(start = 8.dp))
+                }
             }
 
             HorizontalDivider()

@@ -43,12 +43,24 @@ class SettingsScreenTest : com.yohai.mycoffee.BaseTest() {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
+    fun settingsScreenDisplaysSystemThemeOptions() = runComposeUiTest {
+        setContent {
+            SettingsScreen()
+        }
+
+        onNodeWithText("Same as system").assertIsDisplayed()
+        onNodeWithText("Dark").assertIsDisplayed()
+        onNodeWithText("Light").assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
     fun settingsScreenDisplaysConvertedOunceDefaults() = runComposeUiTest {
         setContent {
             SettingsScreen(settings = com.yohai.mycoffee.database.Settings(useGrams = false))
         }
 
-        onNodeWithText("Dose (oz)").assertIsDisplayed()
+        onNodeWithText("Dose (oz)").performScrollTo().assertIsDisplayed()
         onNodeWithText("Yield (oz)").assertIsDisplayed()
         onNodeWithText("0.63").assertIsDisplayed()
         onNodeWithText("1.27").assertIsDisplayed()
