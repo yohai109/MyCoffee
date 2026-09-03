@@ -389,6 +389,8 @@ fun AddStockDialog(
                     value = sizeText,
                     onValueChange = { sizeText = it },
                     label = { Text("Size (${weightUnit(useGrams)})") },
+                    isError = measurementError(sizeText, "Size", 0.1, if (useGrams) 10000.0 else gramsToOunces(10000.0)) != null,
+                    supportingText = measurementError(sizeText, "Size", 0.1, if (useGrams) 10000.0 else gramsToOunces(10000.0))?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -475,6 +477,8 @@ fun AddStockDialog(
                     value = heightText,
                     onValueChange = { heightText = it },
                     label = { Text("Height (masl)") },
+                    isError = integerError(heightText, "Height", 0, 10000, required = false) != null,
+                    supportingText = integerError(heightText, "Height", 0, 10000, required = false)?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -524,8 +528,10 @@ fun AddStockDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     val size = sizeText.toDoubleOrNull() ?: 0.0
-                    val isValid =
-                        name.isNotBlank() && roaster.isNotBlank() && size > 0 && selectedDate != null
+                    val sizeError = measurementError(sizeText, "Size", 0.1, if (useGrams) 10000.0 else gramsToOunces(10000.0))
+                    val heightError = integerError(heightText, "Height", 0, 10000, required = false)
+                    val isValid = name.isNotBlank() && roaster.isNotBlank() &&
+                        sizeError == null && heightError == null && selectedDate != null
                     TextButton(
                         onClick = {
                             onConfirm(

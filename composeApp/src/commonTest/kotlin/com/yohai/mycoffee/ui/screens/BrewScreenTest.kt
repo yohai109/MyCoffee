@@ -107,12 +107,12 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             )
         }
 
-        onNodeWithText("Ethiopian Yirgacheffe").assertIsDisplayed()
-        onNodeWithText("Espresso").assertIsDisplayed()
+        onNodeWithText("Ethiopian Yirgacheffe · Espresso · ${today}").assertIsDisplayed()
         onNodeWithText("18g").assertIsDisplayed()
         onNodeWithText("30s").assertIsDisplayed()
         onNodeWithText("36g").assertIsDisplayed()
-        onNodeWithText("Date: ${today}").assertIsDisplayed()
+        onNodeWithText("Method").assertDoesNotExist()
+        onNodeWithText("Date:").assertDoesNotExist()
         onNodeWithText("Notes: Tasty shot").assertIsDisplayed()
     }
 
@@ -139,8 +139,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             )
         }
 
-        onNodeWithText("Unknown Coffee").assertIsDisplayed()
-        onNodeWithText("Pour over").assertIsDisplayed()
+        onNodeWithText("Unknown Coffee · Pour over · ${testBrew.date}").assertIsDisplayed()
         onNodeWithText("20g").assertIsDisplayed()
         onNodeWithText("3m 0s").assertIsDisplayed()
     }
