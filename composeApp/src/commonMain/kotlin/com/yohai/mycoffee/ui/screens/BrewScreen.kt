@@ -52,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.yohai.mycoffee.database.BrewMethod
+import com.yohai.mycoffee.averageExtractionRatio
 import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.CoffeeState
@@ -103,6 +104,7 @@ fun BrewAnalyticsCard(
                 )
                 topMethod?.let { BrewStat(formatBrewMethod(it), "favorite method") }
             }
+            averageExtractionRatio(brewList)?.let { BrewStat("%.2f".format(it), "average ratio") }
         }
     }
 }
