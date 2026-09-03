@@ -48,11 +48,11 @@ fun SettingsScreen(
     val currentSettings = settings
     val scope = rememberCoroutineScope()
     var useGrams by remember(currentSettings) { mutableStateOf(currentSettings.useGrams) }
-    var defaultBagSize by remember(currentSettings) { mutableStateOf(currentSettings.defaultBagSize.toString()) }
+    var defaultBagSize by remember(currentSettings) { mutableStateOf(formatMeasurement(currentSettings.defaultBagSize, currentSettings.useGrams)) }
     var useDarkTheme by remember(currentSettings) { mutableStateOf(currentSettings.darkMode) }
     var selectedBrewMethod by remember(currentSettings) { mutableStateOf(currentSettings.defaultBrewMethod) }
-    var defaultBrewDose by remember(currentSettings) { mutableStateOf(currentSettings.defaultBrewDose.toString()) }
-    var defaultBrewYield by remember(currentSettings) { mutableStateOf(currentSettings.defaultBrewYield.toString()) }
+    var defaultBrewDose by remember(currentSettings) { mutableStateOf(formatMeasurement(currentSettings.defaultBrewDose, currentSettings.useGrams)) }
+    var defaultBrewYield by remember(currentSettings) { mutableStateOf(formatMeasurement(currentSettings.defaultBrewYield, currentSettings.useGrams)) }
     var brewMethodExpanded by remember { mutableStateOf(false) }
 
     fun save(update: (Settings) -> Settings) {
@@ -75,7 +75,16 @@ fun SettingsScreen(
             ) {
                 Text("App settings and preferences", style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                TextButton(onClick = { save { it.copy(defaultBagSize = defaultBagSize.toDoubleOrNull() ?: it.defaultBagSize, defaultBrewDose = defaultBrewDose.toDoubleOrNull() ?: it.defaultBrewDose, defaultBrewYield = defaultBrewYield.toDoubleOrNull() ?: it.defaultBrewYield) } }) { Text("Save") }
+                TextButton(onClick = {
+                    save {
+                        it.copy(
+                            defaultBagSize = defaultBagSize.toDoubleOrNull()?.let { value -> if (useGrams) value else ouncesToGrams(value) } ?: it.defaultBagSize,
+                            defaultBrewDose = defaultBrewDose.toDoubleOrNull()?.let { value -> if (useGrams) value else ouncesToGrams(value) } ?: it.defaultBrewDose,
+                            defaultBrewYield = defaultBrewYield.toDoubleOrNull()?.let { value -> if (useGrams) value else ouncesToGrams(value) } ?: it.defaultBrewYield,
+                            useGrams = useGrams
+                        )
+                    }
+                }) { Text("Save") }
             }
             Text("Units", style = MaterialTheme.typography.titleMedium)
 
@@ -86,12 +95,28 @@ fun SettingsScreen(
                 tonalElevation = 1.dp
             ) { Column(Modifier.padding(4.dp)) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = useGrams, onClick = { useGrams = true; save { it.copy(useGrams = true) } })
+                    RadioButton(selected = useGrams, onClick = {
+                        if (!useGrams) {
+                            defaultBagSize = defaultBagSize.toDoubleOrNull()?.let(::ouncesToGrams)?.toString() ?: defaultBagSize
+                            defaultBrewDose = defaultBrewDose.toDoubleOrNull()?.let(::ouncesToGrams)?.toString() ?: defaultBrewDose
+                            defaultBrewYield = defaultBrewYield.toDoubleOrNull()?.let(::ouncesToGrams)?.toString() ?: defaultBrewYield
+                        }
+                        useGrams = true
+                        save { it.copy(useGrams = true) }
+                    })
                     Text("Grams", modifier = Modifier.padding(start = 8.dp))
                 }
 
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = !useGrams, onClick = { useGrams = false; save { it.copy(useGrams = false) } })
+                    RadioButton(selected = !useGrams, onClick = {
+                        if (useGrams) {
+                            defaultBagSize = defaultBagSize.toDoubleOrNull()?.let(::gramsToOunces)?.toString() ?: defaultBagSize
+                            defaultBrewDose = defaultBrewDose.toDoubleOrNull()?.let(::gramsToOunces)?.toString() ?: defaultBrewDose
+                            defaultBrewYield = defaultBrewYield.toDoubleOrNull()?.let(::gramsToOunces)?.toString() ?: defaultBrewYield
+                        }
+                        useGrams = false
+                        save { it.copy(useGrams = false) }
+                    })
                     Text("Ounces", modifier = Modifier.padding(start = 8.dp))
                 }
             } }
@@ -102,8 +127,8 @@ fun SettingsScreen(
 
             OutlinedTextField(
                 value = defaultBagSize,
-                onValueChange = { defaultBagSize = it; it.toDoubleOrNull()?.takeIf { value -> value > 0 }?.let { value -> save { settings -> settings.copy(defaultBagSize = value) } } },
-                label = { Text("Size") },
+                onValueChange = { defaultBagSize = it },
+                label = { Text("Size (${if (useGrams) "grams" else "oz"})") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -162,15 +187,15 @@ fun SettingsScreen(
             Row(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = defaultBrewDose,
-                    onValueChange = { defaultBrewDose = it; it.toDoubleOrNull()?.takeIf { value -> value > 0 }?.let { value -> save { settings -> settings.copy(defaultBrewDose = value) } } },
-                    label = { Text("Dose (grams)") },
+                    onValueChange = { defaultBrewDose = it },
+                    label = { Text("Dose (${if (useGrams) "grams" else "oz"})") },
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 OutlinedTextField(
                     value = defaultBrewYield,
-                    onValueChange = { defaultBrewYield = it; it.toDoubleOrNull()?.takeIf { value -> value > 0 }?.let { value -> save { settings -> settings.copy(defaultBrewYield = value) } } },
-                    label = { Text("Yield (grams)") },
+                    onValueChange = { defaultBrewYield = it },
+                    label = { Text("Yield (${if (useGrams) "grams" else "oz"})") },
                     modifier = Modifier.weight(1f)
                 )
             }

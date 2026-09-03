@@ -324,7 +324,10 @@ fun BrewItem(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Coffee, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = coffeeName, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = "$coffeeName · ${formatBrewMethod(brew.method)} · ${brew.date}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
                 Row {
                     IconButton(onClick = onEditClick) {
@@ -336,16 +339,10 @@ fun BrewItem(
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
-            Text("${formatBrewMethod(brew.method)} · ${brew.date}", style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text("Method", style = MaterialTheme.typography.labelSmall)
-                    Text(formatBrewMethod(brew.method), style = MaterialTheme.typography.bodyMedium)
-                }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Dose", style = MaterialTheme.typography.labelSmall)
                     Text(
@@ -367,8 +364,6 @@ fun BrewItem(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text("Date: ${brew.date}", style = MaterialTheme.typography.bodySmall)
             if (!brew.notes.isNullOrBlank()) {
                 Text("Notes: ${brew.notes}", style = MaterialTheme.typography.bodySmall)
             }
@@ -403,8 +398,8 @@ fun AddBrewDialog(
     }
     var selectedMethod by remember { mutableStateOf(initialBrew?.method ?: settings.defaultBrewMethod) }
     var doseText by remember { mutableStateOf(initialBrew?.dose?.let { formatBrewWeight(it, settings.useGrams) } ?: formatBrewWeight(settings.defaultBrewDose, settings.useGrams)) }
-    var brewTimeMinutes by remember { mutableStateOf(initialBrew?.brewTime?.div(60) ?: 0) }
-    var brewTimeSeconds by remember { mutableStateOf(initialBrew?.brewTime?.rem(60) ?: 0) }
+    var brewTimeMinutes by remember { mutableStateOf(initialBrew?.brewTime?.div(60)?.toString() ?: "") }
+    var brewTimeSeconds by remember { mutableStateOf(initialBrew?.brewTime?.rem(60)?.toString() ?: "") }
     var yieldText by remember { mutableStateOf(initialBrew?.yield?.let { formatBrewWeight(it, settings.useGrams) } ?: formatBrewWeight(settings.defaultBrewYield, settings.useGrams)) }
     var notes by remember { mutableStateOf(initialBrew?.notes ?: "") }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -547,6 +542,8 @@ fun AddBrewDialog(
                         value = doseText,
                         onValueChange = { doseText = it },
                         label = { Text("Dose (${if (settings.useGrams) "g" else "oz"})") },
+                        isError = measurementError(doseText, "Dose", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 1000.0 else gramsToOunces(1000.0)) != null,
+                        supportingText = measurementError(doseText, "Dose", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 1000.0 else gramsToOunces(1000.0))?.let { { Text(it) } },
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -554,6 +551,8 @@ fun AddBrewDialog(
                         value = yieldText,
                         onValueChange = { yieldText = it },
                         label = { Text("Yield (${if (settings.useGrams) "g" else "oz"})") },
+                        isError = optionalMeasurementError(yieldText, "Yield", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 5000.0 else gramsToOunces(5000.0)) != null,
+                        supportingText = optionalMeasurementError(yieldText, "Yield", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 5000.0 else gramsToOunces(5000.0))?.let { { Text(it) } },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -562,21 +561,20 @@ fun AddBrewDialog(
 
                 Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
-                        value = if (brewTimeMinutes > 0) brewTimeMinutes.toString() else "",
-                        onValueChange = { brewTimeMinutes = it.toIntOrNull() ?: 0 },
+                        value = brewTimeMinutes,
+                        onValueChange = { brewTimeMinutes = it },
                         label = { Text("Minutes") },
-                        isError = brewTimeMinutes < 0,
+                        isError = integerError(brewTimeMinutes, "Minutes", 0, 1440, required = false) != null,
+                        supportingText = integerError(brewTimeMinutes, "Minutes", 0, 1440, required = false)?.let { { Text(it) } },
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     OutlinedTextField(
-                        value = if (brewTimeSeconds > 0) brewTimeSeconds.toString() else "",
-                        onValueChange = { brewTimeSeconds = it.toIntOrNull() ?: 0 },
+                        value = brewTimeSeconds,
+                        onValueChange = { brewTimeSeconds = it },
                         label = { Text("Seconds") },
-                        isError = brewTimeSeconds !in 0..59,
-                        supportingText = if (brewTimeSeconds !in 0..59) {
-                            { Text("Enter 0 to 59 seconds") }
-                        } else null,
+                        isError = integerError(brewTimeSeconds, "Seconds", 0, 59, required = false) != null,
+                        supportingText = integerError(brewTimeSeconds, "Seconds", 0, 59, required = false)?.let { { Text(it) } },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -603,9 +601,15 @@ fun AddBrewDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     val dose = doseText.toDoubleOrNull() ?: 0.0
-                    val totalBrewTime = brewTimeMinutes * 60 + brewTimeSeconds
-                    val isValid = selectedCoffee != null && dose > 0 &&
-                        isValidBrewTime(brewTimeMinutes, brewTimeSeconds)
+                    val minutes = brewTimeMinutes.toIntOrNull() ?: 0
+                    val seconds = brewTimeSeconds.toIntOrNull() ?: 0
+                    val doseError = measurementError(doseText, "Dose", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 1000.0 else gramsToOunces(1000.0))
+                    val yieldError = optionalMeasurementError(yieldText, "Yield", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 5000.0 else gramsToOunces(5000.0))
+                    val minutesError = integerError(brewTimeMinutes, "Minutes", 0, 1440, required = false)
+                    val secondsError = integerError(brewTimeSeconds, "Seconds", 0, 59, required = false)
+                    val totalBrewTime = minutes * 60 + seconds
+                    val isValid = selectedCoffee != null && doseError == null && yieldError == null &&
+                        minutesError == null && secondsError == null && isValidBrewTime(minutes, seconds)
                     Button(
                         onClick = {
                             val yield = yieldText.toDoubleOrNull()

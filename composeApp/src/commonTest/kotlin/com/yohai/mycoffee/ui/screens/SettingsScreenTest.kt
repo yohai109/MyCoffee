@@ -40,4 +40,17 @@ class SettingsScreenTest : com.yohai.mycoffee.BaseTest() {
         // Then
         onNodeWithText("Default Brew Method").assertIsDisplayed()
     }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun settingsScreenDisplaysConvertedOunceDefaults() = runComposeUiTest {
+        setContent {
+            SettingsScreen(settings = com.yohai.mycoffee.database.Settings(useGrams = false))
+        }
+
+        onNodeWithText("Dose (oz)").assertIsDisplayed()
+        onNodeWithText("Yield (oz)").assertIsDisplayed()
+        onNodeWithText("0.634931833012928").assertIsDisplayed()
+        onNodeWithText("1.269863666025856").assertIsDisplayed()
+    }
 }
