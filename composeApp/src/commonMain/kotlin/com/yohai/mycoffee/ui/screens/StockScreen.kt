@@ -35,6 +35,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -386,7 +387,7 @@ fun AddStockDialog(
                         onValueChange = { origin = it; originExpanded = true },
                         label = { Text("Origin") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = originExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                         modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = originExpanded && filteredOrigins.isNotEmpty(),
@@ -456,7 +457,7 @@ fun AddStockDialog(
                         onValueChange = { species = it; speciesExpanded = true },
                         label = { Text("Species") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speciesExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                         modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = speciesExpanded && filteredSpecies.isNotEmpty(),
