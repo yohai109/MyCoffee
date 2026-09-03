@@ -1,6 +1,7 @@
 package com.yohai.mycoffee.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +55,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.yohai.mycoffee.database.BrewMethod
+import com.yohai.mycoffee.database.BrewRecipe
+import com.yohai.mycoffee.averageExtractionRatio
+import com.yohai.mycoffee.brewsByMonth
 import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.CoffeeState
@@ -59,8 +65,10 @@ import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.math.roundToInt
@@ -68,6 +76,14 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 private const val BREW_GRAMS_PER_OUNCE = 28.3495
+
+data class StructuredBrewNotes(
+    val tastingNotes: String?,
+    val tastingTags: String?,
+    val whatWentWell: String?,
+    val whatToImprove: String?,
+    val wouldMakeAgain: Boolean?
+)
 
 private fun formatBrewWeight(grams: Double, useGrams: Boolean): String =
     if (useGrams) grams.toString() else (grams / BREW_GRAMS_PER_OUNCE).toString()
@@ -103,6 +119,25 @@ fun BrewAnalyticsCard(
                 )
                 topMethod?.let { BrewStat(formatBrewMethod(it), "favorite method") }
             }
+            averageExtractionRatio(brewList)?.let {
+                Text("Average extraction ratio: ${it.toString().take(4)}", style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp))
+            }
+            val monthly = brewsByMonth(brewList).toSortedMap()
+            if (monthly.isNotEmpty()) {
+                Text("Brews by month", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
+                val barColor = MaterialTheme.colorScheme.primary
+                Canvas(Modifier.fillMaxWidth().height(64.dp).padding(top = 4.dp)) {
+                    val max = monthly.values.maxOrNull()?.coerceAtLeast(1) ?: 1
+                    monthly.values.forEachIndexed { index, count ->
+                        val barWidth = size.width / monthly.size
+                        drawRect(barColor, topLeft = androidx.compose.ui.geometry.Offset(index * barWidth + 2f, size.height * (1f - count.toFloat() / max)), size = androidx.compose.ui.geometry.Size(barWidth - 4f, size.height * count.toFloat() / max))
+                    }
+                }
+            }
+            if (brewList.any { it.yield != null }) {
+                Text("Method distribution: ${methodCounts.entries.joinToString { "${formatBrewMethod(it.key)} ${it.value}" }}", style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
@@ -124,10 +159,23 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
         .collectAsState(initial = emptyList())
     val coffeeStock: List<CoffeeStock> by database.coffeeDao().getAllStock()
         .collectAsState(initial = emptyList())
+    val recipes: List<BrewRecipe> by database.recipeDao().getAllRecipes()
+        .collectAsState(initial = emptyList())
 
     var showAddDialog by remember { mutableStateOf(false) }
     var editingBrew by remember { mutableStateOf<BrewRecord?>(null) }
     var showDeleteConfirm by remember { mutableStateOf<BrewRecord?>(null) }
+    var pendingStructuredNotes = StructuredBrewNotes(null, null, null, null, null)
+    var historyDays by remember { mutableStateOf<Int?>(null) }
+    var noteQuery by remember { mutableStateOf("") }
+    val historyBrews = historyDays?.let { days ->
+        val from = Clock.System.todayIn(TimeZone.currentSystemDefault()).minus(days, DateTimeUnit.DAY)
+        brewList.filter { it.date >= from }
+    } ?: brewList
+    val displayedBrews = historyBrews.filter { brew ->
+        noteQuery.isBlank() || listOf(brew.notes, brew.tastingNotes, brew.tastingTags, brew.whatWentWell, brew.whatToImprove)
+            .any { it?.contains(noteQuery, ignoreCase = true) == true }
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -156,12 +204,18 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
-                    BrewAnalyticsCard(brewList, settings)
+                    BrewAnalyticsCard(displayedBrews, settings)
+                    OutlinedTextField(noteQuery, { noteQuery = it }, label = { Text("Search notes or tags") }, modifier = Modifier.fillMaxWidth())
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        listOf(null to "All", 7 to "7 days", 30 to "30 days").forEach { (days, label) ->
+                            TextButton(onClick = { historyDays = days }) { Text(label) }
+                        }
+                    }
                     Text("RECENT BREWS", style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 8.dp, bottom = 2.dp))
                 }
-                items(brewList) { brew ->
+                items(displayedBrews) { brew ->
                     val coffee = coffeeStock.find { it.id == brew.coffeeStockId }
                     BrewItem(
                         brew = brew,
@@ -177,8 +231,10 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
         if (showAddDialog) {
             AddBrewDialog(
                 coffeeStock = coffeeStock,
+                recipes = recipes,
                 settings = settings,
                 onDismiss = { showAddDialog = false },
+                onStructuredNotes = { pendingStructuredNotes = it },
                 onConfirm = { coffeeStockId, date, method, dose, brewTime, yield, notes ->
                     scope.launch {
                         database.brewDao().insertBrew(
@@ -189,7 +245,12 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                                 dose = dose,
                                 brewTime = brewTime,
                                 yield = yield,
-                                notes = notes
+                                 notes = notes,
+                                 tastingNotes = pendingStructuredNotes.tastingNotes,
+                                 tastingTags = pendingStructuredNotes.tastingTags,
+                                 whatWentWell = pendingStructuredNotes.whatWentWell,
+                                 whatToImprove = pendingStructuredNotes.whatToImprove,
+                                 wouldMakeAgain = pendingStructuredNotes.wouldMakeAgain
                             )
                         )
                         val stock = coffeeStock.find { it.id == coffeeStockId }
@@ -211,9 +272,11 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
             AddBrewDialog(
                 initialBrew = brew,
                 coffeeStock = coffeeStock,
+                recipes = recipes,
                 settings = settings,
                 selectedCoffeeName = coffee?.name,
                 onDismiss = { editingBrew = null },
+                onStructuredNotes = { pendingStructuredNotes = it },
                 onConfirm = { coffeeStockId, date, method, dose, brewTime, yield, notes ->
                     scope.launch {
                         database.brewDao().updateBrew(
@@ -224,7 +287,12 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                                 dose = dose,
                                 brewTime = brewTime,
                                 yield = yield,
-                                notes = notes
+                                 notes = notes,
+                                 tastingNotes = pendingStructuredNotes.tastingNotes,
+                                 tastingTags = pendingStructuredNotes.tastingTags,
+                                 whatWentWell = pendingStructuredNotes.whatWentWell,
+                                 whatToImprove = pendingStructuredNotes.whatToImprove,
+                                 wouldMakeAgain = pendingStructuredNotes.wouldMakeAgain
                             )
                         )
                         val oldStock = coffeeStock.find { it.id == brew.coffeeStockId }
@@ -367,6 +435,13 @@ fun BrewItem(
             if (!brew.notes.isNullOrBlank()) {
                 Text("Notes: ${brew.notes}", style = MaterialTheme.typography.bodySmall)
             }
+            if (!brew.tastingTags.isNullOrBlank()) {
+                Text("Tasting: ${brew.tastingTags}", style = MaterialTheme.typography.bodySmall)
+            }
+            brew.tastingNotes?.let { Text("Tasted: $it", style = MaterialTheme.typography.bodySmall) }
+            brew.whatWentWell?.let { Text("Worked: $it", style = MaterialTheme.typography.bodySmall) }
+            brew.whatToImprove?.let { Text("Improve: $it", style = MaterialTheme.typography.bodySmall) }
+            brew.wouldMakeAgain?.let { Text(if (it) "Would make again" else "Would not make again", style = MaterialTheme.typography.bodySmall) }
         }
     }
 }
@@ -379,7 +454,9 @@ fun AddBrewDialog(
     onConfirm: (coffeeStockId: Long, date: LocalDate, method: BrewMethod, dose: Double, brewTime: Int, yield: Double?, notes: String?) -> Unit,
     initialBrew: BrewRecord? = null,
     selectedCoffeeName: String? = null,
-    settings: Settings = Settings.DEFAULT
+    settings: Settings = Settings.DEFAULT,
+    recipes: List<BrewRecipe> = emptyList(),
+    onStructuredNotes: (StructuredBrewNotes) -> Unit = {}
 ) {
     val isEditing = initialBrew != null
     val eligibleCoffeeStock = coffeeStock.filter {
@@ -402,6 +479,12 @@ fun AddBrewDialog(
     var brewTimeSeconds by remember { mutableStateOf(initialBrew?.brewTime?.rem(60)?.toString() ?: "") }
     var yieldText by remember { mutableStateOf(initialBrew?.yield?.let { formatBrewWeight(it, settings.useGrams) } ?: formatBrewWeight(settings.defaultBrewYield, settings.useGrams)) }
     var notes by remember { mutableStateOf(initialBrew?.notes ?: "") }
+    var tastingNotes by remember { mutableStateOf(initialBrew?.tastingNotes ?: "") }
+    var tastingTags by remember { mutableStateOf(initialBrew?.tastingTags ?: "") }
+    var whatWentWell by remember { mutableStateOf(initialBrew?.whatWentWell ?: "") }
+    var whatToImprove by remember { mutableStateOf(initialBrew?.whatToImprove ?: "") }
+    var wouldMakeAgain by remember { mutableStateOf(initialBrew?.wouldMakeAgain) }
+    var structuredNotesExpanded by remember { mutableStateOf(initialBrew?.tastingNotes != null || initialBrew?.tastingTags != null || initialBrew?.whatWentWell != null || initialBrew?.whatToImprove != null || initialBrew?.wouldMakeAgain != null) }
     var showDatePicker by remember { mutableStateOf(false) }
     var methodExpanded by remember { mutableStateOf(false) }
     var coffeeExpanded by remember { mutableStateOf(false) }
@@ -440,7 +523,7 @@ fun AddBrewDialog(
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp
         ) {
-            Column(modifier = Modifier.padding(24.dp)) {
+            Column(modifier = Modifier.padding(24.dp).verticalScroll(rememberScrollState())) {
                 Text(
                     text = if (isEditing) "Edit Brew" else "Add Brew",
                     style = MaterialTheme.typography.headlineSmall,
@@ -507,6 +590,20 @@ fun AddBrewDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 BrewFormSection("RECIPE")
+                if (recipes.isNotEmpty()) {
+                    Text("Saved recipes", style = MaterialTheme.typography.labelMedium)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        recipes.forEach { recipe ->
+                            TextButton(onClick = {
+                                selectedMethod = recipe.method
+                                doseText = formatBrewWeight(recipe.dose, settings.useGrams)
+                                brewTimeMinutes = (recipe.brewTime / 60).toString()
+                                brewTimeSeconds = (recipe.brewTime % 60).toString()
+                                yieldText = recipe.yield?.let { formatBrewWeight(it, settings.useGrams) } ?: ""
+                            }) { Text(recipe.name) }
+                        }
+                    }
+                }
                 ExposedDropdownMenuBox(
                     expanded = methodExpanded,
                     onExpandedChange = { methodExpanded = it }
@@ -589,6 +686,23 @@ fun AddBrewDialog(
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2
                 )
+                TextButton(onClick = { structuredNotesExpanded = !structuredNotesExpanded }) { Text(if (structuredNotesExpanded) "Hide structured notes" else "Add structured notes") }
+                if (structuredNotesExpanded) {
+                    OutlinedTextField(value = tastingNotes, onValueChange = { tastingNotes = it }, label = { Text("Tasting notes") }, modifier = Modifier.fillMaxWidth())
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        listOf("fruity", "citrus", "chocolate", "floral").forEach { tag ->
+                            TextButton(onClick = { tastingTags = (tastingTags.split(',').map(String::trim).filter(String::isNotBlank) + tag).distinct().joinToString(", ") }) { Text(tag) }
+                        }
+                    }
+                    OutlinedTextField(value = tastingTags, onValueChange = { tastingTags = it }, label = { Text("Tasting tags") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = whatWentWell, onValueChange = { whatWentWell = it }, label = { Text("What went well") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = whatToImprove, onValueChange = { whatToImprove = it }, label = { Text("What to improve") }, modifier = Modifier.fillMaxWidth())
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Would make again?")
+                        TextButton(onClick = { wouldMakeAgain = true }) { Text("Yes") }
+                        TextButton(onClick = { wouldMakeAgain = false }) { Text("No") }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -613,6 +727,7 @@ fun AddBrewDialog(
                     Button(
                         onClick = {
                             val yield = yieldText.toDoubleOrNull()
+                            onStructuredNotes(StructuredBrewNotes(tastingNotes.ifBlank { null }, tastingTags.ifBlank { null }, whatWentWell.ifBlank { null }, whatToImprove.ifBlank { null }, wouldMakeAgain))
                             onConfirm(
                                 selectedCoffee!!,
                                 selectedDate,

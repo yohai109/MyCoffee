@@ -58,7 +58,30 @@ data class BrewRecord(
     val dose: Double,
     val brewTime: Int, // in seconds
     val yield: Double?, // in grams
+    val notes: String?,
+    val tastingNotes: String? = null,
+    val tastingTags: String? = null,
+    val whatWentWell: String? = null,
+    val whatToImprove: String? = null,
+    val wouldMakeAgain: Boolean? = null
+)
+
+@Entity
+data class BrewRecipe(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val method: BrewMethod,
+    val dose: Double,
+    val yield: Double?,
+    val brewTime: Int,
+    val waterTemperature: Double?,
     val notes: String?
+)
+
+@Entity(primaryKeys = ["method"])
+data class TimerPreset(
+    val method: BrewMethod,
+    val seconds: Int
 )
 
 @Entity
@@ -125,12 +148,38 @@ interface SettingsDao {
     suspend fun updateSettings(settings: Settings)
 }
 
-@Database(entities = [CoffeeStock::class, BrewRecord::class, Settings::class], version = 5)
+@Dao
+interface RecipeDao {
+    @Query("SELECT * FROM BrewRecipe ORDER BY name COLLATE NOCASE")
+    fun getAllRecipes(): Flow<List<BrewRecipe>>
+
+    @Insert
+    suspend fun insertRecipe(recipe: BrewRecipe)
+
+    @Update
+    suspend fun updateRecipe(recipe: BrewRecipe)
+
+    @Delete
+    suspend fun deleteRecipe(recipe: BrewRecipe)
+}
+
+@Dao
+interface TimerPresetDao {
+    @Query("SELECT * FROM TimerPreset")
+    fun getAll(): Flow<List<TimerPreset>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun save(preset: TimerPreset)
+}
+
+@Database(entities = [CoffeeStock::class, BrewRecord::class, BrewRecipe::class, TimerPreset::class, Settings::class], version = 7)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
     abstract fun brewDao(): BrewDao
     abstract fun settingsDao(): SettingsDao
+    abstract fun recipeDao(): RecipeDao
+    abstract fun timerPresetDao(): TimerPresetDao
 }
 
 class Converters {
@@ -194,12 +243,38 @@ private val MIGRATION_4_5 = object : Migration(4, 5) {
     }
 }
 
+private val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(connection: SQLiteConnection) {
+        val statements = listOf(
+            "ALTER TABLE BrewRecord ADD COLUMN tastingNotes TEXT DEFAULT NULL",
+            "ALTER TABLE BrewRecord ADD COLUMN tastingTags TEXT DEFAULT NULL",
+            "ALTER TABLE BrewRecord ADD COLUMN whatWentWell TEXT DEFAULT NULL",
+            "ALTER TABLE BrewRecord ADD COLUMN whatToImprove TEXT DEFAULT NULL",
+            "ALTER TABLE BrewRecord ADD COLUMN wouldMakeAgain INTEGER DEFAULT NULL",
+            "CREATE TABLE IF NOT EXISTS BrewRecipe (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, method TEXT NOT NULL, dose REAL NOT NULL, yield REAL, brewTime INTEGER NOT NULL, waterTemperature REAL, notes TEXT)"
+        )
+        statements.forEach { sql ->
+            val stmt = connection.prepare(sql)
+            try { stmt.step() } finally { stmt.close() }
+        }
+    }
+}
+
+private val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(connection: SQLiteConnection) {
+        val stmt = connection.prepare("CREATE TABLE IF NOT EXISTS TimerPreset (method TEXT NOT NULL PRIMARY KEY, seconds INTEGER NOT NULL)")
+        try { stmt.step() } finally { stmt.close() }
+    }
+}
+
 fun getRoomDatabase(
     builder: RoomDatabase.Builder<CoffeeDatabase>
 ): CoffeeDatabase {
     return builder
         .addMigrations(MIGRATION_3_4)
         .addMigrations(MIGRATION_4_5)
+        .addMigrations(MIGRATION_5_6)
+        .addMigrations(MIGRATION_6_7)
         .setDriver(BundledSQLiteDriver())
         .build()
 }

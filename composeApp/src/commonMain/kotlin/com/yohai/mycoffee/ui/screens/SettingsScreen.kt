@@ -25,7 +25,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +37,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.yohai.mycoffee.database.BrewMethod
+import com.yohai.mycoffee.database.BrewRecord
+import com.yohai.mycoffee.database.CoffeeStock
+import com.yohai.mycoffee.ExportFormat
+import com.yohai.mycoffee.ExportScope
+import com.yohai.mycoffee.exportCsv
+import com.yohai.mycoffee.exportJson
+import com.yohai.mycoffee.saveExportFile
+import com.yohai.mycoffee.shareExportFile
+import kotlinx.datetime.todayIn
+import kotlinx.datetime.TimeZone
+import kotlin.time.Clock
 import com.yohai.mycoffee.database.CoffeeDatabase
 import com.yohai.mycoffee.database.Settings
 import kotlinx.coroutines.launch
@@ -54,6 +67,11 @@ fun SettingsScreen(
     var defaultBrewDose by remember(currentSettings) { mutableStateOf(formatMeasurement(currentSettings.defaultBrewDose, currentSettings.useGrams)) }
     var defaultBrewYield by remember(currentSettings) { mutableStateOf(formatMeasurement(currentSettings.defaultBrewYield, currentSettings.useGrams)) }
     var brewMethodExpanded by remember { mutableStateOf(false) }
+    val stock by database?.coffeeDao()?.getAllStock()?.collectAsState(initial = emptyList()) ?: remember { mutableStateOf(emptyList<CoffeeStock>()) }
+    val brews by database?.brewDao()?.getAllBrews()?.collectAsState(initial = emptyList()) ?: remember { mutableStateOf(emptyList<BrewRecord>()) }
+    var exportFormat by remember { mutableStateOf(ExportFormat.JSON) }
+    var exportScope by remember { mutableStateOf(ExportScope.ALL) }
+    var exportMessage by remember { mutableStateOf<String?>(null) }
 
     fun save(update: (Settings) -> Settings) {
         database?.let { db ->
@@ -200,5 +218,29 @@ fun SettingsScreen(
                 )
             }
 
+            HorizontalDivider()
+            Text("Data export", style = MaterialTheme.typography.titleMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = { exportFormat = ExportFormat.JSON }) { Text("JSON") }
+                TextButton(onClick = { exportFormat = ExportFormat.CSV }) { Text("CSV") }
+                TextButton(onClick = { exportScope = ExportScope.ALL }) { Text("All") }
+                TextButton(onClick = { exportScope = ExportScope.STOCK }) { Text("Stock") }
+                TextButton(onClick = { exportScope = ExportScope.BREWS }) { Text("Brews") }
+            }
+            TextButton(onClick = {
+                val selectedStock = if (exportScope == ExportScope.BREWS) emptyList() else stock
+                val selectedBrews = if (exportScope == ExportScope.STOCK) emptyList() else brews
+                val extension = exportFormat.name.lowercase()
+                val filename = "mycoffee_export_${Clock.System.todayIn(TimeZone.currentSystemDefault())}.$extension"
+                val content = if (exportFormat == ExportFormat.JSON) exportJson(selectedStock, selectedBrews, filename) else exportCsv(selectedStock, selectedBrews)
+                exportMessage = if (saveExportFile(filename, content)) {
+                    shareExportFile(filename, content)
+                    "Export saved to Downloads: $filename"
+                } else "Could not save export"
+            }, enabled = database != null) { Text("Export data") }
+
+    }
+    exportMessage?.let { message ->
+        AlertDialog(onDismissRequest = { exportMessage = null }, text = { Text(message) }, confirmButton = { TextButton(onClick = { exportMessage = null }) { Text("OK") } })
     }
 }

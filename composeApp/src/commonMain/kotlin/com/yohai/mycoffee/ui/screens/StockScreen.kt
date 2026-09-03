@@ -64,6 +64,10 @@ import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.ProcessMethod
 import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.getDatabase
+import com.yohai.mycoffee.Freshness
+import com.yohai.mycoffee.freshnessFor
+import com.yohai.mycoffee.freshestFirst
+import com.yohai.mycoffee.bestBeforeDate
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -100,9 +104,12 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
     var finishingStock by remember { mutableStateOf<CoffeeStock?>(null) }
     var showDeleteConfirm by remember { mutableStateOf<CoffeeStock?>(null) }
     var finishedBagsExpanded by remember { mutableStateOf(false) }
+    var sortByFreshness by remember { mutableStateOf(false) }
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
-    val activeStockList = remember(stockList) {
-        stockList.filter { it.state != CoffeeState.FINISHED }.sortedBy {
+    val activeStockList = remember(stockList, sortByFreshness, today) {
+        val active = stockList.filter { it.state != CoffeeState.FINISHED }
+        if (sortByFreshness) freshestFirst(active, today) else active.sortedBy {
             when (it.state) {
                 CoffeeState.OPEN -> 0
                 CoffeeState.NEW -> 1
@@ -145,6 +152,13 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
             ) {
                 item {
                     StatisticsBanner(stockList, settings = settings)
+                    if (stockList.any { freshnessFor(it.roastDate, today) == Freshness.PAST_OPTIMAL }) {
+                        Text("Some coffee is past its optimal freshness.", color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(bottom = 8.dp))
+                    }
+                    TextButton(onClick = { sortByFreshness = !sortByFreshness }) {
+                        Text(if (sortByFreshness) "Sort by shelf status" else "Sort by freshness")
+                    }
                 }
                 if (activeStockList.any { it.state == CoffeeState.OPEN }) {
                     item {
@@ -851,6 +865,12 @@ fun StockItem(
                     )
                 }
             }
+
+            Text(
+                text = "Freshness: ${freshnessFor(stock.roastDate, Clock.System.todayIn(TimeZone.currentSystemDefault())).name.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }}",
+                style = MaterialTheme.typography.bodySmall
+            )
+            bestBeforeDate(stock.roastDate)?.let { Text("Best before: $it", style = MaterialTheme.typography.bodySmall) }
 
             if (stock.state == CoffeeState.FINISHED && stock.rating != null) {
                 Spacer(modifier = Modifier.height(4.dp))
