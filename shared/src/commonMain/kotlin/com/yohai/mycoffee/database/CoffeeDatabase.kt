@@ -62,6 +62,18 @@ data class BrewRecord(
 )
 
 @Entity
+data class BrewRecipe(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val method: BrewMethod,
+    val dose: Double,
+    val yield: Double?,
+    val brewTime: Int,
+    val waterTemperature: Double?,
+    val notes: String?
+)
+
+@Entity
 data class Settings(
     @PrimaryKey val id: Int = 1,
     val useGrams: Boolean = true,
@@ -125,12 +137,21 @@ interface SettingsDao {
     suspend fun updateSettings(settings: Settings)
 }
 
-@Database(entities = [CoffeeStock::class, BrewRecord::class, Settings::class], version = 5)
+@Dao
+interface RecipeDao {
+    @Query("SELECT * FROM BrewRecipe ORDER BY name COLLATE NOCASE") fun getAllRecipes(): Flow<List<BrewRecipe>>
+    @Insert suspend fun insertRecipe(recipe: BrewRecipe)
+    @Update suspend fun updateRecipe(recipe: BrewRecipe)
+    @Delete suspend fun deleteRecipe(recipe: BrewRecipe)
+}
+
+@Database(entities = [CoffeeStock::class, BrewRecord::class, BrewRecipe::class, Settings::class], version = 6)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
     abstract fun brewDao(): BrewDao
     abstract fun settingsDao(): SettingsDao
+    abstract fun recipeDao(): RecipeDao
 }
 
 class Converters {
@@ -194,12 +215,20 @@ private val MIGRATION_4_5 = object : Migration(4, 5) {
     }
 }
 
+private val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(connection: SQLiteConnection) {
+        val stmt = connection.prepare("CREATE TABLE IF NOT EXISTS BrewRecipe (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, method TEXT NOT NULL, dose REAL NOT NULL, yield REAL, brewTime INTEGER NOT NULL, waterTemperature REAL, notes TEXT)")
+        try { stmt.step() } finally { stmt.close() }
+    }
+}
+
 fun getRoomDatabase(
     builder: RoomDatabase.Builder<CoffeeDatabase>
 ): CoffeeDatabase {
     return builder
         .addMigrations(MIGRATION_3_4)
         .addMigrations(MIGRATION_4_5)
+        .addMigrations(MIGRATION_5_6)
         .setDriver(BundledSQLiteDriver())
         .build()
 }
