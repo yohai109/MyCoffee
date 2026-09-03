@@ -64,6 +64,7 @@ import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.ProcessMethod
 import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.getDatabase
+import com.yohai.mycoffee.freshnessFor
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -792,6 +793,7 @@ fun StockItem(
                     }
                 }
             }
+            Text("Freshness: ${freshnessFor(stock.roastDate, Clock.System.todayIn(TimeZone.currentSystemDefault())).name.replace('_', ' ')}", style = MaterialTheme.typography.bodySmall)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
