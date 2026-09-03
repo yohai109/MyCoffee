@@ -35,7 +35,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -69,9 +68,6 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 private const val BREW_GRAMS_PER_OUNCE = 28.3495
-
-private fun formatBrewWeight(grams: Double, useGrams: Boolean): String =
-    if (useGrams) grams.toString() else (grams / BREW_GRAMS_PER_OUNCE).toString()
 
 @Composable
 fun BrewAnalyticsCard(
@@ -131,16 +127,11 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
     var editingBrew by remember { mutableStateOf<BrewRecord?>(null) }
     var showDeleteConfirm by remember { mutableStateOf<BrewRecord?>(null) }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Brew")
-            }
-        }
-    ) { padding ->
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize()) {
         if (brewList.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxSize().padding(bottom = 96.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -163,7 +154,7 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 8.dp, bottom = 2.dp))
                 }
-                items(brewList) { brew ->
+                items(brewList, key = { it.id }) { brew ->
                     val coffee = coffeeStock.find { it.id == brew.coffeeStockId }
                     BrewItem(
                         brew = brew,
@@ -176,6 +167,10 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
             }
         }
 
+        }
+        FloatingActionButton(onClick = { showAddDialog = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
+            Icon(Icons.Default.Add, contentDescription = "Add Brew")
+        }
         if (showAddDialog) {
             AddBrewDialog(
                 coffeeStock = coffeeStock,
@@ -399,10 +394,10 @@ fun AddBrewDialog(
         )
     }
     var selectedMethod by remember { mutableStateOf(initialBrew?.method ?: settings.defaultBrewMethod) }
-    var doseText by remember { mutableStateOf(initialBrew?.dose?.let { formatBrewWeight(it, settings.useGrams) } ?: formatBrewWeight(settings.defaultBrewDose, settings.useGrams)) }
+    var doseText by remember { mutableStateOf(initialBrew?.dose?.let { formatMeasurement(it, settings.useGrams) } ?: formatMeasurement(settings.defaultBrewDose, settings.useGrams)) }
     var brewTimeMinutes by remember { mutableStateOf(initialBrew?.brewTime?.div(60)?.toString() ?: "") }
     var brewTimeSeconds by remember { mutableStateOf(initialBrew?.brewTime?.rem(60)?.toString() ?: "") }
-    var yieldText by remember { mutableStateOf(initialBrew?.yield?.let { formatBrewWeight(it, settings.useGrams) } ?: formatBrewWeight(settings.defaultBrewYield, settings.useGrams)) }
+    var yieldText by remember { mutableStateOf(initialBrew?.yield?.let { formatMeasurement(it, settings.useGrams) } ?: formatMeasurement(settings.defaultBrewYield, settings.useGrams)) }
     var notes by remember { mutableStateOf(initialBrew?.notes ?: "") }
     var showDatePicker by remember { mutableStateOf(false) }
     var methodExpanded by remember { mutableStateOf(false) }
@@ -645,7 +640,7 @@ private fun BrewFormSection(text: String) {
 }
 
 private fun formatBrewDisplayWeight(grams: Double, useGrams: Boolean): String {
-    return if (useGrams) "${grams.toInt()}g" else "${formatBrewWeight(grams, useGrams = false)}oz"
+    return "${formatDisplayMeasurement(grams, useGrams)}${if (useGrams) "g" else "oz"}"
 }
 
 fun formatBrewMethod(method: BrewMethod): String {

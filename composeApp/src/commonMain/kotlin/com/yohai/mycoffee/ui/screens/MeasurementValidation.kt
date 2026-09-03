@@ -6,8 +6,14 @@ fun gramsToOunces(grams: Double): Double = grams / GRAMS_PER_OUNCE
 
 fun ouncesToGrams(ounces: Double): Double = ounces * GRAMS_PER_OUNCE
 
+fun formatDisplayMeasurement(grams: Double, useGrams: Boolean): String {
+    val value = if (useGrams) grams else gramsToOunces(grams)
+    val rounded = kotlin.math.round(value * 100) / 100
+    return rounded.toString().removeSuffix(".0")
+}
+
 fun formatMeasurement(grams: Double, useGrams: Boolean): String =
-    if (useGrams) grams.toString() else gramsToOunces(grams).toString()
+    formatDisplayMeasurement(grams, useGrams)
 
 fun measurementError(text: String, label: String, min: Double, max: Double): String? {
     if (text.isBlank()) return "$label is required"

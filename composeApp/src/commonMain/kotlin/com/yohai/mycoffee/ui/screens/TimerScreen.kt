@@ -35,11 +35,13 @@ private fun timerPreset(method: BrewMethod) = when (method) {
     BrewMethod.OTHER -> 180
 }
 
+fun timerDurationMillis(text: String): Long = text.toLongOrNull()?.takeIf { it > 0 }?.times(1000) ?: 0
+
 @Composable
 fun TimerScreen() {
     var method by remember { mutableStateOf(BrewMethod.ESPRESSO) }
     var duration by remember { mutableStateOf(timerPreset(method).toString()) }
-    var remaining by remember { mutableLongStateOf(duration.toLong() * 1000) }
+    var remaining by remember { mutableLongStateOf(timerDurationMillis(duration)) }
     var startedAt by remember { mutableStateOf<Long?>(null) }
     var completed by remember { mutableStateOf(false) }
     val running = startedAt != null
@@ -47,7 +49,7 @@ fun TimerScreen() {
     LaunchedEffect(startedAt) {
         while (startedAt != null) {
             val start = startedAt ?: break
-            remaining = ((duration.toLongOrNull()?.times(1000L) ?: 0L) - (Clock.System.now().toEpochMilliseconds() - start)).coerceAtLeast(0)
+            remaining = (timerDurationMillis(duration) - (Clock.System.now().toEpochMilliseconds() - start)).coerceAtLeast(0)
             if (remaining == 0L) { startedAt = null; completed = true } else delay(100)
         }
     }
@@ -59,10 +61,14 @@ fun TimerScreen() {
                 Button(onClick = { method = preset; duration = timerPreset(preset).toString(); remaining = timerPreset(preset) * 1000L; completed = false }, enabled = !running) { Text(formatBrewMethod(preset)) }
             }
         }
-        OutlinedTextField(duration, { duration = it }, label = { Text("Seconds") }, enabled = !running)
+        OutlinedTextField(duration, {
+            duration = it
+            if (!running) remaining = timerDurationMillis(it)
+        }, label = { Text("Seconds") }, enabled = !running, isError = duration.isNotBlank() && timerDurationMillis(duration) == 0L,
+            supportingText = if (duration.isNotBlank() && timerDurationMillis(duration) == 0L) {{ Text("Enter a positive number") }} else null)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { completed = false; startedAt = if (running) null else Clock.System.now().toEpochMilliseconds() }, enabled = remaining > 0) { Text(if (running) "Stop" else "Start") }
-            Button(onClick = { startedAt = null; completed = false; remaining = duration.toLongOrNull()?.times(1000) ?: 0 }) { Text("Reset") }
+            Button(onClick = { completed = false; startedAt = if (running) null else Clock.System.now().toEpochMilliseconds() }, enabled = if (running) true else timerDurationMillis(duration) > 0) { Text(if (running) "Stop" else "Start") }
+            Button(onClick = { startedAt = null; completed = false; remaining = timerDurationMillis(duration) }) { Text("Reset") }
         }
     }
     if (completed) AlertDialog(onDismissRequest = { completed = false }, title = { Text("Brew complete") }, text = { Text("Your timer has finished.") }, confirmButton = { Button(onClick = { completed = false }) { Text("Done") } })
