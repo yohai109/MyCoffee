@@ -42,6 +42,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navOptions
 import com.yohai.mycoffee.ui.screens.BrewScreen
 import com.yohai.mycoffee.ui.screens.SettingsScreen
 import com.yohai.mycoffee.ui.screens.StockScreen
@@ -52,6 +53,10 @@ import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.getDatabase
 import com.yohai.mycoffee.ui.WindowLayoutClass
 import com.yohai.mycoffee.ui.windowLayoutClassForWidth
+
+internal fun secondaryNavigationOptions() = navOptions {
+    launchSingleTop = true
+}
 
 sealed class Screen(
     val route: String,
@@ -113,7 +118,7 @@ fun App() {
                             listOf(Screen.Recipes, Screen.Timer).forEach { screen ->
                                 DropdownMenuItem(text = { Text(screen.label) }, onClick = {
                                     secondaryExpanded = false
-                                    navController.navigate(screen.route)
+                                    navController.navigate(screen.route, secondaryNavigationOptions())
                                 })
                             }
                         }
