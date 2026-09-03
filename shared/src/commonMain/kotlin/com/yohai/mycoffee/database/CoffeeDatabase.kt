@@ -58,7 +58,12 @@ data class BrewRecord(
     val dose: Double,
     val brewTime: Int, // in seconds
     val yield: Double?, // in grams
-    val notes: String?
+    val notes: String?,
+    val tastingNotes: String? = null,
+    val tastingTags: String? = null,
+    val whatWentWell: String? = null,
+    val whatToImprove: String? = null,
+    val wouldMakeAgain: Boolean? = null
 )
 
 @Entity
@@ -125,7 +130,7 @@ interface SettingsDao {
     suspend fun updateSettings(settings: Settings)
 }
 
-@Database(entities = [CoffeeStock::class, BrewRecord::class, Settings::class], version = 5)
+@Database(entities = [CoffeeStock::class, BrewRecord::class, Settings::class], version = 6)
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
@@ -194,12 +199,24 @@ private val MIGRATION_4_5 = object : Migration(4, 5) {
     }
 }
 
+private val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(connection: SQLiteConnection) {
+        listOf("tastingNotes", "tastingTags", "whatWentWell", "whatToImprove").forEach { column ->
+            val stmt = connection.prepare("ALTER TABLE BrewRecord ADD COLUMN $column TEXT DEFAULT NULL")
+            try { stmt.step() } finally { stmt.close() }
+        }
+        val stmt = connection.prepare("ALTER TABLE BrewRecord ADD COLUMN wouldMakeAgain INTEGER DEFAULT NULL")
+        try { stmt.step() } finally { stmt.close() }
+    }
+}
+
 fun getRoomDatabase(
     builder: RoomDatabase.Builder<CoffeeDatabase>
 ): CoffeeDatabase {
     return builder
         .addMigrations(MIGRATION_3_4)
         .addMigrations(MIGRATION_4_5)
+        .addMigrations(MIGRATION_5_6)
         .setDriver(BundledSQLiteDriver())
         .build()
 }
