@@ -4,9 +4,12 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-class AndroidDatabaseFactory(private val context: Context) : DatabaseFactory {
+class AndroidDatabaseFactory(
+    private val context: Context,
+    private val databaseName: String = "coffee.db"
+) : DatabaseFactory {
     override fun createBuilder(): RoomDatabase.Builder<CoffeeDatabase> {
-        val dbFile = context.getDatabasePath("coffee.db")
+        val dbFile = context.getDatabasePath(databaseName)
         return Room.databaseBuilder<CoffeeDatabase>(
             context = context.applicationContext,
             name = dbFile.absolutePath
