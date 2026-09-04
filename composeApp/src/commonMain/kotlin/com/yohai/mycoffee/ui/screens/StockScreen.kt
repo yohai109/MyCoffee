@@ -74,6 +74,9 @@ import kotlinx.datetime.todayIn
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.time.Instant
+import org.jetbrains.compose.resources.stringResource
+import mycoffee.composeapp.generated.resources.Res
+import mycoffee.composeapp.generated.resources.*
 
 private val ORIGIN_OPTIONS = listOf(
     "Ethiopia", "Colombia", "Kenya", "Brazil", "Costa Rica", "Guatemala",
@@ -120,11 +123,11 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Your shelf is waiting", style = MaterialTheme.typography.titleLarge)
+                         Text(stringResource(Res.string.stock_empty_title), style = MaterialTheme.typography.titleLarge)
                         Spacer(Modifier.height(6.dp))
-                        Text("Add a bag to start keeping track.", style = MaterialTheme.typography.bodyMedium)
+                         Text(stringResource(Res.string.stock_empty_message), style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.height(16.dp))
-                        Button(onClick = { showAddDialog = true }) { Text("Add coffee") }
+                         Button(onClick = { showAddDialog = true }) { Text(stringResource(Res.string.add_coffee)) }
                     }
                 }
             } else {
@@ -136,7 +139,7 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
                     item { StatisticsBanner(stockList, settings = settings) }
                     if (activeStockList.any { it.state == CoffeeState.OPEN }) {
                         item {
-                            Text("CURRENTLY OPEN", style = MaterialTheme.typography.labelMedium,
+                             Text(stringResource(Res.string.currently_open), style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(top = 8.dp))
                         }
@@ -168,7 +171,7 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
             onClick = { showAddDialog = true },
             modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Stock")
+             Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.add_stock))
         }
 
         if (showAddDialog) {
@@ -248,8 +251,8 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
         showDeleteConfirm?.let { stock ->
             AlertDialog(
                 onDismissRequest = { showDeleteConfirm = null },
-                title = { Text("Delete Bag") },
-                 text = { Text("Are you sure you want to delete this bag and its brew records?") },
+                 title = { Text(stringResource(Res.string.delete_bag)) },
+                  text = { Text(stringResource(Res.string.delete_bag_confirmation)) },
                 confirmButton = {
                     TextButton(onClick = {
                         scope.launch {
@@ -258,12 +261,12 @@ fun StockScreen(settings: Settings = Settings.DEFAULT) {
                             showDeleteConfirm = null
                         }
                     }) {
-                        Text("Delete")
+                         Text(stringResource(Res.string.delete))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteConfirm = null }) {
-                        Text("Cancel")
+                         Text(stringResource(Res.string.cancel))
                     }
                 }
             )
@@ -310,12 +313,12 @@ fun AddStockDialog(
                     }
                     showDatePicker = false
                 }) {
-                    Text("OK")
+                     Text(stringResource(Res.string.ok))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
+                     Text(stringResource(Res.string.cancel))
                 }
             }
         ) {
@@ -331,28 +334,28 @@ fun AddStockDialog(
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
-                    text = if (isEditing) "Edit Stock" else "Add New Stock",
+                     text = stringResource(if (isEditing) Res.string.edit_stock else Res.string.add_new_stock),
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Coffee Name") },
+                     label = { Text(stringResource(Res.string.coffee_name)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = roaster,
                     onValueChange = { roaster = it },
-                    label = { Text("Roaster") },
+                     label = { Text(stringResource(Res.string.roaster)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = sizeText,
                     onValueChange = { sizeText = it },
-                    label = { Text("Size (${weightUnit(useGrams)})") },
+                     label = { Text(stringResource(if (useGrams) Res.string.size_grams else Res.string.size_ounces)) },
                     isError = measurementError(sizeText, "Size", 0.1, if (useGrams) 10000.0 else gramsToOunces(10000.0)) != null,
                     supportingText = measurementError(sizeText, "Size", 0.1, if (useGrams) 10000.0 else gramsToOunces(10000.0))?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth()
@@ -362,10 +365,10 @@ fun AddStockDialog(
                     OutlinedTextField(
                         value = selectedDate?.toString() ?: "",
                         onValueChange = {},
-                        label = { Text("Roast Date") },
+                         label = { Text(stringResource(Res.string.roast_date)) },
                         readOnly = true,
                         trailingIcon = {
-                            Icon(Icons.Default.CalendarMonth, contentDescription = "Select date")
+                             Icon(Icons.Default.CalendarMonth, contentDescription = stringResource(Res.string.select_date))
                         },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -385,7 +388,7 @@ fun AddStockDialog(
                     OutlinedTextField(
                         value = origin,
                         onValueChange = { origin = it; originExpanded = true },
-                        label = { Text("Origin") },
+                         label = { Text(stringResource(Res.string.origin)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = originExpanded) },
                          modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
                     )
@@ -411,11 +414,11 @@ fun AddStockDialog(
                         value = process?.name?.replace("_", " ") ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Process") },
+                         label = { Text(stringResource(Res.string.process)) },
                         trailingIcon = {
                             Icon(
                                 if (processExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = "Select process",
+                                 contentDescription = stringResource(Res.string.select_process),
                                 modifier = Modifier.clickable { processExpanded = !processExpanded }
                             )
                         },
@@ -440,7 +443,7 @@ fun AddStockDialog(
                 OutlinedTextField(
                     value = heightText,
                     onValueChange = { heightText = it },
-                    label = { Text("Height (masl)") },
+                     label = { Text(stringResource(Res.string.height_masl)) },
                     isError = integerError(heightText, "Height", 0, 10000, required = false) != null,
                     supportingText = integerError(heightText, "Height", 0, 10000, required = false)?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth()
@@ -455,7 +458,7 @@ fun AddStockDialog(
                     OutlinedTextField(
                         value = species,
                         onValueChange = { species = it; speciesExpanded = true },
-                        label = { Text("Species") },
+                         label = { Text(stringResource(Res.string.species)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speciesExpanded) },
                          modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
                     )
@@ -478,7 +481,7 @@ fun AddStockDialog(
                 OutlinedTextField(
                     value = tastingNotes,
                     onValueChange = { tastingNotes = it },
-                    label = { Text("Tasting Notes") },
+                     label = { Text(stringResource(Res.string.tasting_notes)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2
                 )
@@ -488,7 +491,7 @@ fun AddStockDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                         Text(stringResource(Res.string.cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     val size = sizeText.toDoubleOrNull() ?: 0.0
@@ -509,7 +512,7 @@ fun AddStockDialog(
                         },
                         enabled = isValid
                     ) {
-                        Text(if (isEditing) "Save" else "Add")
+                         Text(stringResource(if (isEditing) Res.string.save else Res.string.add))
                     }
                 }
             }
@@ -575,7 +578,7 @@ fun RatingSelector(
                     imageVector = if (i <= (rating
                             ?: 0)
                     ) Icons.Filled.Star else Icons.Filled.StarBorder,
-                    contentDescription = "Star $i",
+                     contentDescription = stringResource(Res.string.star_number, i),
                     tint = if (i <= (rating
                             ?: 0)
                     ) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
@@ -592,7 +595,7 @@ fun StarRating(rating: Int?) {
             for (i in 1..5) {
                 Icon(
                     imageVector = if (i <= rating) Icons.Filled.Star else Icons.Filled.StarBorder,
-                    contentDescription = "Star $i",
+                     contentDescription = stringResource(Res.string.star_number, i),
                     tint = if (i <= rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
                         alpha = 0.5f
                     ),
@@ -621,27 +624,27 @@ fun StatisticsBanner(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Statistics",
+                 text = stringResource(Res.string.statistics),
                 style = MaterialTheme.typography.titleMedium
             )
-            Text("A quick read of your shelf", style = MaterialTheme.typography.bodySmall)
+             Text(stringResource(Res.string.shelf_summary), style = MaterialTheme.typography.bodySmall)
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 ShelfStat("${stockList.count { it.state != CoffeeState.FINISHED }}", "active")
-                ShelfStat("${stockList.count { it.state == CoffeeState.OPEN }}", "open")
-                ShelfStat("${stockList.count { it.state == CoffeeState.NEW }}", "unopened")
+                 ShelfStat("${stockList.count { it.state == CoffeeState.OPEN }}", stringResource(Res.string.open))
+                 ShelfStat("${stockList.count { it.state == CoffeeState.NEW }}", stringResource(Res.string.unopened))
             }
             Spacer(modifier = Modifier.height(10.dp))
             if (averageOpenTime != null) {
                 val roundedDays = averageOpenTime.roundToInt()
-                val daysText = if (roundedDays == 1) "day" else "days"
+                 val daysText = stringResource(if (roundedDays == 1) Res.string.day else Res.string.days)
                 Text(
-                    text = "Average open time: $roundedDays $daysText",
+                     text = stringResource(Res.string.average_open_time, roundedDays, daysText),
                     style = MaterialTheme.typography.bodyMedium
                 )
             } else {
                 Text(
-                    text = "Average open time: No finished bags yet",
+                     text = stringResource(Res.string.no_finished_bags),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -649,12 +652,12 @@ fun StatisticsBanner(
             if (averageRating != null) {
                 val roundedRating = averageRating.roundToInt()
                 Text(
-                    text = "Average rating: $roundedRating stars",
+                     text = stringResource(Res.string.average_rating, roundedRating),
                     style = MaterialTheme.typography.bodyMedium
                 )
             } else {
                 Text(
-                    text = "Average rating: No rated bags yet",
+                     text = stringResource(Res.string.no_rated_bags),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -694,12 +697,12 @@ fun FinishedBagsHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Finished Bags ($count)",
+                 text = stringResource(Res.string.finished_bags, count),
                 style = MaterialTheme.typography.titleMedium
             )
             Icon(
                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = if (expanded) "Collapse" else "Expand"
+                 contentDescription = stringResource(if (expanded) Res.string.collapse else Res.string.expand)
             )
         }
     }
@@ -744,30 +747,30 @@ fun StockItem(
                     Spacer(Modifier.width(10.dp))
                     Column {
                         Text(text = stock.name, style = MaterialTheme.typography.titleLarge)
-                        Text(text = "Roaster: ${stock.roaster}", style = MaterialTheme.typography.bodySmall)
+                         Text(text = stringResource(Res.string.roaster_value, stock.roaster), style = MaterialTheme.typography.bodySmall)
                     }
                 }
                 Row {
                     if (stock.state != CoffeeState.FINISHED) {
-                        IconButton(onClick = onEditClick) { Icon(Icons.Default.Edit, contentDescription = "Edit") }
+                         IconButton(onClick = onEditClick) { Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.edit)) }
                     }
                     IconButton(onClick = onDeleteClick) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                         Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.delete))
                     }
                 }
             }
-            Text("Freshness: ${freshnessFor(stock.roastDate, Clock.System.todayIn(TimeZone.currentSystemDefault())).name.replace('_', ' ')}", style = MaterialTheme.typography.bodySmall)
+             Text(stringResource(Res.string.freshness_value, freshnessFor(stock.roastDate, Clock.System.todayIn(TimeZone.currentSystemDefault())).name.replace('_', ' ')), style = MaterialTheme.typography.bodySmall)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "State: ${stock.state}", style = MaterialTheme.typography.bodySmall)
+                 Text(text = stringResource(Res.string.state_value, stock.state), style = MaterialTheme.typography.bodySmall)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val remaining = stock.remainingWeight ?: stock.size
                     if (remaining < 50) {
                         Icon(
                             Icons.Default.Error,
-                            contentDescription = "Low stock",
+                             contentDescription = stringResource(Res.string.low_stock),
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(end = 4.dp)
                         )
@@ -787,31 +790,31 @@ fun StockItem(
                 Spacer(modifier = Modifier.height(8.dp))
                 stock.origin?.let {
                     Text(
-                        text = "Origin: $it",
+                         text = stringResource(Res.string.origin_value, it),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
                 stock.species?.let {
                     Text(
-                        text = "Species: $it",
+                         text = stringResource(Res.string.species_value, it),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
                 stock.height?.let {
                     Text(
-                        text = "Height: ${it} masl",
+                         text = stringResource(Res.string.height_value, it),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
                 stock.process?.let {
                     Text(
-                        text = "Process: ${it.name.replace("_", " ")}",
+                         text = stringResource(Res.string.process_value, it.name.replace("_", " ")),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
                 stock.tastingNotes?.let {
                     Text(
-                        text = "Notes: $it",
+                         text = stringResource(Res.string.notes_value, it),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -830,11 +833,11 @@ fun StockItem(
                 ) {
                     if (stock.state == CoffeeState.NEW) {
                         TextButton(onClick = onOpenClick) {
-                            Text("Open")
+                             Text(stringResource(Res.string.open))
                         }
                     } else if (stock.state == CoffeeState.OPEN) {
                         TextButton(onClick = onFinishClick) {
-                            Text("Finish")
+                             Text(stringResource(Res.string.finish))
                         }
                     }
                 }
@@ -870,12 +873,12 @@ fun FinishStockDialog(
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
-                    text = "Finish ${stock.name}?",
+                     text = stringResource(Res.string.finish_stock_title, stock.name),
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 Text(
-                    text = "Rate this coffee (optional)",
+                     text = stringResource(Res.string.rate_coffee),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -889,13 +892,13 @@ fun FinishStockDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                         Text(stringResource(Res.string.cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
                         onClick = { onConfirm(rating) }
                     ) {
-                        Text("Finish")
+                         Text(stringResource(Res.string.finish))
                     }
                 }
             }

@@ -53,6 +53,15 @@ import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.getDatabase
 import com.yohai.mycoffee.ui.WindowLayoutClass
 import com.yohai.mycoffee.ui.windowLayoutClassForWidth
+import org.jetbrains.compose.resources.stringResource
+import mycoffee.composeapp.generated.resources.Res
+import mycoffee.composeapp.generated.resources.app_stock_subtitle
+import mycoffee.composeapp.generated.resources.more_destinations
+import mycoffee.composeapp.generated.resources.stock
+import mycoffee.composeapp.generated.resources.brew
+import mycoffee.composeapp.generated.resources.settings
+import mycoffee.composeapp.generated.resources.recipes
+import mycoffee.composeapp.generated.resources.timer
 
 internal fun secondaryNavigationOptions() = navOptions {
     launchSingleTop = true
@@ -66,13 +75,14 @@ internal fun originatingPrimaryRoute(currentRoute: String?, secondaryOrigin: Str
 sealed class Screen(
     val route: String,
     val label: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val labelResource: org.jetbrains.compose.resources.StringResource
 ) {
-    data object Stock : Screen("stock", "Stock", Icons.AutoMirrored.Filled.List)
-    data object Brew : Screen("brew", "Brew", Icons.Default.Refresh)
-    data object Settings : Screen("settings", "Settings", Icons.Default.Settings)
-    data object Recipes : Screen("recipes", "Recipes", Icons.Default.Refresh)
-    data object Timer : Screen("timer", "Timer", Icons.Default.Refresh)
+    data object Stock : Screen("stock", "Stock", Icons.AutoMirrored.Filled.List, Res.string.stock)
+    data object Brew : Screen("brew", "Brew", Icons.Default.Refresh, Res.string.brew)
+    data object Settings : Screen("settings", "Settings", Icons.Default.Settings, Res.string.settings)
+    data object Recipes : Screen("recipes", "Recipes", Icons.Default.Refresh, Res.string.recipes)
+    data object Timer : Screen("timer", "Timer", Icons.Default.Refresh, Res.string.timer)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -112,19 +122,19 @@ fun App() {
                  TopAppBar(
                     title = {
                         Column {
-                            Text(currentScreen.label, style = MaterialTheme.typography.titleLarge)
+                             Text(stringResource(currentScreen.labelResource), style = MaterialTheme.typography.titleLarge)
                             if (currentScreen == Screen.Stock) {
-                                Text("Your coffee, at a glance", style = MaterialTheme.typography.labelSmall)
+                                 Text(stringResource(Res.string.app_stock_subtitle), style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     },
                     actions = {
                         IconButton(onClick = { secondaryExpanded = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More destinations")
+                             Icon(Icons.Default.MoreVert, contentDescription = stringResource(Res.string.more_destinations))
                         }
                         DropdownMenu(expanded = secondaryExpanded, onDismissRequest = { secondaryExpanded = false }) {
                             listOf(Screen.Recipes, Screen.Timer).forEach { screen ->
-                                DropdownMenuItem(text = { Text(screen.label) }, onClick = {
+                                 DropdownMenuItem(text = { Text(stringResource(screen.labelResource)) }, onClick = {
                                     secondaryExpanded = false
                                     secondaryOrigin = originatingRoute
                                     navController.navigate(
@@ -144,8 +154,8 @@ fun App() {
                 ) {
                     items.forEach { screen ->
                         NavigationBarItem(
-                            icon = { Icon(screen.icon, contentDescription = screen.label) },
-                            label = { Text(screen.label) },
+                             icon = { Icon(screen.icon, contentDescription = stringResource(screen.labelResource)) },
+                             label = { Text(stringResource(screen.labelResource)) },
                              selected = originatingRoute == screen.route,
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.onPrimary,

@@ -23,6 +23,17 @@ import androidx.compose.ui.unit.dp
 import com.yohai.mycoffee.database.BrewMethod
 import kotlinx.coroutines.delay
 import kotlin.time.Clock
+import org.jetbrains.compose.resources.stringResource
+import mycoffee.composeapp.generated.resources.Res
+import mycoffee.composeapp.generated.resources.brew_complete
+import mycoffee.composeapp.generated.resources.brew_timer
+import mycoffee.composeapp.generated.resources.done
+import mycoffee.composeapp.generated.resources.enter_positive_number
+import mycoffee.composeapp.generated.resources.reset
+import mycoffee.composeapp.generated.resources.seconds
+import mycoffee.composeapp.generated.resources.start
+import mycoffee.composeapp.generated.resources.stop
+import mycoffee.composeapp.generated.resources.timer_finished
 
 private fun timerPreset(method: BrewMethod) = when (method) {
     BrewMethod.ESPRESSO -> 30
@@ -54,7 +65,7 @@ fun TimerScreen() {
         }
     }
     Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)) {
-        Text("Brew timer", style = MaterialTheme.typography.headlineMedium)
+         Text(stringResource(Res.string.brew_timer), style = MaterialTheme.typography.headlineMedium)
         Text(formatBrewTime((remaining / 1000).toInt()), style = MaterialTheme.typography.displayLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             listOf(BrewMethod.ESPRESSO, BrewMethod.POUR_OVER, BrewMethod.FRENCH_PRESS, BrewMethod.AEROPRESS).forEach { preset ->
@@ -64,12 +75,12 @@ fun TimerScreen() {
         OutlinedTextField(duration, {
             duration = it
             if (!running) remaining = timerDurationMillis(it)
-        }, label = { Text("Seconds") }, enabled = !running, isError = duration.isNotBlank() && timerDurationMillis(duration) == 0L,
-            supportingText = if (duration.isNotBlank() && timerDurationMillis(duration) == 0L) {{ Text("Enter a positive number") }} else null)
+        }, label = { Text(stringResource(Res.string.seconds)) }, enabled = !running, isError = duration.isNotBlank() && timerDurationMillis(duration) == 0L,
+            supportingText = if (duration.isNotBlank() && timerDurationMillis(duration) == 0L) {{ Text(stringResource(Res.string.enter_positive_number)) }} else null)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { completed = false; startedAt = if (running) null else Clock.System.now().toEpochMilliseconds() }, enabled = if (running) true else timerDurationMillis(duration) > 0) { Text(if (running) "Stop" else "Start") }
-            Button(onClick = { startedAt = null; completed = false; remaining = timerDurationMillis(duration) }) { Text("Reset") }
+            Button(onClick = { completed = false; startedAt = if (running) null else Clock.System.now().toEpochMilliseconds() }, enabled = if (running) true else timerDurationMillis(duration) > 0) { Text(stringResource(if (running) Res.string.stop else Res.string.start)) }
+            Button(onClick = { startedAt = null; completed = false; remaining = timerDurationMillis(duration) }) { Text(stringResource(Res.string.reset)) }
         }
     }
-    if (completed) AlertDialog(onDismissRequest = { completed = false }, title = { Text("Brew complete") }, text = { Text("Your timer has finished.") }, confirmButton = { Button(onClick = { completed = false }) { Text("Done") } })
+    if (completed) AlertDialog(onDismissRequest = { completed = false }, title = { Text(stringResource(Res.string.brew_complete)) }, text = { Text(stringResource(Res.string.timer_finished)) }, confirmButton = { Button(onClick = { completed = false }) { Text(stringResource(Res.string.done)) } })
 }
