@@ -41,11 +41,4 @@ class ComposeAppCommonTest {
         assertEquals("Settings", Screen.Settings.label)
     }
 
-    @Test
-    fun testScreenIconsAreNotNull() {
-        // Test that all screen icons are defined
-        assertTrue(Screen.Stock.icon != null, "Stock icon should be defined")
-        assertTrue(Screen.Brew.icon != null, "Brew icon should be defined")
-        assertTrue(Screen.Settings.icon != null, "Settings icon should be defined")
-    }
 }

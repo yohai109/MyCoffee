@@ -1,7 +1,7 @@
 package com.yohai.mycoffee
 
-import kotlin.test.Test
-import kotlin.test.assertNotNull
+import org.junit.Assert.assertNotNull
+import org.junit.Test
 
 /**
  * Android-specific UI tests
@@ -24,6 +24,6 @@ class AndroidAppTest {
         } catch (e: ClassNotFoundException) {
             null
         }
-        assertNotNull(mainActivityClass, "MainActivity should exist in Android source")
+        assertNotNull("MainActivity should exist in Android source", mainActivityClass)
     }
 }

@@ -2,20 +2,27 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 }
 
 kotlin {
-    androidTarget {
+    android {
+        namespace = "com.yohai.mycoffee.shared"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        withHostTest {
+        }
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
-    iosArm64()
-    iosSimulatorArm64()
+
+    if (System.getProperty("os.name").startsWith("Mac")) {
+        iosArm64()
+        iosSimulatorArm64()
+    }
     
     jvm()
     
@@ -38,18 +45,8 @@ room {
 dependencies {
     add("kspCommonMainMetadata", libs.room.compiler)
     add("kspAndroid", libs.room.compiler)
-    add("kspIosArm64", libs.room.compiler)
-    add("kspIosSimulatorArm64", libs.room.compiler)
-}
-
-android {
-    namespace = "com.yohai.mycoffee.shared"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
+    if (System.getProperty("os.name").startsWith("Mac")) {
+        add("kspIosArm64", libs.room.compiler)
+        add("kspIosSimulatorArm64", libs.room.compiler)
     }
 }
