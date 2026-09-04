@@ -83,6 +83,8 @@ Before submitting your contribution, make sure all tests pass:
 
 - **Common Tests:** `./gradlew :composeApp:allTests`
 - **Android Tests:** `./gradlew :composeApp:testDebugUnitTest`
+- **Android E2E Tests:** Start an API 28+ emulator or connect an Android device, then run `./gradlew :androidApp:connectedDebugAndroidTest`.
+- **Single Android E2E Test:** `./gradlew :androidApp:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.yohai.mycoffee.EndToEndTest#appStartsOnStockAndPrimaryNavigationWorks`
 - **iOS Tests:** `./gradlew :composeApp:iosSimulatorArm64Test`
 - **Desktop Tests:** `./gradlew :composeApp:jvmTest`
 - **Server Tests:** `./gradlew :server:test`
