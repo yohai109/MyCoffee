@@ -10,8 +10,14 @@ plugins {
 kotlin {
     android {
         namespace = "com.yohai.mycoffee.shared"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        compileSdk =
+            libs.versions.android.compileSdk
+                .get()
+                .toInt()
+        minSdk =
+            libs.versions.android.minSdk
+                .get()
+                .toInt()
         withHostTest {
         }
         compilerOptions {
@@ -23,9 +29,9 @@ kotlin {
         iosArm64()
         iosSimulatorArm64()
     }
-    
+
     jvm()
-    
+
     sourceSets {
         commonMain.dependencies {
             api(libs.room.runtime)

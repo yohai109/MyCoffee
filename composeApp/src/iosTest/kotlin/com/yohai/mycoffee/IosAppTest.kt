@@ -2,14 +2,12 @@ package com.yohai.mycoffee
 
 import kotlin.test.Test
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * iOS-specific UI tests
  * These are basic smoke tests to ensure iOS-specific code compiles and integrates correctly
  */
 class IosAppTest {
-
     @Test
     fun testIosPlatformString() {
         // Basic smoke test to ensure iOS test infrastructure works

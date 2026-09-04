@@ -7,12 +7,11 @@ import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
 import com.yohai.mycoffee.database.Settings
-import kotlin.time.Clock
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Clock
 
 class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
 
@@ -53,7 +52,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
         roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
         openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
         finishDate = null,
-        remainingWeight = remainingWeight
+        remainingWeight = remainingWeight,
     )
 
     @OptIn(ExperimentalTestApi::class)
@@ -67,7 +66,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             dose = 18.0,
             brewTime = 30,
             yield = 36.0,
-            notes = null
+            notes = null,
         )
 
         setContent {
@@ -76,7 +75,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 coffeeName = "Test Coffee",
                 settings = Settings(useGrams = false),
                 onEditClick = {},
-                onDeleteClick = {}
+                onDeleteClick = {},
             )
         }
 
@@ -96,7 +95,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             dose = 18.0,
             brewTime = 30,
             yield = 36.0,
-            notes = "Tasty shot"
+            notes = "Tasty shot",
         )
 
         setContent {
@@ -104,11 +103,11 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 brew = testBrew,
                 coffeeName = "Ethiopian Yirgacheffe",
                 onEditClick = {},
-                onDeleteClick = {}
+                onDeleteClick = {},
             )
         }
 
-        onNodeWithText("Ethiopian Yirgacheffe · Espresso · ${today}").assertIsDisplayed()
+        onNodeWithText("Ethiopian Yirgacheffe · Espresso · $today").assertIsDisplayed()
         onNodeWithText("18g").assertIsDisplayed()
         onNodeWithText("30s").assertIsDisplayed()
         onNodeWithText("36g").assertIsDisplayed()
@@ -128,7 +127,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             dose = 20.0,
             brewTime = 180,
             yield = null,
-            notes = null
+            notes = null,
         )
 
         setContent {
@@ -136,7 +135,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 brew = testBrew,
                 coffeeName = "Unknown Coffee",
                 onEditClick = {},
-                onDeleteClick = {}
+                onDeleteClick = {},
             )
         }
 
@@ -156,7 +155,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             dose = 18.0,
             brewTime = 30,
             yield = null,
-            notes = null
+            notes = null,
         )
 
         setContent {
@@ -164,7 +163,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 brew = testBrew,
                 coffeeName = "Test Coffee",
                 onEditClick = {},
-                onDeleteClick = {}
+                onDeleteClick = {},
             )
         }
 
@@ -182,7 +181,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             dose = 18.0,
             brewTime = 30,
             yield = null,
-            notes = null
+            notes = null,
         )
 
         setContent {
@@ -190,7 +189,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 brew = testBrew,
                 coffeeName = "Test Coffee",
                 onEditClick = {},
-                onDeleteClick = {}
+                onDeleteClick = {},
             )
         }
 
@@ -209,7 +208,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             dose = 18.0,
             brewTime = 30,
             yield = null,
-            notes = null
+            notes = null,
         )
 
         setContent {
@@ -217,7 +216,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 brew = testBrew,
                 coffeeName = "Test Coffee",
                 onEditClick = { editClicked = true },
-                onDeleteClick = {}
+                onDeleteClick = {},
             )
         }
 
@@ -237,7 +236,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             dose = 18.0,
             brewTime = 30,
             yield = null,
-            notes = null
+            notes = null,
         )
 
         setContent {
@@ -245,7 +244,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 brew = testBrew,
                 coffeeName = "Test Coffee",
                 onEditClick = {},
-                onDeleteClick = { deleteClicked = true }
+                onDeleteClick = { deleteClicked = true },
             )
         }
 
@@ -265,15 +264,15 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 size = 250.0,
                 roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                finishDate = null
-            )
+                finishDate = null,
+            ),
         )
 
         setContent {
             AddBrewDialog(
                 coffeeStock = coffeeStock,
                 onDismiss = {},
-                onConfirm = { _, _, _, _, _, _, _ -> }
+                onConfirm = { _, _, _, _, _, _, _ -> },
             )
         }
 
@@ -301,7 +300,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 size = 250.0,
                 roastDate = today,
                 openDate = null,
-                finishDate = null
+                finishDate = null,
             ),
             CoffeeStock(
                 id = 2,
@@ -311,15 +310,15 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 size = 250.0,
                 roastDate = today,
                 openDate = today,
-                finishDate = null
-            )
+                finishDate = null,
+            ),
         )
 
         setContent {
             AddBrewDialog(
                 coffeeStock = coffeeStock,
                 onDismiss = {},
-                onConfirm = { _, _, _, _, _, _, _ -> }
+                onConfirm = { _, _, _, _, _, _, _ -> },
             )
         }
 
@@ -339,7 +338,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 size = 250.0,
                 roastDate = today,
                 openDate = null,
-                finishDate = null
+                finishDate = null,
             ),
             CoffeeStock(
                 id = 2,
@@ -349,8 +348,8 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 size = 250.0,
                 roastDate = today,
                 openDate = today,
-                finishDate = null
-            )
+                finishDate = null,
+            ),
         )
 
         setContent {
@@ -374,8 +373,8 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 size = 250.0,
                 roastDate = today,
                 openDate = null,
-                finishDate = null
-            )
+                finishDate = null,
+            ),
         )
         val initialBrew = BrewRecord(
             id = 1,
@@ -385,7 +384,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
             dose = 30.0,
             brewTime = 240,
             yield = 450.0,
-            notes = "Test notes"
+            notes = "Test notes",
         )
 
         setContent {
@@ -394,7 +393,7 @@ class BrewScreenTest : com.yohai.mycoffee.BaseTest() {
                 onDismiss = {},
                 onConfirm = { _, _, _, _, _, _, _ -> },
                 initialBrew = initialBrew,
-                selectedCoffeeName = "Test Coffee"
+                selectedCoffeeName = "Test Coffee",
             )
         }
 

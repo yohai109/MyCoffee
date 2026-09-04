@@ -46,7 +46,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun MyCoffeeTheme(
     darkTheme: Boolean? = null,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = if (darkTheme ?: isSystemInDarkTheme()) {
         DarkColorScheme
@@ -57,7 +57,7 @@ fun MyCoffeeTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = CoffeeTypography,
-        content = content
+        content = content,
     )
 }
 
@@ -65,6 +65,6 @@ private val CoffeeTypography = androidx.compose.material3.Typography().run {
     copy(
         titleLarge = titleLarge.copy(fontFamily = FontFamily.Serif),
         headlineSmall = headlineSmall.copy(fontFamily = FontFamily.Serif),
-        displaySmall = displaySmall.copy(fontFamily = FontFamily.Serif)
+        displaySmall = displaySmall.copy(fontFamily = FontFamily.Serif),
     )
 }

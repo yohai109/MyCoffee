@@ -12,6 +12,4 @@ fun initDatabase(databaseFactory: DatabaseFactory) {
     factory = databaseFactory
 }
 
-fun getDatabase(): CoffeeDatabase {
-    return getRoomDatabase(factory.createBuilder())
-}
+fun getDatabase(): CoffeeDatabase = getRoomDatabase(factory.createBuilder())

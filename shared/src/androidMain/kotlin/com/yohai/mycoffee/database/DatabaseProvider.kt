@@ -9,7 +9,7 @@ class AndroidDatabaseFactory(private val context: Context) : DatabaseFactory {
         val dbFile = context.getDatabasePath("coffee.db")
         return Room.databaseBuilder<CoffeeDatabase>(
             context = context.applicationContext,
-            name = dbFile.absolutePath
+            name = dbFile.absolutePath,
         )
     }
 }

@@ -24,6 +24,8 @@ ksp = "2.3.6"
 sqlite = "2.7.0"
 kotlinx-datetime = "0.8.0"
 robolectric = "4.16.1"
+spotless = "7.2.1"
+ktlint = "1.5.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -73,3 +75,4 @@ ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
