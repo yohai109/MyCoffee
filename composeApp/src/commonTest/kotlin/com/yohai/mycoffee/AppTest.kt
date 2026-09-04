@@ -3,7 +3,7 @@ package com.yohai.mycoffee
 import androidx.compose.ui.test.*
 import kotlin.test.Test
 
-class AppTest {
+class AppTest : BaseTest() {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
