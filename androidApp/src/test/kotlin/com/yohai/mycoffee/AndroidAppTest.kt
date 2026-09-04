@@ -24,6 +24,6 @@ class AndroidAppTest {
         } catch (e: ClassNotFoundException) {
             null
         }
-        assertNotNull(mainActivityClass, "MainActivity should exist in Android source")
+        assertNotNull("MainActivity should exist in Android source", mainActivityClass)
     }
 }

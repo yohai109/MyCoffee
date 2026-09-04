@@ -1,9 +1,26 @@
 package com.yohai.mycoffee
 
 import androidx.compose.ui.test.*
-import kotlin.test.Test
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import com.yohai.mycoffee.database.CoffeeDatabase
+import com.yohai.mycoffee.database.DatabaseFactory
+import com.yohai.mycoffee.database.initDatabase
+import org.junit.Before
+import org.junit.Test
 
-class AppTest : BaseTest() {
+private class TestDatabaseFactory : DatabaseFactory {
+    override fun createBuilder(): RoomDatabase.Builder<CoffeeDatabase> {
+        return Room.inMemoryDatabaseBuilder<CoffeeDatabase>()
+    }
+}
+
+class AppTest {
+
+    @Before
+    fun setup() {
+        initDatabase(TestDatabaseFactory())
+    }
 
     @OptIn(ExperimentalTestApi::class)
     @Test
