@@ -2,6 +2,7 @@ package com.yohai.mycoffee.ui.theme
 
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
 
 class ThemeTest {

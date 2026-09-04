@@ -1,6 +1,7 @@
 package com.yohai.mycoffee.ui.screens
 
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
 
 class SettingsScreenTest : com.yohai.mycoffee.BaseTest() {

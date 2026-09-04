@@ -1,6 +1,7 @@
 package com.yohai.mycoffee.ui.screens
 
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.v2.runComposeUiTest
 import com.yohai.mycoffee.database.BrewMethod
 import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.CoffeeState

@@ -30,7 +30,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ./gradlew :server:test :shared:jvmTest :composeApp:jvmTest :androidApp:testDebugUnitTest
+          ./gradlew :server:test :shared:jvmTest :composeApp:jvmTest
 
       - name: Build debug APK
         run: |

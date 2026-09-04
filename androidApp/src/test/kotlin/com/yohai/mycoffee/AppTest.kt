@@ -1,8 +1,11 @@
 package com.yohai.mycoffee
 
+import android.content.Context
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.test.core.app.ApplicationProvider
 import com.yohai.mycoffee.database.CoffeeDatabase
 import com.yohai.mycoffee.database.DatabaseFactory
 import com.yohai.mycoffee.database.initDatabase
@@ -11,7 +14,10 @@ import org.junit.Test
 
 private class TestDatabaseFactory : DatabaseFactory {
     override fun createBuilder(): RoomDatabase.Builder<CoffeeDatabase> {
-        return Room.inMemoryDatabaseBuilder<CoffeeDatabase>()
+        return Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext<Context>(),
+            CoffeeDatabase::class.java
+        )
     }
 }
 
