@@ -9,6 +9,7 @@ plugins {
 
 kotlin {
     android {
+        androidResources.enable = true
         namespace = "com.yohai.mycoffee.shared"
         compileSdk =
             libs.versions.android.compileSdk
