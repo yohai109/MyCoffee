@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ComposeAppCommonTest {
-
     @Test
     fun testBasicArithmetic() {
         assertEquals(3, 1 + 2)
@@ -47,5 +46,4 @@ class ComposeAppCommonTest {
         assertEquals("Brew", Screen.Brew.label)
         assertEquals("Settings", Screen.Settings.label)
     }
-
 }

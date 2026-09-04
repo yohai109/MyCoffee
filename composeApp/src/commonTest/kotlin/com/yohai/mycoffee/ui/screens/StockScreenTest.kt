@@ -4,9 +4,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
-import com.yohai.mycoffee.database.ProcessMethod
 import com.yohai.mycoffee.database.Settings
-import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -16,6 +14,7 @@ import kotlinx.datetime.todayIn
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Clock
 
 class StockScreenTest : com.yohai.mycoffee.BaseTest() {
 
@@ -31,7 +30,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             roastDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
             openDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
             finishDate = null,
-            remainingWeight = 250.0
+            remainingWeight = 250.0,
         )
 
         setContent { StockItem(testStock, settings = Settings(useGrams = false)) }
@@ -209,7 +208,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _, _, _, _, _, _, _ -> }
+                onConfirm = { _, _, _, _, _, _, _, _, _ -> },
             )
         }
 
@@ -244,7 +243,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             AddStockDialog(
                 onDismiss = {},
                 onConfirm = { _, _, _, _, _, _, _, _, _ -> },
-                initialStock = initialStock
+                initialStock = initialStock,
             )
         }
 
@@ -291,7 +290,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                     confirmedSize = size
                     confirmedRoastDate = roastDate
                 },
-                initialStock = initialStock
+                initialStock = initialStock,
             )
         }
 
@@ -400,7 +399,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             StockItem(
                 stock = testStock,
-                onEditClick = { editClicked = true }
+                onEditClick = { editClicked = true },
             )
         }
 
@@ -435,7 +434,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = today,
                 finishDate = null,
-            )
+            ),
         )
 
         // When
@@ -451,7 +450,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         val tenDaysAgo = today.minus(10, DateTimeUnit.DAY)
         val twentyDaysAgo = today.minus(20, DateTimeUnit.DAY)
-        
+
         val stockList = listOf(
             // Bag 1: opened 20 days ago, finished 10 days ago = 10 days open
             CoffeeStock(
@@ -474,7 +473,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = tenDaysAgo,
                 openDate = tenDaysAgo,
                 finishDate = today,
-            )
+            ),
         )
 
         // When
@@ -499,7 +498,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = null,
                 finishDate = null,
-            )
+            ),
         )
 
         // When
@@ -518,7 +517,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         // Given
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         val tenDaysAgo = today.minus(10, DateTimeUnit.DAY)
-        
+
         val stockList = listOf(
             CoffeeStock(
                 id = 1,
@@ -529,7 +528,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = tenDaysAgo,
                 openDate = tenDaysAgo,
                 finishDate = today,
-            )
+            ),
         )
 
         // When
@@ -548,7 +547,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         // Given
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         val oneDayAgo = today.minus(1, DateTimeUnit.DAY)
-        
+
         val stockList = listOf(
             CoffeeStock(
                 id = 1,
@@ -559,7 +558,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = oneDayAgo,
                 openDate = oneDayAgo,
                 finishDate = today,
-            )
+            ),
         )
 
         // When
@@ -606,11 +605,11 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = null,
                 finishDate = null,
-            )
+            ),
         )
 
         // When - sort by state with OPEN first, then NEW, then FINISHED
-        val sorted = stockList.sortedBy { 
+        val sorted = stockList.sortedBy {
             when (it.state) {
                 CoffeeState.OPEN -> 0
                 CoffeeState.NEW -> 1
@@ -635,7 +634,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             FinishedBagsHeader(
                 count = 5,
                 expanded = false,
-                onToggle = {}
+                onToggle = {},
             )
         }
 
@@ -651,7 +650,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             FinishedBagsHeader(
                 count = 3,
                 expanded = true,
-                onToggle = {}
+                onToggle = {},
             )
         }
 
@@ -667,7 +666,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             FinishedBagsHeader(
                 count = 3,
                 expanded = false,
-                onToggle = {}
+                onToggle = {},
             )
         }
 
@@ -686,7 +685,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             FinishedBagsHeader(
                 count = 1,
                 expanded = false,
-                onToggle = { toggleCalled = true }
+                onToggle = { toggleCalled = true },
             )
         }
 
@@ -731,7 +730,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = null,
                 finishDate = null,
-            )
+            ),
         )
 
         // When - separate into active and finished
@@ -759,8 +758,8 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = today,
                 finishDate = today,
-                rating = null
-            )
+                rating = null,
+            ),
         )
 
         val result = calculateAverageRating(stockList)
@@ -781,7 +780,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = today,
                 finishDate = today,
-                rating = 4
+                rating = 4,
             ),
             CoffeeStock(
                 id = 2,
@@ -792,8 +791,8 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = today,
                 finishDate = today,
-                rating = 5
-            )
+                rating = 5,
+            ),
         )
 
         val result = calculateAverageRating(stockList)
@@ -814,7 +813,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = today,
                 finishDate = null,
-                rating = 3
+                rating = 3,
             ),
             CoffeeStock(
                 id = 2,
@@ -825,8 +824,8 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = today,
                 finishDate = today,
-                rating = 5
-            )
+                rating = 5,
+            ),
         )
 
         val result = calculateAverageRating(stockList)
@@ -848,8 +847,8 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = today,
                 finishDate = today,
-                rating = 4
-            )
+                rating = 4,
+            ),
         )
 
         setContent {
@@ -873,8 +872,8 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
                 roastDate = today,
                 openDate = today,
                 finishDate = today,
-                rating = null
-            )
+                rating = null,
+            ),
         )
 
         setContent {
@@ -911,7 +910,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             roastDate = today,
             openDate = today,
             finishDate = today,
-            rating = 4
+            rating = 4,
         )
 
         setContent {
@@ -934,14 +933,14 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             size = 250.0,
             roastDate = today,
             openDate = today,
-            finishDate = null
+            finishDate = null,
         )
 
         setContent {
             FinishStockDialog(
                 stock = stock,
                 onDismiss = {},
-                onConfirm = {}
+                onConfirm = {},
             )
         }
 
@@ -1045,7 +1044,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             StockItem(
                 stock = testStock,
-                onDeleteClick = { deleteClicked = true }
+                onDeleteClick = { deleteClicked = true },
             )
         }
 
@@ -1068,7 +1067,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             size = 250.0,
             roastDate = today,
             openDate = today,
-            finishDate = null
+            finishDate = null,
         )
         var confirmedRating: Int? = null
 
@@ -1076,7 +1075,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             FinishStockDialog(
                 stock = stock,
                 onDismiss = {},
-                onConfirm = { rating -> confirmedRating = rating }
+                onConfirm = { rating -> confirmedRating = rating },
             )
         }
 
@@ -1101,7 +1100,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             openDate = null,
             finishDate = null,
             height = 1800,
-            species = "Arabica"
+            species = "Arabica",
         )
 
         // When
@@ -1147,7 +1146,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
         setContent {
             AddStockDialog(
                 onDismiss = {},
-                onConfirm = { _, _, _, _, _, _, _, _, _ -> }
+                onConfirm = { _, _, _, _, _, _, _, _, _ -> },
             )
         }
 
@@ -1173,7 +1172,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             finishDate = null,
             height = 1500,
             species = "Robusta",
-            origin = "Ethiopia"
+            origin = "Ethiopia",
         )
 
         // When
@@ -1181,7 +1180,7 @@ class StockScreenTest : com.yohai.mycoffee.BaseTest() {
             AddStockDialog(
                 onDismiss = {},
                 onConfirm = { _, _, _, _, _, _, _, _, _ -> },
-                initialStock = initialStock
+                initialStock = initialStock,
             )
         }
 

@@ -19,7 +19,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
 enum class ProcessMethod {
-    WASHED, NATURAL, HONEY, WET_HONEY, ANAEROBIC, OTHER
+    WASHED,
+    NATURAL,
+    HONEY,
+    WET_HONEY,
+    ANAEROBIC,
+    OTHER,
 }
 
 @Entity
@@ -31,22 +36,31 @@ data class CoffeeStock(
     val openDate: LocalDate?,
     val finishDate: LocalDate?,
     val state: CoffeeState,
-val size: Double,
+    val size: Double,
     val remainingWeight: Double? = null,
     val rating: Int? = null,
     val origin: String? = null,
     val process: ProcessMethod? = null,
     val tastingNotes: String? = null,
     val height: Int? = null,
-    val species: String? = null
+    val species: String? = null,
 )
 
 enum class CoffeeState {
-    NEW, OPEN, FINISHED
+    NEW,
+    OPEN,
+    FINISHED,
 }
 
 enum class BrewMethod {
-    POUR_OVER, ESPRESSO, FRENCH_PRESS, AEROPRESS, MOKA_POT, COLD_BREW, DRIP, OTHER
+    POUR_OVER,
+    ESPRESSO,
+    FRENCH_PRESS,
+    AEROPRESS,
+    MOKA_POT,
+    COLD_BREW,
+    DRIP,
+    OTHER,
 }
 
 @Entity
@@ -63,7 +77,7 @@ data class BrewRecord(
     val tastingTags: String? = null,
     val whatWentWell: String? = null,
     val whatToImprove: String? = null,
-    val wouldMakeAgain: Boolean? = null
+    val wouldMakeAgain: Boolean? = null,
 )
 
 @Entity
@@ -75,7 +89,7 @@ data class BrewRecipe(
     val yield: Double?,
     val brewTime: Int,
     val waterTemperature: Double?,
-    val notes: String?
+    val notes: String?,
 )
 
 @Entity
@@ -86,7 +100,7 @@ data class Settings(
     val darkMode: Boolean? = null,
     val defaultBrewMethod: BrewMethod = BrewMethod.ESPRESSO,
     val defaultBrewDose: Double = 18.0,
-    val defaultBrewYield: Double = 36.0
+    val defaultBrewYield: Double = 36.0,
 ) {
     companion object {
         val DEFAULT = Settings()
@@ -144,9 +158,13 @@ interface SettingsDao {
 
 @Dao
 interface RecipeDao {
-    @Query("SELECT * FROM BrewRecipe ORDER BY name COLLATE NOCASE") fun getAllRecipes(): Flow<List<BrewRecipe>>
+    @Query("SELECT * FROM BrewRecipe ORDER BY name COLLATE NOCASE")
+    fun getAllRecipes(): Flow<List<BrewRecipe>>
+
     @Insert suspend fun insertRecipe(recipe: BrewRecipe)
+
     @Update suspend fun updateRecipe(recipe: BrewRecipe)
+
     @Delete suspend fun deleteRecipe(recipe: BrewRecipe)
 }
 
@@ -154,59 +172,57 @@ interface RecipeDao {
 @TypeConverters(Converters::class)
 abstract class CoffeeDatabase : RoomDatabase() {
     abstract fun coffeeDao(): CoffeeDao
+
     abstract fun brewDao(): BrewDao
+
     abstract fun settingsDao(): SettingsDao
+
     abstract fun recipeDao(): RecipeDao
 }
 
 class Converters {
     @TypeConverter
-    fun fromTimestamp(value: String?): LocalDate? {
-        return value?.let { LocalDate.parse(it) }
-    }
+    fun fromTimestamp(value: String?): LocalDate? = value?.let { LocalDate.parse(it) }
 
     @TypeConverter
-    fun dateToTimestamp(date: LocalDate?): String? {
-        return date?.toString()
-    }
+    fun dateToTimestamp(date: LocalDate?): String? = date?.toString()
 
     @TypeConverter
-    fun fromBrewMethod(value: BrewMethod?): String? {
-        return value?.name
-    }
+    fun fromBrewMethod(value: BrewMethod?): String? = value?.name
 
     @TypeConverter
-    fun toBrewMethod(value: String?): BrewMethod? {
-        return value?.let { BrewMethod.valueOf(it) }
-    }
+    fun toBrewMethod(value: String?): BrewMethod? = value?.let { BrewMethod.valueOf(it) }
 
     @TypeConverter
-    fun fromProcessMethod(value: String?): ProcessMethod? {
-        return value?.let { ProcessMethod.valueOf(it) }
-    }
+    fun fromProcessMethod(value: String?): ProcessMethod? = value?.let { ProcessMethod.valueOf(it) }
 
     @TypeConverter
-    fun toProcessMethod(value: ProcessMethod?): String? {
-        return value?.name
-    }
+    fun toProcessMethod(value: ProcessMethod?): String? = value?.name
 }
 
-private val MIGRATION_3_4 = object : Migration(3, 4) {
-    override fun migrate(connection: SQLiteConnection) {
-        for (sql in listOf(
-            "ALTER TABLE CoffeeStock ADD COLUMN height INTEGER DEFAULT NULL",
-            "ALTER TABLE CoffeeStock ADD COLUMN species TEXT DEFAULT NULL"
-        )) {
-            val stmt = connection.prepare(sql)
-            try { stmt.step() } finally { stmt.close() }
+private val MIGRATION_3_4 =
+    object : Migration(3, 4) {
+        override fun migrate(connection: SQLiteConnection) {
+            for (sql in listOf(
+                "ALTER TABLE CoffeeStock ADD COLUMN height INTEGER DEFAULT NULL",
+                "ALTER TABLE CoffeeStock ADD COLUMN species TEXT DEFAULT NULL",
+            )) {
+                val stmt = connection.prepare(sql)
+                try {
+                    stmt.step()
+                } finally {
+                    stmt.close()
+                }
+            }
         }
     }
-}
 
-private val MIGRATION_4_5 = object : Migration(4, 5) {
-    override fun migrate(connection: SQLiteConnection) {
-        val stmt = connection.prepare(
-            """CREATE TABLE IF NOT EXISTS Settings (
+private val MIGRATION_4_5 =
+    object : Migration(4, 5) {
+        override fun migrate(connection: SQLiteConnection) {
+            val stmt =
+                connection.prepare(
+                    """CREATE TABLE IF NOT EXISTS Settings (
                 id INTEGER NOT NULL PRIMARY KEY,
                 useGrams INTEGER NOT NULL,
                 defaultBagSize REAL NOT NULL,
@@ -214,29 +230,51 @@ private val MIGRATION_4_5 = object : Migration(4, 5) {
                 defaultBrewMethod TEXT NOT NULL,
                 defaultBrewDose REAL NOT NULL,
                 defaultBrewYield REAL NOT NULL
-            )"""
-        )
-        try { stmt.step() } finally { stmt.close() }
-    }
-}
-
-private val MIGRATION_5_6 = object : Migration(5, 6) {
-    override fun migrate(connection: SQLiteConnection) {
-        listOf("tastingNotes", "tastingTags", "whatWentWell", "whatToImprove").forEach { column ->
-            val stmt = connection.prepare("ALTER TABLE BrewRecord ADD COLUMN $column TEXT DEFAULT NULL")
-            try { stmt.step() } finally { stmt.close() }
+            )""",
+                )
+            try {
+                stmt.step()
+            } finally {
+                stmt.close()
+            }
         }
-        val stmt = connection.prepare("ALTER TABLE BrewRecord ADD COLUMN wouldMakeAgain INTEGER DEFAULT NULL")
-        try { stmt.step() } finally { stmt.close() }
-        val recipeStmt = connection.prepare("CREATE TABLE IF NOT EXISTS BrewRecipe (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, method TEXT NOT NULL, dose REAL NOT NULL, yield REAL, brewTime INTEGER NOT NULL, waterTemperature REAL, notes TEXT)")
-        try { recipeStmt.step() } finally { recipeStmt.close() }
     }
-}
 
-private val MIGRATION_6_7 = object : Migration(6, 7) {
-    override fun migrate(connection: SQLiteConnection) {
-        val create = connection.prepare(
-            """CREATE TABLE Settings_new (
+private val MIGRATION_5_6 =
+    object : Migration(5, 6) {
+        override fun migrate(connection: SQLiteConnection) {
+            listOf("tastingNotes", "tastingTags", "whatWentWell", "whatToImprove").forEach { column ->
+                val stmt = connection.prepare("ALTER TABLE BrewRecord ADD COLUMN $column TEXT DEFAULT NULL")
+                try {
+                    stmt.step()
+                } finally {
+                    stmt.close()
+                }
+            }
+            val stmt = connection.prepare("ALTER TABLE BrewRecord ADD COLUMN wouldMakeAgain INTEGER DEFAULT NULL")
+            try {
+                stmt.step()
+            } finally {
+                stmt.close()
+            }
+            val recipeStmt =
+                connection.prepare(
+                    "CREATE TABLE IF NOT EXISTS BrewRecipe (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL, method TEXT NOT NULL, dose REAL NOT NULL, yield REAL, brewTime INTEGER NOT NULL, waterTemperature REAL, notes TEXT)",
+                )
+            try {
+                recipeStmt.step()
+            } finally {
+                recipeStmt.close()
+            }
+        }
+    }
+
+private val MIGRATION_6_7 =
+    object : Migration(6, 7) {
+        override fun migrate(connection: SQLiteConnection) {
+            val create =
+                connection.prepare(
+                    """CREATE TABLE Settings_new (
                 id INTEGER NOT NULL PRIMARY KEY,
                 useGrams INTEGER NOT NULL,
                 defaultBagSize REAL NOT NULL,
@@ -244,33 +282,42 @@ private val MIGRATION_6_7 = object : Migration(6, 7) {
                 defaultBrewMethod TEXT NOT NULL,
                 defaultBrewDose REAL NOT NULL,
                 defaultBrewYield REAL NOT NULL
-            )"""
-        )
-        try { create.step() } finally { create.close() }
+            )""",
+                )
+            try {
+                create.step()
+            } finally {
+                create.close()
+            }
 
-        val copy = connection.prepare(
-            """INSERT INTO Settings_new
+            val copy =
+                connection.prepare(
+                    """INSERT INTO Settings_new
                 SELECT id, useGrams, defaultBagSize, darkMode,
                     defaultBrewMethod, defaultBrewDose, defaultBrewYield
-                FROM Settings"""
-        )
-        try { copy.step() } finally { copy.close() }
+                FROM Settings""",
+                )
+            try {
+                copy.step()
+            } finally {
+                copy.close()
+            }
 
-        for (sql in listOf("DROP TABLE Settings", "ALTER TABLE Settings_new RENAME TO Settings")) {
-            val stmt = connection.prepare(sql)
-            try { stmt.step() } finally { stmt.close() }
+            for (sql in listOf("DROP TABLE Settings", "ALTER TABLE Settings_new RENAME TO Settings")) {
+                val stmt = connection.prepare(sql)
+                try {
+                    stmt.step()
+                } finally {
+                    stmt.close()
+                }
+            }
         }
     }
-}
 
-fun getRoomDatabase(
-    builder: RoomDatabase.Builder<CoffeeDatabase>
-): CoffeeDatabase {
-    return builder
-        .addMigrations(MIGRATION_3_4)
-        .addMigrations(MIGRATION_4_5)
-        .addMigrations(MIGRATION_5_6)
-        .addMigrations(MIGRATION_6_7)
-        .setDriver(BundledSQLiteDriver())
-        .build()
-}
+fun getRoomDatabase(builder: RoomDatabase.Builder<CoffeeDatabase>): CoffeeDatabase = builder
+    .addMigrations(MIGRATION_3_4)
+    .addMigrations(MIGRATION_4_5)
+    .addMigrations(MIGRATION_5_6)
+    .addMigrations(MIGRATION_6_7)
+    .setDriver(BundledSQLiteDriver())
+    .build()

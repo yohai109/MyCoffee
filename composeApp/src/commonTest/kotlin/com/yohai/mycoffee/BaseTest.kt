@@ -8,9 +8,7 @@ import com.yohai.mycoffee.database.initDatabase
 import kotlin.test.BeforeTest
 
 class TestDatabaseFactory : DatabaseFactory {
-    override fun createBuilder(): RoomDatabase.Builder<CoffeeDatabase> {
-        return Room.inMemoryDatabaseBuilder<CoffeeDatabase>()
-    }
+    override fun createBuilder(): RoomDatabase.Builder<CoffeeDatabase> = Room.inMemoryDatabaseBuilder<CoffeeDatabase>()
 }
 
 open class BaseTest {

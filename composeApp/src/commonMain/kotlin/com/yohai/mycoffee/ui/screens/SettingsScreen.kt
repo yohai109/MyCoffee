@@ -6,19 +6,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -38,33 +35,33 @@ import com.yohai.mycoffee.database.BrewMethod
 import com.yohai.mycoffee.database.CoffeeDatabase
 import com.yohai.mycoffee.database.Settings
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.stringResource
 import mycoffee.composeapp.generated.resources.Res
 import mycoffee.composeapp.generated.resources.app_settings
+import mycoffee.composeapp.generated.resources.dark
 import mycoffee.composeapp.generated.resources.default_bag_size
 import mycoffee.composeapp.generated.resources.default_brew_method
 import mycoffee.composeapp.generated.resources.default_brew_recipe
-import mycoffee.composeapp.generated.resources.dark
+import mycoffee.composeapp.generated.resources.dose_grams
+import mycoffee.composeapp.generated.resources.dose_ounces
 import mycoffee.composeapp.generated.resources.grams
 import mycoffee.composeapp.generated.resources.light
 import mycoffee.composeapp.generated.resources.method
 import mycoffee.composeapp.generated.resources.ounces
 import mycoffee.composeapp.generated.resources.same_as_system
 import mycoffee.composeapp.generated.resources.save
-import mycoffee.composeapp.generated.resources.theme
-import mycoffee.composeapp.generated.resources.units
 import mycoffee.composeapp.generated.resources.size_grams
 import mycoffee.composeapp.generated.resources.size_ounces
-import mycoffee.composeapp.generated.resources.dose_grams
-import mycoffee.composeapp.generated.resources.dose_ounces
+import mycoffee.composeapp.generated.resources.theme
+import mycoffee.composeapp.generated.resources.units
 import mycoffee.composeapp.generated.resources.yield_grams
 import mycoffee.composeapp.generated.resources.yield_ounces
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     database: CoffeeDatabase? = null,
-    settings: Settings = Settings.DEFAULT
+    settings: Settings = Settings.DEFAULT,
 ) {
     val currentSettings = settings
     val scope = rememberCoroutineScope()
@@ -90,34 +87,38 @@ fun SettingsScreen(
             .fillMaxSize()
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(stringResource(Res.string.app_settings), style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                TextButton(onClick = {
-                    save {
-                        it.copy(
-                            defaultBagSize = defaultBagSize.toDoubleOrNull()?.let { value -> if (useGrams) value else ouncesToGrams(value) } ?: it.defaultBagSize,
-                            defaultBrewDose = defaultBrewDose.toDoubleOrNull()?.let { value -> if (useGrams) value else ouncesToGrams(value) } ?: it.defaultBrewDose,
-                            defaultBrewYield = defaultBrewYield.toDoubleOrNull()?.let { value -> if (useGrams) value else ouncesToGrams(value) } ?: it.defaultBrewYield,
-                            useGrams = useGrams
-                        )
-                    }
-                }, enabled = bagSizeError == null && doseError == null && yieldError == null) { Text(stringResource(Res.string.save)) }
-            }
-             Text(stringResource(Res.string.units), style = MaterialTheme.typography.titleMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                stringResource(Res.string.app_settings),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            )
+            TextButton(onClick = {
+                save {
+                    it.copy(
+                        defaultBagSize = defaultBagSize.toDoubleOrNull()?.let { value -> if (useGrams) value else ouncesToGrams(value) } ?: it.defaultBagSize,
+                        defaultBrewDose = defaultBrewDose.toDoubleOrNull()?.let { value -> if (useGrams) value else ouncesToGrams(value) } ?: it.defaultBrewDose,
+                        defaultBrewYield = defaultBrewYield.toDoubleOrNull()?.let { value -> if (useGrams) value else ouncesToGrams(value) } ?: it.defaultBrewYield,
+                        useGrams = useGrams,
+                    )
+                }
+            }, enabled = bagSizeError == null && doseError == null && yieldError == null) { Text(stringResource(Res.string.save)) }
+        }
+        Text(stringResource(Res.string.units), style = MaterialTheme.typography.titleMedium)
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surface,
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
-                tonalElevation = 1.dp
-            ) { Column(Modifier.padding(4.dp)) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surface,
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+            tonalElevation = 1.dp,
+        ) {
+            Column(Modifier.padding(4.dp)) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = useGrams, onClick = {
                         if (!useGrams) {
@@ -128,7 +129,7 @@ fun SettingsScreen(
                         useGrams = true
                         save { it.copy(useGrams = true) }
                     })
-                     Text(stringResource(Res.string.grams), modifier = Modifier.padding(start = 8.dp))
+                    Text(stringResource(Res.string.grams), modifier = Modifier.padding(start = 8.dp))
                 }
 
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -141,100 +142,100 @@ fun SettingsScreen(
                         useGrams = false
                         save { it.copy(useGrams = false) }
                     })
-                     Text(stringResource(Res.string.ounces), modifier = Modifier.padding(start = 8.dp))
-                }
-            } }
-
-            HorizontalDivider()
-
-             Text(stringResource(Res.string.default_bag_size), style = MaterialTheme.typography.titleMedium)
-
-            OutlinedTextField(
-                value = defaultBagSize,
-                onValueChange = { defaultBagSize = it },
-                 label = { Text(stringResource(if (useGrams) Res.string.size_grams else Res.string.size_ounces)) },
-                isError = bagSizeError != null,
-                supportingText = bagSizeError?.let { { Text(it) } },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            HorizontalDivider()
-
-             Text(stringResource(Res.string.theme), style = MaterialTheme.typography.titleMedium)
-
-            listOf(
-                 null to stringResource(Res.string.same_as_system),
-                 true to stringResource(Res.string.dark),
-                 false to stringResource(Res.string.light)
-            ).forEach { (value, label) ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = darkTheme == value,
-                        onClick = {
-                            darkTheme = value
-                            save { settings -> settings.copy(darkMode = value) }
-                        }
-                    )
-                    Text(label, modifier = Modifier.padding(start = 8.dp))
+                    Text(stringResource(Res.string.ounces), modifier = Modifier.padding(start = 8.dp))
                 }
             }
+        }
 
-            HorizontalDivider()
+        HorizontalDivider()
 
-             Text(stringResource(Res.string.default_brew_method), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(Res.string.default_bag_size), style = MaterialTheme.typography.titleMedium)
 
-            ExposedDropdownMenuBox(
-                expanded = brewMethodExpanded,
-                onExpandedChange = { brewMethodExpanded = it }
+        OutlinedTextField(
+            value = defaultBagSize,
+            onValueChange = { defaultBagSize = it },
+            label = { Text(stringResource(if (useGrams) Res.string.size_grams else Res.string.size_ounces)) },
+            isError = bagSizeError != null,
+            supportingText = bagSizeError?.let { { Text(it) } },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        HorizontalDivider()
+
+        Text(stringResource(Res.string.theme), style = MaterialTheme.typography.titleMedium)
+
+        listOf(
+            null to stringResource(Res.string.same_as_system),
+            true to stringResource(Res.string.dark),
+            false to stringResource(Res.string.light),
+        ).forEach { (value, label) ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                OutlinedTextField(
-                    value = formatBrewMethod(selectedBrewMethod),
-                    onValueChange = {},
-                    readOnly = true,
-                     label = { Text(stringResource(Res.string.method)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = brewMethodExpanded) },
-                     modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                RadioButton(
+                    selected = darkTheme == value,
+                    onClick = {
+                        darkTheme = value
+                        save { settings -> settings.copy(darkMode = value) }
+                    },
                 )
-                ExposedDropdownMenu(
-                    expanded = brewMethodExpanded,
-                    onDismissRequest = { brewMethodExpanded = false },
-                ) {
-                    BrewMethod.entries.forEach { method ->
-                        DropdownMenuItem(
-                            text = { Text(formatBrewMethod(method)) },
-                            onClick = {
-                                selectedBrewMethod = method
-                                save { it.copy(defaultBrewMethod = method) }
-                                brewMethodExpanded = false
-                            }
-                        )
-                    }
-                }
-             }
-
-             Text(stringResource(Res.string.default_brew_recipe), style = MaterialTheme.typography.titleMedium)
-            Row(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = defaultBrewDose,
-                    onValueChange = { defaultBrewDose = it },
-                     label = { Text(stringResource(if (useGrams) Res.string.dose_grams else Res.string.dose_ounces)) },
-                    isError = doseError != null,
-                    supportingText = doseError?.let { { Text(it) } },
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                OutlinedTextField(
-                    value = defaultBrewYield,
-                    onValueChange = { defaultBrewYield = it },
-                     label = { Text(stringResource(if (useGrams) Res.string.yield_grams else Res.string.yield_ounces)) },
-                    isError = yieldError != null,
-                    supportingText = yieldError?.let { { Text(it) } },
-                    modifier = Modifier.weight(1f)
-                )
+                Text(label, modifier = Modifier.padding(start = 8.dp))
             }
+        }
 
+        HorizontalDivider()
+
+        Text(stringResource(Res.string.default_brew_method), style = MaterialTheme.typography.titleMedium)
+
+        ExposedDropdownMenuBox(
+            expanded = brewMethodExpanded,
+            onExpandedChange = { brewMethodExpanded = it },
+        ) {
+            OutlinedTextField(
+                value = formatBrewMethod(selectedBrewMethod),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(Res.string.method)) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = brewMethodExpanded) },
+                modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            )
+            ExposedDropdownMenu(
+                expanded = brewMethodExpanded,
+                onDismissRequest = { brewMethodExpanded = false },
+            ) {
+                BrewMethod.entries.forEach { method ->
+                    DropdownMenuItem(
+                        text = { Text(formatBrewMethod(method)) },
+                        onClick = {
+                            selectedBrewMethod = method
+                            save { it.copy(defaultBrewMethod = method) }
+                            brewMethodExpanded = false
+                        },
+                    )
+                }
+            }
+        }
+
+        Text(stringResource(Res.string.default_brew_recipe), style = MaterialTheme.typography.titleMedium)
+        Row(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = defaultBrewDose,
+                onValueChange = { defaultBrewDose = it },
+                label = { Text(stringResource(if (useGrams) Res.string.dose_grams else Res.string.dose_ounces)) },
+                isError = doseError != null,
+                supportingText = doseError?.let { { Text(it) } },
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            OutlinedTextField(
+                value = defaultBrewYield,
+                onValueChange = { defaultBrewYield = it },
+                label = { Text(stringResource(if (useGrams) Res.string.yield_grams else Res.string.yield_ounces)) },
+                isError = yieldError != null,
+                supportingText = yieldError?.let { { Text(it) } },
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }

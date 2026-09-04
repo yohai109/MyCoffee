@@ -8,7 +8,6 @@ import org.junit.Test
  * These are basic smoke tests to ensure Android-specific code compiles and integrates correctly
  */
 class AndroidAppTest {
-
     @Test
     fun testAndroidPlatformString() {
         // Basic smoke test to ensure Android test infrastructure works
@@ -19,11 +18,12 @@ class AndroidAppTest {
     @Test
     fun testAndroidMainActivityClassExists() {
         // Verify MainActivity class exists in the Android-specific source
-        val mainActivityClass = try {
-            Class.forName("com.yohai.mycoffee.MainActivity")
-        } catch (e: ClassNotFoundException) {
-            null
-        }
+        val mainActivityClass =
+            try {
+                Class.forName("com.yohai.mycoffee.MainActivity")
+            } catch (e: ClassNotFoundException) {
+                null
+            }
         assertNotNull("MainActivity should exist in Android source", mainActivityClass)
     }
 }

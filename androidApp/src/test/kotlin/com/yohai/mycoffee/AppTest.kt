@@ -13,12 +13,10 @@ import org.junit.Before
 import org.junit.Test
 
 private class TestDatabaseFactory : DatabaseFactory {
-    override fun createBuilder(): RoomDatabase.Builder<CoffeeDatabase> {
-        return Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext<Context>(),
-            CoffeeDatabase::class.java
-        )
-    }
+    override fun createBuilder(): RoomDatabase.Builder<CoffeeDatabase> = Room.inMemoryDatabaseBuilder(
+        ApplicationProvider.getApplicationContext<Context>(),
+        CoffeeDatabase::class.java,
+    )
 }
 
 class AppTest {
