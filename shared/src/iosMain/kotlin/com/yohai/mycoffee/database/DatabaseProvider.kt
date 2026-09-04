@@ -9,7 +9,7 @@ class IosDatabaseFactory : DatabaseFactory {
         val dbFilePath = NSHomeDirectory() + "/coffee.db"
         return Room.databaseBuilder<CoffeeDatabase>(
             name = dbFilePath,
-            factory =  { CoffeeDatabase::class.instantiateImpl() }
+            factory = { CoffeeDatabase::class.instantiateImpl() },
         )
     }
 }

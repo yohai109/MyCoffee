@@ -1,0 +1,52 @@
+#!/usr/bin/env sh
+set -eu
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+
+files=$(mktemp)
+stash_created=false
+cleanup() {
+    status=$?
+    if [ "$stash_created" = true ]; then
+        git stash pop >/dev/null || {
+            printf '%s\n' "ERROR: Could not restore unstaged changes. Resolve the stash before committing." >&2
+            exit 1
+        }
+    fi
+    rm -f "$files"
+    exit "$status"
+}
+trap cleanup EXIT INT TERM
+
+git diff --cached --name-only --diff-filter=ACMR | while IFS= read -r path; do
+    case "$path" in
+        *.kt|*.gradle.kts) printf '%s\n' "$path" >> "$files" ;;
+    esac
+done
+
+if [ ! -s "$files" ]; then
+    exit 0
+fi
+
+set --
+while IFS= read -r path; do
+    set -- "$@" "$path"
+done < "$files"
+
+if ! git diff --quiet -- "$@"; then
+    git stash push --keep-index --quiet -m "pre-commit formatting" -- "$@" >/dev/null
+    stash_created=true
+fi
+
+if ! ./gradlew --no-daemon formatStaged -PformatFilesFile="$files"; then
+    printf '%s\n' "ERROR: Formatting failed. Fix the reported Kotlin/Gradle style errors and retry." >&2
+    exit 1
+fi
+
+git add --pathspec-from-file="$files"
+
+if ! ./gradlew --no-daemon checkFormatting -PformatFilesFile="$files"; then
+    printf '%s\n' "ERROR: Formatting violations remain. Run ./gradlew formatStaged and review the staged changes." >&2
+    exit 1
+fi

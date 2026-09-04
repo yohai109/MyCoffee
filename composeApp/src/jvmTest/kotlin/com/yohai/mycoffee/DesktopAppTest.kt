@@ -9,7 +9,6 @@ import kotlin.test.assertTrue
  * These are basic smoke tests to ensure Desktop/JVM-specific code compiles and integrates correctly
  */
 class DesktopAppTest {
-
     @Test
     fun testDesktopPlatformString() {
         // Basic smoke test to ensure Desktop test infrastructure works

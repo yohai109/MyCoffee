@@ -23,14 +23,13 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,12 +50,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.yohai.mycoffee.database.BrewMethod
 import com.yohai.mycoffee.averageExtractionRatio
-import com.yohai.mycoffee.database.Settings
+import com.yohai.mycoffee.database.BrewMethod
 import com.yohai.mycoffee.database.BrewRecord
 import com.yohai.mycoffee.database.CoffeeState
 import com.yohai.mycoffee.database.CoffeeStock
+import com.yohai.mycoffee.database.Settings
 import com.yohai.mycoffee.database.getDatabase
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -64,19 +63,19 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
+import mycoffee.composeapp.generated.resources.*
+import mycoffee.composeapp.generated.resources.Res
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.time.Instant
-import org.jetbrains.compose.resources.stringResource
-import mycoffee.composeapp.generated.resources.Res
-import mycoffee.composeapp.generated.resources.*
 
 private const val BREW_GRAMS_PER_OUNCE = 28.3495
 
 @Composable
 fun BrewAnalyticsCard(
     brewList: List<BrewRecord>,
-    settings: Settings = Settings.DEFAULT
+    settings: Settings = Settings.DEFAULT,
 ) {
     if (brewList.isEmpty()) return
 
@@ -89,22 +88,22 @@ fun BrewAnalyticsCard(
         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
         shape = RoundedCornerShape(10.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-             Text(stringResource(Res.string.brew_analytics), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(Res.string.brew_analytics), style = MaterialTheme.typography.titleMedium)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                 BrewStat("$totalBrews", stringResource(Res.string.brews))
+                BrewStat("$totalBrews", stringResource(Res.string.brews))
                 BrewStat(
                     formatBrewDisplayWeight(avgDose.toDouble(), settings.useGrams),
-                     stringResource(Res.string.average_dose)
+                    stringResource(Res.string.average_dose),
                 )
-                 topMethod?.let { BrewStat(formatBrewMethod(it), stringResource(Res.string.favorite_method)) }
+                topMethod?.let { BrewStat(formatBrewMethod(it), stringResource(Res.string.favorite_method)) }
             }
-             averageExtractionRatio(brewList)?.let { BrewStat("%.2f".format(it), stringResource(Res.string.average_ratio)) }
+            averageExtractionRatio(brewList)?.let { BrewStat("%.2f".format(it), stringResource(Res.string.average_ratio)) }
         }
     }
 }
@@ -133,47 +132,49 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
-        if (brewList.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(bottom = 96.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                     Text(stringResource(Res.string.brew_empty_title), style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.height(6.dp))
-                     Text(stringResource(Res.string.brew_empty_message), style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(16.dp))
-                     Button(onClick = { showAddDialog = true }) { Text(stringResource(Res.string.log_brew)) }
+            if (brewList.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(bottom = 96.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(stringResource(Res.string.brew_empty_title), style = MaterialTheme.typography.titleLarge)
+                        Spacer(Modifier.height(6.dp))
+                        Text(stringResource(Res.string.brew_empty_message), style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = { showAddDialog = true }) { Text(stringResource(Res.string.log_brew)) }
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    item {
+                        BrewAnalyticsCard(brewList, settings)
+                        Text(
+                            stringResource(Res.string.recent_brews),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
+                        )
+                    }
+                    items(brewList, key = { it.id }) { brew ->
+                        val coffee = coffeeStock.find { it.id == brew.coffeeStockId }
+                        BrewItem(
+                            brew = brew,
+                            coffeeName = coffee?.name ?: "Unknown Coffee",
+                            settings = settings,
+                            onEditClick = { editingBrew = brew },
+                            onDeleteClick = { showDeleteConfirm = brew },
+                        )
+                    }
                 }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item {
-                    BrewAnalyticsCard(brewList, settings)
-                     Text(stringResource(Res.string.recent_brews), style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp))
-                }
-                items(brewList, key = { it.id }) { brew ->
-                    val coffee = coffeeStock.find { it.id == brew.coffeeStockId }
-                    BrewItem(
-                        brew = brew,
-                        coffeeName = coffee?.name ?: "Unknown Coffee",
-                        settings = settings,
-                        onEditClick = { editingBrew = brew },
-                        onDeleteClick = { showDeleteConfirm = brew }
-                    )
-                }
-            }
-        }
-
         }
         FloatingActionButton(onClick = { showAddDialog = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
-             Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.add_brew))
+            Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.add_brew))
         }
         if (showAddDialog) {
             AddBrewDialog(
@@ -190,20 +191,20 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                                 dose = dose,
                                 brewTime = brewTime,
                                 yield = yield,
-                                notes = notes
-                            )
+                                notes = notes,
+                            ),
                         )
                         val stock = coffeeStock.find { it.id == coffeeStockId }
                         stock?.let {
                             val currentRemaining = it.remainingWeight ?: it.size
                             val newRemaining = (currentRemaining - dose).coerceAtLeast(0.0)
                             database.coffeeDao().updateStock(
-                                it.copy(remainingWeight = newRemaining)
+                                it.copy(remainingWeight = newRemaining),
                             )
                         }
                         showAddDialog = false
                     }
-                }
+                },
             )
         }
 
@@ -225,8 +226,8 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                                 dose = dose,
                                 brewTime = brewTime,
                                 yield = yield,
-                                notes = notes
-                            )
+                                notes = notes,
+                            ),
                         )
                         val oldStock = coffeeStock.find { it.id == brew.coffeeStockId }
                         val newStock = coffeeStock.find { it.id == coffeeStockId }
@@ -237,9 +238,9 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                                         remainingWeight = remainingAfterBrewEdit(
                                             stock = it,
                                             oldDose = brew.dose,
-                                            newDose = dose
-                                        )
-                                    )
+                                            newDose = dose,
+                                        ),
+                                    ),
                                 )
                             }
                         } else {
@@ -248,30 +249,30 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                                     it.copy(
                                         remainingWeight = remainingAfterRestoringBrew(
                                             stock = it,
-                                            dose = brew.dose
-                                        )
-                                    )
+                                            dose = brew.dose,
+                                        ),
+                                    ),
                                 )
                             }
                             newStock?.let {
                                 database.coffeeDao().updateStock(
                                     it.copy(
-                                        remainingWeight = remainingAfterBrew(dose = dose, stock = it)
-                                    )
+                                        remainingWeight = remainingAfterBrew(dose = dose, stock = it),
+                                    ),
                                 )
                             }
                         }
                         editingBrew = null
                     }
-                }
+                },
             )
         }
 
         showDeleteConfirm?.let { brew ->
             AlertDialog(
                 onDismissRequest = { showDeleteConfirm = null },
-                 title = { Text(stringResource(Res.string.delete_brew)) },
-                 text = { Text(stringResource(Res.string.delete_brew_confirmation)) },
+                title = { Text(stringResource(Res.string.delete_brew)) },
+                text = { Text(stringResource(Res.string.delete_brew_confirmation)) },
                 confirmButton = {
                     TextButton(onClick = {
                         scope.launch {
@@ -280,23 +281,23 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                                     stock.copy(
                                         remainingWeight = remainingAfterRestoringBrew(
                                             stock = stock,
-                                            dose = brew.dose
-                                        )
-                                    )
+                                            dose = brew.dose,
+                                        ),
+                                    ),
                                 )
                             }
                             database.brewDao().deleteBrew(brew)
                             showDeleteConfirm = null
                         }
                     }) {
-                         Text(stringResource(Res.string.delete))
+                        Text(stringResource(Res.string.delete))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteConfirm = null }) {
-                     Text(stringResource(Res.string.cancel))
+                        Text(stringResource(Res.string.cancel))
                     }
-                }
+                },
             )
         }
     }
@@ -308,65 +309,65 @@ fun BrewItem(
     coffeeName: String,
     settings: Settings = Settings.DEFAULT,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(10.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Coffee, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "$coffeeName · ${formatBrewMethod(brew.method)} · ${brew.date}",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
                     )
                 }
                 Row {
                     IconButton(onClick = onEditClick) {
-                         Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.edit))
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.edit))
                     }
                     IconButton(onClick = onDeleteClick) {
-                         Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.delete))
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.delete))
                     }
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                     Text(stringResource(Res.string.dose), style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(Res.string.dose), style = MaterialTheme.typography.labelSmall)
                     Text(
                         formatBrewDisplayWeight(brew.dose, settings.useGrams),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                     Text(stringResource(Res.string.time), style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(Res.string.time), style = MaterialTheme.typography.labelSmall)
                     Text(formatBrewTime(brew.brewTime), style = MaterialTheme.typography.bodyMedium)
                 }
                 if (brew.yield != null) {
                     Column(horizontalAlignment = Alignment.End) {
-                         Text(stringResource(Res.string.yield), style = MaterialTheme.typography.labelSmall)
+                        Text(stringResource(Res.string.yield), style = MaterialTheme.typography.labelSmall)
                         Text(
                             formatBrewDisplayWeight(brew.yield ?: 0.0, settings.useGrams),
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                     }
                 }
             }
             if (!brew.notes.isNullOrBlank()) {
-                 Text(stringResource(Res.string.brew_notes, brew.notes.orEmpty()), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(Res.string.brew_notes, brew.notes.orEmpty()), style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -380,7 +381,7 @@ fun AddBrewDialog(
     onConfirm: (coffeeStockId: Long, date: LocalDate, method: BrewMethod, dose: Double, brewTime: Int, yield: Double?, notes: String?) -> Unit,
     initialBrew: BrewRecord? = null,
     selectedCoffeeName: String? = null,
-    settings: Settings = Settings.DEFAULT
+    settings: Settings = Settings.DEFAULT,
 ) {
     val isEditing = initialBrew != null
     val eligibleCoffeeStock = coffeeStock.filter {
@@ -389,12 +390,12 @@ fun AddBrewDialog(
     var selectedCoffee by remember {
         mutableStateOf(
             initialBrew?.coffeeStockId
-                ?: eligibleCoffeeStock.firstOrNull()?.id
+                ?: eligibleCoffeeStock.firstOrNull()?.id,
         )
     }
     var selectedDate by remember {
         mutableStateOf(
-            initialBrew?.date ?: Clock.System.todayIn(TimeZone.currentSystemDefault())
+            initialBrew?.date ?: Clock.System.todayIn(TimeZone.currentSystemDefault()),
         )
     }
     var selectedMethod by remember { mutableStateOf(initialBrew?.method ?: settings.defaultBrewMethod) }
@@ -410,7 +411,7 @@ fun AddBrewDialog(
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = selectedDate.atStartOfDayIn(TimeZone.UTC)
-                .toEpochMilliseconds()
+                .toEpochMilliseconds(),
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -422,14 +423,14 @@ fun AddBrewDialog(
                     }
                     showDatePicker = false
                 }) {
-                     Text(stringResource(Res.string.ok))
+                    Text(stringResource(Res.string.ok))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                     Text(stringResource(Res.string.cancel))
+                    Text(stringResource(Res.string.cancel))
                 }
-            }
+            },
         ) {
             DatePicker(state = datePickerState)
         }
@@ -439,38 +440,38 @@ fun AddBrewDialog(
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp
+            tonalElevation = 6.dp,
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
                     text = if (isEditing) "Edit Brew" else "Add Brew",
                     style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 16.dp),
                 )
                 BrewFormSection("COFFEE & DATE")
 
                 if (eligibleCoffeeStock.isEmpty()) {
                     Text(
                         "No open coffee in stock. Open a coffee bag first.",
-                        color = MaterialTheme.colorScheme.error
+                        color = MaterialTheme.colorScheme.error,
                     )
                 } else {
                     ExposedDropdownMenuBox(
                         expanded = coffeeExpanded,
-                        onExpandedChange = { coffeeExpanded = it }
+                        onExpandedChange = { coffeeExpanded = it },
                     ) {
                         OutlinedTextField(
                             value = eligibleCoffeeStock.find { it.id == selectedCoffee }?.name
                                 ?: selectedCoffeeName ?: "",
                             onValueChange = {},
                             readOnly = true,
-                             label = { Text(stringResource(Res.string.coffee)) },
+                            label = { Text(stringResource(Res.string.coffee)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = coffeeExpanded) },
-                             modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                         )
                         ExposedDropdownMenu(
                             expanded = coffeeExpanded,
-                            onDismissRequest = { coffeeExpanded = false }
+                            onDismissRequest = { coffeeExpanded = false },
                         ) {
                             eligibleCoffeeStock.forEach { coffee ->
                                 DropdownMenuItem(
@@ -478,7 +479,7 @@ fun AddBrewDialog(
                                     onClick = {
                                         selectedCoffee = coffee.id
                                         coffeeExpanded = false
-                                    }
+                                    },
                                 )
                             }
                         }
@@ -491,17 +492,17 @@ fun AddBrewDialog(
                     OutlinedTextField(
                         value = selectedDate.toString(),
                         onValueChange = {},
-                         label = { Text(stringResource(Res.string.date)) },
+                        label = { Text(stringResource(Res.string.date)) },
                         readOnly = true,
                         trailingIcon = {
-                             Icon(Icons.Default.CalendarMonth, contentDescription = stringResource(Res.string.select_date))
+                            Icon(Icons.Default.CalendarMonth, contentDescription = stringResource(Res.string.select_date))
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Box(
                         modifier = Modifier
                             .matchParentSize()
-                            .clickable { showDatePicker = true }
+                            .clickable { showDatePicker = true },
                     )
                 }
 
@@ -510,19 +511,19 @@ fun AddBrewDialog(
                 BrewFormSection("RECIPE")
                 ExposedDropdownMenuBox(
                     expanded = methodExpanded,
-                    onExpandedChange = { methodExpanded = it }
+                    onExpandedChange = { methodExpanded = it },
                 ) {
                     OutlinedTextField(
                         value = formatBrewMethod(selectedMethod),
                         onValueChange = {},
                         readOnly = true,
-                         label = { Text(stringResource(Res.string.brew_method)) },
+                        label = { Text(stringResource(Res.string.brew_method)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = methodExpanded) },
-                         modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                        modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                     )
                     ExposedDropdownMenu(
                         expanded = methodExpanded,
-                        onDismissRequest = { methodExpanded = false }
+                        onDismissRequest = { methodExpanded = false },
                     ) {
                         BrewMethod.entries.forEach { method ->
                             DropdownMenuItem(
@@ -530,7 +531,7 @@ fun AddBrewDialog(
                                 onClick = {
                                     selectedMethod = method
                                     methodExpanded = false
-                                }
+                                },
                             )
                         }
                     }
@@ -542,19 +543,19 @@ fun AddBrewDialog(
                     OutlinedTextField(
                         value = doseText,
                         onValueChange = { doseText = it },
-                         label = { Text(stringResource(if (settings.useGrams) Res.string.dose_grams else Res.string.dose_ounces)) },
+                        label = { Text(stringResource(if (settings.useGrams) Res.string.dose_grams else Res.string.dose_ounces)) },
                         isError = measurementError(doseText, "Dose", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 1000.0 else gramsToOunces(1000.0)) != null,
                         supportingText = measurementError(doseText, "Dose", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 1000.0 else gramsToOunces(1000.0))?.let { { Text(it) } },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     OutlinedTextField(
                         value = yieldText,
                         onValueChange = { yieldText = it },
-                         label = { Text(stringResource(if (settings.useGrams) Res.string.yield_grams else Res.string.yield_ounces)) },
+                        label = { Text(stringResource(if (settings.useGrams) Res.string.yield_grams else Res.string.yield_ounces)) },
                         isError = optionalMeasurementError(yieldText, "Yield", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 5000.0 else gramsToOunces(5000.0)) != null,
                         supportingText = optionalMeasurementError(yieldText, "Yield", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 5000.0 else gramsToOunces(5000.0))?.let { { Text(it) } },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
 
@@ -564,19 +565,19 @@ fun AddBrewDialog(
                     OutlinedTextField(
                         value = brewTimeMinutes,
                         onValueChange = { brewTimeMinutes = it },
-                         label = { Text(stringResource(Res.string.minutes)) },
+                        label = { Text(stringResource(Res.string.minutes)) },
                         isError = integerError(brewTimeMinutes, "Minutes", 0, 1440, required = false) != null,
                         supportingText = integerError(brewTimeMinutes, "Minutes", 0, 1440, required = false)?.let { { Text(it) } },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     OutlinedTextField(
                         value = brewTimeSeconds,
                         onValueChange = { brewTimeSeconds = it },
-                         label = { Text(stringResource(Res.string.seconds)) },
+                        label = { Text(stringResource(Res.string.seconds)) },
                         isError = integerError(brewTimeSeconds, "Seconds", 0, 59, required = false) != null,
                         supportingText = integerError(brewTimeSeconds, "Seconds", 0, 59, required = false)?.let { { Text(it) } },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
 
@@ -586,19 +587,19 @@ fun AddBrewDialog(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                     label = { Text(stringResource(Res.string.notes)) },
+                    label = { Text(stringResource(Res.string.notes)) },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 2
+                    minLines = 2,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.End,
                 ) {
                     TextButton(onClick = onDismiss) {
-                         Text(stringResource(Res.string.cancel))
+                        Text(stringResource(Res.string.cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     val dose = doseText.toDoubleOrNull() ?: 0.0
@@ -620,10 +621,11 @@ fun AddBrewDialog(
                                 selectedMethod,
                                 if (settings.useGrams) dose else dose * BREW_GRAMS_PER_OUNCE,
                                 totalBrewTime,
-                                 yield?.let { if (settings.useGrams) it else it * BREW_GRAMS_PER_OUNCE },
-                                notes.ifBlank { null })
+                                yield?.let { if (settings.useGrams) it else it * BREW_GRAMS_PER_OUNCE },
+                                notes.ifBlank { null },
+                            )
                         },
-                        enabled = isValid && selectedCoffee != null
+                        enabled = isValid && selectedCoffee != null,
                     ) {
                         Text(if (isEditing) "Save" else "Add")
                     }
@@ -639,17 +641,13 @@ private fun BrewFormSection(text: String) {
         text = text,
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+        modifier = Modifier.padding(top = 8.dp, bottom = 6.dp),
     )
 }
 
-private fun formatBrewDisplayWeight(grams: Double, useGrams: Boolean): String {
-    return "${formatDisplayMeasurement(grams, useGrams)}${if (useGrams) "g" else "oz"}"
-}
+private fun formatBrewDisplayWeight(grams: Double, useGrams: Boolean): String = "${formatDisplayMeasurement(grams, useGrams)}${if (useGrams) "g" else "oz"}"
 
-fun formatBrewMethod(method: BrewMethod): String {
-    return method.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
-}
+fun formatBrewMethod(method: BrewMethod): String = method.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
 
 fun formatBrewTime(seconds: Int): String {
     val minutes = seconds / 60
@@ -657,8 +655,7 @@ fun formatBrewTime(seconds: Int): String {
     return if (minutes > 0) "${minutes}m ${secs}s" else "${secs}s"
 }
 
-fun isValidBrewTime(minutes: Int, seconds: Int): Boolean =
-    minutes >= 0 && seconds in 0..59 && minutes * 60 + seconds > 0
+fun isValidBrewTime(minutes: Int, seconds: Int): Boolean = minutes >= 0 && seconds in 0..59 && minutes * 60 + seconds > 0
 
 fun remainingAfterBrew(stock: CoffeeStock, dose: Double): Double {
     val currentRemaining = stock.remainingWeight ?: stock.size

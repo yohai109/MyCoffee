@@ -22,8 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.yohai.mycoffee.database.BrewMethod
 import kotlinx.coroutines.delay
-import kotlin.time.Clock
-import org.jetbrains.compose.resources.stringResource
 import mycoffee.composeapp.generated.resources.Res
 import mycoffee.composeapp.generated.resources.brew_complete
 import mycoffee.composeapp.generated.resources.brew_timer
@@ -34,6 +32,8 @@ import mycoffee.composeapp.generated.resources.seconds
 import mycoffee.composeapp.generated.resources.start
 import mycoffee.composeapp.generated.resources.stop
 import mycoffee.composeapp.generated.resources.timer_finished
+import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
 
 private fun timerPreset(method: BrewMethod) = when (method) {
     BrewMethod.ESPRESSO -> 30
@@ -61,25 +61,52 @@ fun TimerScreen() {
         while (startedAt != null) {
             val start = startedAt ?: break
             remaining = (timerDurationMillis(duration) - (Clock.System.now().toEpochMilliseconds() - start)).coerceAtLeast(0)
-            if (remaining == 0L) { startedAt = null; completed = true } else delay(100)
+            if (remaining == 0L) {
+                startedAt = null
+                completed = true
+            } else {
+                delay(100)
+            }
         }
     }
     Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)) {
-         Text(stringResource(Res.string.brew_timer), style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(Res.string.brew_timer), style = MaterialTheme.typography.headlineMedium)
         Text(formatBrewTime((remaining / 1000).toInt()), style = MaterialTheme.typography.displayLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             listOf(BrewMethod.ESPRESSO, BrewMethod.POUR_OVER, BrewMethod.FRENCH_PRESS, BrewMethod.AEROPRESS).forEach { preset ->
-                Button(onClick = { method = preset; duration = timerPreset(preset).toString(); remaining = timerPreset(preset) * 1000L; completed = false }, enabled = !running) { Text(formatBrewMethod(preset)) }
+                Button(onClick = {
+                    method = preset
+                    duration = timerPreset(preset).toString()
+                    remaining = timerPreset(preset) * 1000L
+                    completed = false
+                }, enabled = !running) { Text(formatBrewMethod(preset)) }
             }
         }
-        OutlinedTextField(duration, {
-            duration = it
-            if (!running) remaining = timerDurationMillis(it)
-        }, label = { Text(stringResource(Res.string.seconds)) }, enabled = !running, isError = duration.isNotBlank() && timerDurationMillis(duration) == 0L,
-            supportingText = if (duration.isNotBlank() && timerDurationMillis(duration) == 0L) {{ Text(stringResource(Res.string.enter_positive_number)) }} else null)
+        OutlinedTextField(
+            duration,
+            {
+                duration = it
+                if (!running) remaining = timerDurationMillis(it)
+            },
+            label = { Text(stringResource(Res.string.seconds)) },
+            enabled = !running,
+            isError = duration.isNotBlank() && timerDurationMillis(duration) == 0L,
+            supportingText = if (duration.isNotBlank() && timerDurationMillis(duration) == 0L) {
+                { Text(stringResource(Res.string.enter_positive_number)) }
+            } else {
+                null
+            },
+        )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { completed = false; startedAt = if (running) null else Clock.System.now().toEpochMilliseconds() }, enabled = if (running) true else timerDurationMillis(duration) > 0) { Text(stringResource(if (running) Res.string.stop else Res.string.start)) }
-            Button(onClick = { startedAt = null; completed = false; remaining = timerDurationMillis(duration) }) { Text(stringResource(Res.string.reset)) }
+            Button(onClick = {
+                completed = false
+                startedAt = if (running) null else Clock.System.now().toEpochMilliseconds()
+            }, enabled = if (running) true else timerDurationMillis(duration) > 0) { Text(stringResource(if (running) Res.string.stop else Res.string.start)) }
+            Button(onClick = {
+                startedAt = null
+                completed = false
+                remaining = timerDurationMillis(duration)
+            }) { Text(stringResource(Res.string.reset)) }
         }
     }
     if (completed) AlertDialog(onDismissRequest = { completed = false }, title = { Text(stringResource(Res.string.brew_complete)) }, text = { Text(stringResource(Res.string.timer_finished)) }, confirmButton = { Button(onClick = { completed = false }) { Text(stringResource(Res.string.done)) } })

@@ -12,7 +12,7 @@ class AndroidDatabaseFactory(
         val dbFile = context.getDatabasePath(databaseName)
         return Room.databaseBuilder<CoffeeDatabase>(
             context = context.applicationContext,
-            name = dbFile.absolutePath
+            name = dbFile.absolutePath,
         )
     }
 }

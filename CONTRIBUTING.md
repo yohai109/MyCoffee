@@ -19,6 +19,28 @@ Thank you for your interest in contributing to MyCoffee! We welcome contribution
 
 ## Development Setup
 
+### Git Hooks and Code Style
+
+Install the repository-managed pre-commit hook after cloning:
+
+```bash
+./scripts/install-git-hooks.sh
+```
+
+The hook formats staged Kotlin and Gradle Kotlin files, updates their staged
+content, and checks them before allowing the commit. Unstaged tracked changes
+are preserved. Build output, generated files, and Room schemas are excluded.
+
+Run the checks manually when needed:
+
+```bash
+./gradlew formatStaged
+./gradlew checkFormatting
+```
+
+If validation reports violations, run `./gradlew formatStaged`, review the
+changes, stage the intended files, and run `./gradlew checkFormatting` again.
+
 ### Prerequisites
 
 - JDK 17 or higher
