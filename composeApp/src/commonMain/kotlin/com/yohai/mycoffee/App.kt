@@ -72,6 +72,15 @@ internal fun originatingPrimaryRoute(currentRoute: String?, secondaryOrigin: Str
         it == Screen.Stock.route || it == Screen.Brew.route || it == Screen.Settings.route
     } ?: secondaryOrigin
 
+internal fun screenForRoute(currentRoute: String?) = when (currentRoute?.substringBefore("?")) {
+    Screen.Stock.route -> Screen.Stock
+    Screen.Brew.route -> Screen.Brew
+    Screen.Settings.route -> Screen.Settings
+    Screen.Recipes.route -> Screen.Recipes
+    Screen.Timer.route -> Screen.Timer
+    else -> Screen.Stock
+}
+
 sealed class Screen(
     val route: String,
     val label: String,
@@ -105,7 +114,6 @@ fun App() {
             Screen.Brew,
             Screen.Settings,
         )
-        val destinations = items + listOf(Screen.Recipes, Screen.Timer)
         var secondaryExpanded by remember { mutableStateOf(false) }
         var secondaryOrigin by rememberSaveable { mutableStateOf(Screen.Stock.route) }
 
@@ -113,7 +121,7 @@ fun App() {
         val currentDestination = navBackStackEntry?.destination
         val currentRoute = currentDestination?.route
         val originatingRoute = originatingPrimaryRoute(currentRoute, secondaryOrigin)
-        val currentScreen = destinations.find { it.route == currentRoute } ?: Screen.Stock
+        val currentScreen = screenForRoute(currentRoute)
 
         BoxWithConstraints {
         val layoutClass = windowLayoutClassForWidth(maxWidth.value.toInt())

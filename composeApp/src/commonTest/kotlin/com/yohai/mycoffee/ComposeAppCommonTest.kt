@@ -34,6 +34,13 @@ class ComposeAppCommonTest {
     }
 
     @Test
+    fun secondaryRoutesResolveTheirOwnShellScreens() {
+        assertEquals(Screen.Recipes, screenForRoute("recipes?origin=stock"))
+        assertEquals(Screen.Timer, screenForRoute("timer?origin=stock"))
+        assertEquals(Screen.Stock, screenForRoute(null))
+    }
+
+    @Test
     fun testScreenLabelsAreDefined() {
         // Test that all screen labels are properly defined
         assertEquals("Stock", Screen.Stock.label)

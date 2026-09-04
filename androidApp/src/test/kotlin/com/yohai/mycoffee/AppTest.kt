@@ -110,4 +110,24 @@ class AppTest {
         // Stock screen should be visible (checking for navigation bar item presence)
         onNodeWithText("Stock").assertIsDisplayed()
     }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun secondaryDestinationsDisplayTheirShellTitlesWithoutStockSubtitle() = runComposeUiTest {
+        setContent {
+            App()
+        }
+
+        onNodeWithContentDescription("More destinations").performClick()
+        onNodeWithText("Recipes").performClick()
+        waitForIdle()
+        onNodeWithText("Recipes").assertIsDisplayed()
+        onNodeWithText("Your coffee, at a glance").assertDoesNotExist()
+
+        onNodeWithContentDescription("More destinations").performClick()
+        onNodeWithText("Timer").performClick()
+        waitForIdle()
+        onNodeWithText("Timer").assertIsDisplayed()
+        onNodeWithText("Your coffee, at a glance").assertDoesNotExist()
+    }
 }
