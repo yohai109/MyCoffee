@@ -30,12 +30,12 @@ jobs:
 
       - name: Run tests
         run: |
-          ./gradlew :server:test :shared:jvmTest :composeApp:jvmTest
+          ./gradlew :server:test :shared:jvmTest :composeApp:jvmTest :androidApp:testDebugUnitTest
 
       - name: Build debug APK
         run: |
           if [ -d "$ANDROID_HOME" ]; then
-            ./gradlew :composeApp:assembleDebug
+            ./gradlew :androidApp:assembleDebug
           else
             echo "Skipping Android build - no Android SDK"
           fi
@@ -80,7 +80,7 @@ jobs:
           cache-read-only: false
 
       - name: Build release APK
-        run: ./gradlew :composeApp:assembleRelease
+        run: ./gradlew :androidApp:assembleRelease
 
       - name: Validate signing secrets
         env:
