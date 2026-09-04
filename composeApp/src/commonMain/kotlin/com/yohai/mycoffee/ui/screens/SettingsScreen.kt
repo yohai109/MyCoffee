@@ -38,6 +38,27 @@ import com.yohai.mycoffee.database.BrewMethod
 import com.yohai.mycoffee.database.CoffeeDatabase
 import com.yohai.mycoffee.database.Settings
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import mycoffee.composeapp.generated.resources.Res
+import mycoffee.composeapp.generated.resources.app_settings
+import mycoffee.composeapp.generated.resources.default_bag_size
+import mycoffee.composeapp.generated.resources.default_brew_method
+import mycoffee.composeapp.generated.resources.default_brew_recipe
+import mycoffee.composeapp.generated.resources.dark
+import mycoffee.composeapp.generated.resources.grams
+import mycoffee.composeapp.generated.resources.light
+import mycoffee.composeapp.generated.resources.method
+import mycoffee.composeapp.generated.resources.ounces
+import mycoffee.composeapp.generated.resources.same_as_system
+import mycoffee.composeapp.generated.resources.save
+import mycoffee.composeapp.generated.resources.theme
+import mycoffee.composeapp.generated.resources.units
+import mycoffee.composeapp.generated.resources.size_grams
+import mycoffee.composeapp.generated.resources.size_ounces
+import mycoffee.composeapp.generated.resources.dose_grams
+import mycoffee.composeapp.generated.resources.dose_ounces
+import mycoffee.composeapp.generated.resources.yield_grams
+import mycoffee.composeapp.generated.resources.yield_ounces
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +97,7 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("App settings and preferences", style = MaterialTheme.typography.bodyMedium,
+                Text(stringResource(Res.string.app_settings), style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                 TextButton(onClick = {
                     save {
@@ -87,9 +108,9 @@ fun SettingsScreen(
                             useGrams = useGrams
                         )
                     }
-                }, enabled = bagSizeError == null && doseError == null && yieldError == null) { Text("Save") }
+                }, enabled = bagSizeError == null && doseError == null && yieldError == null) { Text(stringResource(Res.string.save)) }
             }
-            Text("Units", style = MaterialTheme.typography.titleMedium)
+             Text(stringResource(Res.string.units), style = MaterialTheme.typography.titleMedium)
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -107,7 +128,7 @@ fun SettingsScreen(
                         useGrams = true
                         save { it.copy(useGrams = true) }
                     })
-                    Text("Grams", modifier = Modifier.padding(start = 8.dp))
+                     Text(stringResource(Res.string.grams), modifier = Modifier.padding(start = 8.dp))
                 }
 
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -120,18 +141,18 @@ fun SettingsScreen(
                         useGrams = false
                         save { it.copy(useGrams = false) }
                     })
-                    Text("Ounces", modifier = Modifier.padding(start = 8.dp))
+                     Text(stringResource(Res.string.ounces), modifier = Modifier.padding(start = 8.dp))
                 }
             } }
 
             HorizontalDivider()
 
-            Text("Default Bag Size", style = MaterialTheme.typography.titleMedium)
+             Text(stringResource(Res.string.default_bag_size), style = MaterialTheme.typography.titleMedium)
 
             OutlinedTextField(
                 value = defaultBagSize,
                 onValueChange = { defaultBagSize = it },
-                label = { Text("Size (${if (useGrams) "grams" else "oz"})") },
+                 label = { Text(stringResource(if (useGrams) Res.string.size_grams else Res.string.size_ounces)) },
                 isError = bagSizeError != null,
                 supportingText = bagSizeError?.let { { Text(it) } },
                 modifier = Modifier.fillMaxWidth()
@@ -139,12 +160,12 @@ fun SettingsScreen(
 
             HorizontalDivider()
 
-            Text("Theme", style = MaterialTheme.typography.titleMedium)
+             Text(stringResource(Res.string.theme), style = MaterialTheme.typography.titleMedium)
 
             listOf(
-                null to "Same as system",
-                true to "Dark",
-                false to "Light"
+                 null to stringResource(Res.string.same_as_system),
+                 true to stringResource(Res.string.dark),
+                 false to stringResource(Res.string.light)
             ).forEach { (value, label) ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -163,7 +184,7 @@ fun SettingsScreen(
 
             HorizontalDivider()
 
-            Text("Default Brew Method", style = MaterialTheme.typography.titleMedium)
+             Text(stringResource(Res.string.default_brew_method), style = MaterialTheme.typography.titleMedium)
 
             ExposedDropdownMenuBox(
                 expanded = brewMethodExpanded,
@@ -173,7 +194,7 @@ fun SettingsScreen(
                     value = formatBrewMethod(selectedBrewMethod),
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Method") },
+                     label = { Text(stringResource(Res.string.method)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = brewMethodExpanded) },
                      modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                 )
@@ -194,12 +215,12 @@ fun SettingsScreen(
                 }
              }
 
-            Text("Default Brew Recipe", style = MaterialTheme.typography.titleMedium)
+             Text(stringResource(Res.string.default_brew_recipe), style = MaterialTheme.typography.titleMedium)
             Row(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = defaultBrewDose,
                     onValueChange = { defaultBrewDose = it },
-                    label = { Text("Dose (${if (useGrams) "grams" else "oz"})") },
+                     label = { Text(stringResource(if (useGrams) Res.string.dose_grams else Res.string.dose_ounces)) },
                     isError = doseError != null,
                     supportingText = doseError?.let { { Text(it) } },
                     modifier = Modifier.weight(1f)
@@ -208,7 +229,7 @@ fun SettingsScreen(
                 OutlinedTextField(
                     value = defaultBrewYield,
                     onValueChange = { defaultBrewYield = it },
-                    label = { Text("Yield (${if (useGrams) "grams" else "oz"})") },
+                     label = { Text(stringResource(if (useGrams) Res.string.yield_grams else Res.string.yield_ounces)) },
                     isError = yieldError != null,
                     supportingText = yieldError?.let { { Text(it) } },
                     modifier = Modifier.weight(1f)

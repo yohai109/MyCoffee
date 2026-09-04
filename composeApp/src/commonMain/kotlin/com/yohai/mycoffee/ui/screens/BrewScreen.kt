@@ -67,6 +67,9 @@ import kotlinx.datetime.todayIn
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.time.Instant
+import org.jetbrains.compose.resources.stringResource
+import mycoffee.composeapp.generated.resources.Res
+import mycoffee.composeapp.generated.resources.*
 
 private const val BREW_GRAMS_PER_OUNCE = 28.3495
 
@@ -89,19 +92,19 @@ fun BrewAnalyticsCard(
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-            Text("Brew Analytics", style = MaterialTheme.typography.titleMedium)
+             Text(stringResource(Res.string.brew_analytics), style = MaterialTheme.typography.titleMedium)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BrewStat("$totalBrews", "brews")
+                 BrewStat("$totalBrews", stringResource(Res.string.brews))
                 BrewStat(
                     formatBrewDisplayWeight(avgDose.toDouble(), settings.useGrams),
-                    "average dose"
+                     stringResource(Res.string.average_dose)
                 )
-                topMethod?.let { BrewStat(formatBrewMethod(it), "favorite method") }
+                 topMethod?.let { BrewStat(formatBrewMethod(it), stringResource(Res.string.favorite_method)) }
             }
-            averageExtractionRatio(brewList)?.let { BrewStat("%.2f".format(it), "average ratio") }
+             averageExtractionRatio(brewList)?.let { BrewStat("%.2f".format(it), stringResource(Res.string.average_ratio)) }
         }
     }
 }
@@ -136,11 +139,11 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Your brew journal is quiet", style = MaterialTheme.typography.titleLarge)
+                     Text(stringResource(Res.string.brew_empty_title), style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(6.dp))
-                    Text("Record a brew to remember what worked.", style = MaterialTheme.typography.bodyMedium)
+                     Text(stringResource(Res.string.brew_empty_message), style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(16.dp))
-                    Button(onClick = { showAddDialog = true }) { Text("Log a brew") }
+                     Button(onClick = { showAddDialog = true }) { Text(stringResource(Res.string.log_brew)) }
                 }
             }
         } else {
@@ -151,7 +154,7 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
             ) {
                 item {
                     BrewAnalyticsCard(brewList, settings)
-                    Text("RECENT BREWS", style = MaterialTheme.typography.labelMedium,
+                     Text(stringResource(Res.string.recent_brews), style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 8.dp, bottom = 2.dp))
                 }
@@ -170,7 +173,7 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
 
         }
         FloatingActionButton(onClick = { showAddDialog = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
-            Icon(Icons.Default.Add, contentDescription = "Add Brew")
+             Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.add_brew))
         }
         if (showAddDialog) {
             AddBrewDialog(
@@ -267,8 +270,8 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
         showDeleteConfirm?.let { brew ->
             AlertDialog(
                 onDismissRequest = { showDeleteConfirm = null },
-                title = { Text("Delete Brew") },
-                text = { Text("Are you sure you want to delete this brew record?") },
+                 title = { Text(stringResource(Res.string.delete_brew)) },
+                 text = { Text(stringResource(Res.string.delete_brew_confirmation)) },
                 confirmButton = {
                     TextButton(onClick = {
                         scope.launch {
@@ -286,12 +289,12 @@ fun BrewScreen(settings: Settings = Settings.DEFAULT) {
                             showDeleteConfirm = null
                         }
                     }) {
-                        Text("Delete")
+                         Text(stringResource(Res.string.delete))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteConfirm = null }) {
-                        Text("Cancel")
+                     Text(stringResource(Res.string.cancel))
                     }
                 }
             )
@@ -329,10 +332,10 @@ fun BrewItem(
                 }
                 Row {
                     IconButton(onClick = onEditClick) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                         Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.edit))
                     }
                     IconButton(onClick = onDeleteClick) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                         Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.delete))
                     }
                 }
             }
@@ -342,19 +345,19 @@ fun BrewItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Dose", style = MaterialTheme.typography.labelSmall)
+                     Text(stringResource(Res.string.dose), style = MaterialTheme.typography.labelSmall)
                     Text(
                         formatBrewDisplayWeight(brew.dose, settings.useGrams),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Time", style = MaterialTheme.typography.labelSmall)
+                     Text(stringResource(Res.string.time), style = MaterialTheme.typography.labelSmall)
                     Text(formatBrewTime(brew.brewTime), style = MaterialTheme.typography.bodyMedium)
                 }
                 if (brew.yield != null) {
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("Yield", style = MaterialTheme.typography.labelSmall)
+                         Text(stringResource(Res.string.yield), style = MaterialTheme.typography.labelSmall)
                         Text(
                             formatBrewDisplayWeight(brew.yield ?: 0.0, settings.useGrams),
                             style = MaterialTheme.typography.bodyMedium
@@ -363,7 +366,7 @@ fun BrewItem(
                 }
             }
             if (!brew.notes.isNullOrBlank()) {
-                Text("Notes: ${brew.notes}", style = MaterialTheme.typography.bodySmall)
+                 Text(stringResource(Res.string.brew_notes, brew.notes.orEmpty()), style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -419,12 +422,12 @@ fun AddBrewDialog(
                     }
                     showDatePicker = false
                 }) {
-                    Text("OK")
+                     Text(stringResource(Res.string.ok))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
+                     Text(stringResource(Res.string.cancel))
                 }
             }
         ) {
@@ -461,7 +464,7 @@ fun AddBrewDialog(
                                 ?: selectedCoffeeName ?: "",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Coffee") },
+                             label = { Text(stringResource(Res.string.coffee)) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = coffeeExpanded) },
                              modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                         )
@@ -488,10 +491,10 @@ fun AddBrewDialog(
                     OutlinedTextField(
                         value = selectedDate.toString(),
                         onValueChange = {},
-                        label = { Text("Date") },
+                         label = { Text(stringResource(Res.string.date)) },
                         readOnly = true,
                         trailingIcon = {
-                            Icon(Icons.Default.CalendarMonth, contentDescription = "Select date")
+                             Icon(Icons.Default.CalendarMonth, contentDescription = stringResource(Res.string.select_date))
                         },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -513,7 +516,7 @@ fun AddBrewDialog(
                         value = formatBrewMethod(selectedMethod),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Brew Method") },
+                         label = { Text(stringResource(Res.string.brew_method)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = methodExpanded) },
                          modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     )
@@ -539,7 +542,7 @@ fun AddBrewDialog(
                     OutlinedTextField(
                         value = doseText,
                         onValueChange = { doseText = it },
-                        label = { Text("Dose (${if (settings.useGrams) "g" else "oz"})") },
+                         label = { Text(stringResource(if (settings.useGrams) Res.string.dose_grams else Res.string.dose_ounces)) },
                         isError = measurementError(doseText, "Dose", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 1000.0 else gramsToOunces(1000.0)) != null,
                         supportingText = measurementError(doseText, "Dose", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 1000.0 else gramsToOunces(1000.0))?.let { { Text(it) } },
                         modifier = Modifier.weight(1f)
@@ -548,7 +551,7 @@ fun AddBrewDialog(
                     OutlinedTextField(
                         value = yieldText,
                         onValueChange = { yieldText = it },
-                        label = { Text("Yield (${if (settings.useGrams) "g" else "oz"})") },
+                         label = { Text(stringResource(if (settings.useGrams) Res.string.yield_grams else Res.string.yield_ounces)) },
                         isError = optionalMeasurementError(yieldText, "Yield", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 5000.0 else gramsToOunces(5000.0)) != null,
                         supportingText = optionalMeasurementError(yieldText, "Yield", if (settings.useGrams) 0.1 else gramsToOunces(0.1), if (settings.useGrams) 5000.0 else gramsToOunces(5000.0))?.let { { Text(it) } },
                         modifier = Modifier.weight(1f)
@@ -561,7 +564,7 @@ fun AddBrewDialog(
                     OutlinedTextField(
                         value = brewTimeMinutes,
                         onValueChange = { brewTimeMinutes = it },
-                        label = { Text("Minutes") },
+                         label = { Text(stringResource(Res.string.minutes)) },
                         isError = integerError(brewTimeMinutes, "Minutes", 0, 1440, required = false) != null,
                         supportingText = integerError(brewTimeMinutes, "Minutes", 0, 1440, required = false)?.let { { Text(it) } },
                         modifier = Modifier.weight(1f)
@@ -570,7 +573,7 @@ fun AddBrewDialog(
                     OutlinedTextField(
                         value = brewTimeSeconds,
                         onValueChange = { brewTimeSeconds = it },
-                        label = { Text("Seconds") },
+                         label = { Text(stringResource(Res.string.seconds)) },
                         isError = integerError(brewTimeSeconds, "Seconds", 0, 59, required = false) != null,
                         supportingText = integerError(brewTimeSeconds, "Seconds", 0, 59, required = false)?.let { { Text(it) } },
                         modifier = Modifier.weight(1f)
@@ -583,7 +586,7 @@ fun AddBrewDialog(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes") },
+                     label = { Text(stringResource(Res.string.notes)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2
                 )
@@ -595,7 +598,7 @@ fun AddBrewDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                         Text(stringResource(Res.string.cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     val dose = doseText.toDoubleOrNull() ?: 0.0
